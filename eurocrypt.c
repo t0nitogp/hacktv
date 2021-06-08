@@ -43,18 +43,17 @@
 
 /* Data for EC controlled-access decoding */
 const static ec_mode_t _ec_modes[] = {
-	{ "rdv",      EC_S,    EC_S, { 0xFE, 0x6D, 0x9A, 0xBB, 0xEB, 0x97, 0xFB }, { 0x00, 0x2D, 0x93 }, { "01/11/1995" }, { 0xFF, 0x00 }, "RDV (S2)" },
-	{ "tvs",      EC_S,    EC_S, { 0x5C, 0x8B, 0x11, 0x2F, 0x99, 0xA8, 0x2C }, { 0x00, 0x2B, 0x50 }, { "01/11/1995" }, { 0x00, 0x01 }, "TV-S (S2)" },
-	{ "ctvs1",    EC_S,    EC_S, { 0x17, 0x38, 0xFA, 0x8A, 0x84, 0x5A, 0x5E }, { 0x00, 0x2B, 0x20 }, { "01/11/1995" }, { 0x00, 0x01 }, "CTV (S2)" },
-	{ "ctvs2",    EC_S,    EC_S, { 0x9B, 0x16, 0x8D, 0xF3, 0x80, 0xE2, 0x85 }, { 0x00, 0x2B, 0x40 }, { "01/11/1995" }, { 0x00, 0x01 }, "CTV (S2)" },
+	{ "tvs",      EC_S,    EC_S, { 0x5C, 0x8B, 0x11, 0x2F, 0x99, 0xA8, 0x2C }, { 0x00, 0x2B, 0x50 }, { "06/02/1999" }, { 0xFF, 0x00 }, "TV-S (S2)" },
+	{ "ctvs",     EC_S,    EC_S, { 0x27, 0x82, 0xC5, 0xA3, 0x2D, 0x34, 0xD2 }, { 0x00, 0x2B, 0x20 }, { "06/02/1999" }, { 0xFF, 0x00 }, "CTV (S2)" },
 	{ "ctv",      EC_M,    EC_M, { 0x84, 0x66, 0x30, 0xE4, 0xDA, 0xFA, 0x23 }, { 0x00, 0x04, 0x38 }, { "01/11/1995" }, { 0xFF, 0x00 }, "CTV (M)" },
-	{ "tvplus",   EC_M,    EC_M, { 0x12, 0x06, 0x28, 0x3A, 0x4B, 0x1D, 0xE2 }, { 0x00, 0x2C, 0x08 }, { "01/11/1995" }, { 0x04, 0x00 }, "TV Plus (M)" },
-	{ "tv1000",   EC_M,    EC_M, { 0x48, 0x63, 0xC5, 0xB3, 0xDA, 0xE3, 0x29 }, { 0x00, 0x04, 0x18 }, { "01/11/1995" }, { 0x05, 0x04 }, "TV1000 (M)" },
-	{ "tv3update",EC_M,    EC_M, { 0xE9, 0xF3, 0x34, 0x36, 0xB0, 0xBB, 0xF8 }, { 0x00, 0x04, 0x0C }, { "01/11/1995" }, { 0x05, 0x04 }, "TV3 (AU - M)" },
-	{ "filmnet",  EC_M,    EC_M, { 0x21, 0x12, 0x31, 0x35, 0x8A, 0xC3, 0x4F }, { 0x00, 0x28, 0x08 }, { "01/08/1994" }, { 0x05, 0x00 }, "FilmNet (M)" },
-	{ "nrk",      EC_S,    EC_M, { 0xE7, 0x19, 0x5B, 0x7C, 0x47, 0xF4, 0x66 }, { 0x47, 0x52, 0x00 }, { "01/11/1995" }, { 0x00, 0x02 }, "NRK (S2)" },
-	{ "cplus", EC_3DES, EC_3DES, { 0x34, 0x51, 0x85, 0xCE, 0x42, 0x07, 0x4B,   /* Key 00 and key 01 - index key C */
-	                               0xB4, 0xA0, 0xD9, 0x3B, 0x94, 0x28, 0xC9 }, { 0x00, 0x2B, 0x1C }, { "01/11/1995" }, { 0x00, 0x01 }, "Canal+ (3DES)" },
+	{ "tvplus",   EC_M,    EC_M, { 0x12, 0x06, 0x28, 0x3A, 0x4B, 0x1D, 0xE2 }, { 0x00, 0x2C, 0x08 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV Plus (M)" },
+	{ "tv1000",   EC_M,    EC_M, { 0x48, 0x63, 0xC5, 0xB3, 0xDA, 0xE3, 0x29 }, { 0x00, 0x04, 0x18 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV1000 (M)" },
+	{ "tv3update",EC_M,    EC_M, { 0xE9, 0xF3, 0x34, 0x36, 0xB0, 0xBB, 0xF8 }, { 0x00, 0x04, 0x0C }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV3 (AU - M)" },
+	{ "filmnet",  EC_M,    EC_M, { 0x21, 0x12, 0x31, 0x35, 0x8A, 0xC3, 0x4F }, { 0x00, 0x28, 0x08 }, { "28/02/1993" }, { 0xFF, 0x00 }, "FilmNet (M)" },
+	{ "nrk",      EC_S,    EC_M, { 0xE7, 0x19, 0x5B, 0x7C, 0x47, 0xF4, 0x66 }, { 0x47, 0x52, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "NRK (S2)" },
+	{ "tv2",      EC_S,    EC_M, { 0x70, 0xBF, 0x6E, 0x51, 0x9F, 0xB8, 0xA6 }, { 0x47, 0x51, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "TV2 Norway (S2)" },
+	{ "cplus", EC_3DES, EC_3DES, { 0x62, 0xA7, 0x01, 0xA0, 0x5E, 0x8B, 0xB9,   /* Key 02 and key 03 - index key E */
+	                               0xCB, 0x86, 0x67, 0x27, 0x5C, 0x53, 0x17 }, { 0x00, 0x2B, 0x1E }, { "06/02/1999" }, { 0xFF, 0x00 }, "Canal+ (3DES)" },
 	{ NULL } 
 };
 
@@ -827,22 +826,31 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 		if(vid->conf.showecm)
 		{
 			int i;
-			fprintf(stderr, "\n\n***** ECM *****");
-			fprintf(stderr, "\nOperational key [%02X]:\t", e->mode->ppid[2] & 0x0F);
+			if(frame == 1)
+			{
+				fprintf(stderr, "\n+----+----------------------+-------------------------+-------------------------+");
+				fprintf(stderr, "----------------------------+----------------------------+");
+				fprintf(stderr, "-------------------------+");
+				fprintf(stderr, "\n| ## |   Operational Key    |   Encrypted CW (even)   |    Encrypted CW (odd)   |");
+				fprintf(stderr, "    Decrypted CW (even)     |     Decrypted CW (odd)     |");
+				fprintf(stderr, "           Hash          |");
+			}
+			fprintf(stderr, "\n+----+----------------------+-------------------------+-------------------------+");
+			fprintf(stderr, "----------------------------+----------------------------+");
+			fprintf(stderr, "-------------------------+");
+			fprintf(stderr, "\n| %02X | ", e->mode->ppid[2] & 0x0F);
 			for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->mode->key[i]);
-			fprintf(stderr, "\nEurocrypt ECM   [in]:\t");
+			fprintf(stderr, "| ");
 			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->ecw[0][i]);
 			fprintf(stderr, "| ");
 			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->ecw[1][i]);
-			fprintf(stderr,"\nEurocrypt ECM   [out]:\t");
+			fprintf(stderr, "| %s", t ? "  " : "->");
 			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->cw[0][i]);
-			fprintf(stderr, "| ");
+			fprintf(stderr, " | %s", t ? "->" : "  ");
 			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->cw[1][i]);
-			fprintf(stderr,"\nUsing CW        [%s]:\t%s", t ? "odd" : "even", t ? "                          " : "");
-			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->cw[t][i]);
-			fprintf(stderr,"\nHash:\t\t\t");
+			fprintf(stderr, " | ");
 			for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->ecm_hash[i]);
-			fprintf(stderr,"\n");
+			fprintf(stderr, "|");
 		}
 	}
 	

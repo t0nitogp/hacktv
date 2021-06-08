@@ -808,7 +808,7 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 	
 	if(!av->seekflag)
 	{
-		memset(frame->data[0],0x1A, vid_get_framebuffer_length(av->s));
+		memset(frame->data[0],0x00, vid_get_framebuffer_length(av->s));
 		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
 							"SEEKING VIDEO",
 							50, 47, 1, 0, 0, 0);
@@ -1599,6 +1599,13 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 	if(s->conf.timestamp)
 	{
 		s->conf.timestamp = time(0);
+		
+		if(font_init(s, 40, source_ratio) != VID_OK)
+		{
+			s->conf.timestamp = 0;
+		};
+		
+		av->font[1] = s->av_font;
 	}
 	
 	if(s->conf.logo)
@@ -1611,16 +1618,6 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		{
 			s->conf.logo = NULL;
 		}
-	}
-	
-	if(s->conf.timestamp)
-	{
-		if(font_init(s, 40, source_ratio) != VID_OK)
-		{
-			s->conf.timestamp = 0;
-		};
-		
-		av->font[1] = s->av_font;
 	}
 	
 	/* Generic font */

@@ -316,15 +316,15 @@ static int _get_line_size(av_font_t *font, char *fmt, int *line_width, int *line
 	return(HACKTV_OK);
 }
 
-static void _print_line(av_font_t *font, int line_width, int line_height, int pos_x, int pos_y, char *fmt, int shadow, int box, uint32_t colour, float transparency)
+static void _print_line(av_font_t *font, int line_width, int line_height, int pos_x, int pos_y, char *fmt, int shadow, int box, uint32_t colour, float transparency, int type)
 {
 		if(box)
 		{
 			int x_box_start = pos_x - 5;
 			int x_box_end = x_box_start + line_width + 10;
 			
-			int y_box_start = pos_y - (line_height * 1.15);
-			int y_box_end = y_box_start + (line_height * 1.425);
+			int y_box_start = pos_y - (type == 1 ? 24 : (line_height * 1.15));
+			int y_box_end = y_box_start + (type == 1 ? 32 : (line_height * 1.425));
 			draw_box(font, x_box_start, y_box_start, x_box_end, y_box_end, colour, transparency);
 		}
 		if(shadow) _printf(font, pos_x + 2, pos_y + 2, 0x000000, fmt);
@@ -371,7 +371,7 @@ void print_subtitle(av_font_t *font, uint32_t *vid, char *fmt)
 				/* Centre line on screen */
 				x = font->video_width / 2 - line_width / 2;
 				
-				_print_line(font, line_width, line_height, x, y, text, 1, 1, 0x3A3A3A, 0.5);
+				_print_line(font, line_width, line_height, x, y, text, 1, 1, 0x3A3A3A, 0.5, 1);
 				
 				/* Move starting y position */
 				y += spacing;
@@ -390,7 +390,7 @@ void print_subtitle(av_font_t *font, uint32_t *vid, char *fmt)
 		/* Centre line on screen */
 		x = font->video_width / 2 -  line_width / 2;
 		
-		_print_line(font, line_width, line_height, x, y + ((lines - 1) * spacing), text, 1, 1, 0x3A3A3A, 0.5);
+		_print_line(font, line_width, line_height, x, y + ((lines - 1) * spacing), text, 1, 1, 0x3A3A3A, 0.5, 1);
 	}
 }
 
@@ -408,6 +408,6 @@ void print_generic_text(av_font_t *font, uint32_t *vid, char *fmt, float pos_x, 
 		/* Centre if 50% */
 		pos_x = font->video_width * (pos_x / 100.00) - (pos_x != 50 ? 0 : line_width * (pos_x / 100.00));
 		pos_y = pos_y / 100.00 * font->video_height;
-		_print_line(font, line_width, line_height, (int) pos_x, (int) pos_y, fmt, shadow, box, colour, transparency);
+		_print_line(font, line_width, line_height, (int) pos_x, (int) pos_y, fmt, shadow, box, colour, transparency, 0);
 	}
 }
