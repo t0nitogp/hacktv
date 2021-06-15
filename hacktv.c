@@ -464,7 +464,6 @@ int main(int argc, char *argv[])
 		{ "chid",           required_argument, 0, _OPT_CHID },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
 		{ "passthru",       required_argument, 0, _OPT_PASSTHRU },
-		{ "fmaudiotest",    no_argument,       0, _OPT_FMAUDIOTEST },
 		{ "frequency",      required_argument, 0, 'f' },
 		{ "amp",            no_argument,       0, 'a' },
 		{ "gain",           required_argument, 0, 'g' },
@@ -805,10 +804,6 @@ int main(int argc, char *argv[])
 		case _OPT_PASSTHRU: /* --passthru <path> */
 			free(s.passthru);
 			s.passthru = strdup(optarg);
-			break;
-		
-		case _OPT_FMAUDIOTEST: /* --fmaudiotest (undocumented, for testing only) */
-			s.fmaudiotest = 1;
 			break;
 		
 		case 'f': /* -f, --frequency <value> */
@@ -1229,7 +1224,6 @@ int main(int argc, char *argv[])
 	vid_conf.offset = s.offset;
 	vid_conf.passthru = s.passthru;
 	vid_conf.volume = s.volume;
-	vid_conf.fmaudiotest = s.fmaudiotest;
 	
 	/* Setup video encoder */
 	r = vid_init(&s.vid, s.samplerate, &vid_conf);
