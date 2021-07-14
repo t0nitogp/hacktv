@@ -827,7 +827,15 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 	if(av->s->conf.timestamp)
 	{
 		char timestr[20];
-		time_t diff = time(0) - av->s->conf.timestamp  + (av->s->conf.position * 60) - 3600;
+		int toffset;
+		toffset = 0;
+		
+		/* Hack to resolve time calculation differences between Windows and *nix */
+		#ifndef WIN32
+			toffset = 3600;
+		#endif
+		
+		time_t diff = time(0) - av->s->conf.timestamp  + (av->s->conf.position * 60) - toffset;
 		struct tm *d = localtime(&diff);
 		sprintf(timestr, "%02d:%02d:%02d", d->tm_hour, d->tm_min, d->tm_sec);
 		print_generic_text(	av->font[1],
