@@ -708,6 +708,10 @@ static int _create_si_dg3_packet(mac_t *s, uint8_t *pkt)
 	
 	if(s->eurocrypt)
 	{
+		/* PG */
+		pkt[x++] = 0x80;
+		pkt[x++] = 0x0E;
+		
 		/* Parameter ACCM */
 		pkt[x++] = 0x88;
 		pkt[x++] = 0x04;        /* Packet length = 3 */
