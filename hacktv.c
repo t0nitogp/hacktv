@@ -120,6 +120,7 @@ static void print_usage(void)
 		"      --downmix                  Downmix 5.1 audio to 2.0.\n"
 		"      --volume <value>           Adjust volume. Takes floats as argument.\n"
 		"      --showecm                  Show input and output control wordsfor scrambled modes.\n"
+		"      --a2stereo                 Enable Zweikanalton / A2 Stereo, disables NICAM.\n"
 		"      --single-cut               Enable D/D2-MAC single cut video scrambling.\n"
 		"      --double-cut               Enable D/D2-MAC double cut video scrambling.\n"
 		"      --eurocrypt <mode>         Enable Eurocrypt conditional access for D/D2-MAC.\n"
@@ -389,6 +390,7 @@ enum {
 	_OPT_NOCOLOUR,
 	_OPT_NOAUDIO,
 	_OPT_NONICAM,
+	_OPT_A2STEREO,
 	_OPT_SINGLE_CUT,
 	_OPT_DOUBLE_CUT,
 	_OPT_SCRAMBLE_AUDIO,
@@ -457,6 +459,7 @@ int main(int argc, char *argv[])
 		{ "nocolor",        no_argument,       0, _OPT_NOCOLOUR },
 		{ "noaudio",        no_argument,       0, _OPT_NOAUDIO },
 		{ "nonicam",        no_argument,       0, _OPT_NONICAM },
+		{ "a2stereo",       no_argument,       0, _OPT_A2STEREO },
 		{ "single-cut",     no_argument,       0, _OPT_SINGLE_CUT },
 		{ "double-cut",     no_argument,       0, _OPT_DOUBLE_CUT },
 		{ "eurocrypt",      required_argument, 0, _OPT_EUROCRYPT },
@@ -521,6 +524,7 @@ int main(int argc, char *argv[])
 	s.nocolour = 0;
 	s.noaudio = 0;
 	s.nonicam = 0;
+	s.a2stereo = 0;
 	s.scramble_video = 0;
 	s.scramble_audio = 0;
 	s.chid = -1;
@@ -776,6 +780,10 @@ int main(int argc, char *argv[])
 			s.nonicam = 1;
 			break;
 		
+		case _OPT_A2STEREO: /* --a2stereo */
+			s.a2stereo = 1;
+			break;
+		
 		case _OPT_SINGLE_CUT: /* --single-cut */
 			s.scramble_video = 1;
 			break;
@@ -940,6 +948,11 @@ int main(int argc, char *argv[])
 		/* Disable the NICAM sub-carrier */
 		vid_conf.nicam_level = 0;
 		vid_conf.nicam_carrier = 0;
+	}
+	
+	if(s.a2stereo > 0)
+	{
+		vid_conf.a2stereo = 1;
 	}
 	
 	vid_conf.scramble_video = s.scramble_video;

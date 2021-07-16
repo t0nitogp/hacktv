@@ -81,6 +81,7 @@ typedef struct vid_t vid_t;
 //#define VID_NONE 0
 #define VID_50US 1
 #define VID_75US 2
+#define VID_J17  3
 
 /* AV source function prototypes */
 typedef uint32_t *(*vid_read_video_t)(void *private, float *ratio);
@@ -249,6 +250,9 @@ typedef struct {
 	double fm_right_deviation;
 	int fm_right_preemph;
 	
+	/* A2 Stereo / Zweikanalton */
+	int a2stereo;
+	
 	/* Stereo NICAM audio */
 	double nicam_carrier;
 	double nicam_beta;
@@ -409,11 +413,16 @@ struct vid_t {
 	int audio;
 	int16_t *audiobuffer;
 	size_t audiobuffer_samples;
+	int interp;
 	
 	/* FM Mono/Stereo audio state */
 	_mod_fm_t fm_mono;
 	_mod_fm_t fm_left;
 	_mod_fm_t fm_right;
+	
+	/* Zweikanalton / A2 Stereo state */
+	_mod_am_t a2stereo_pilot;
+	_mod_am_t a2stereo_signal;
 	
 	/* NICAM stereo audio state */
 	nicam_mod_t nicam;

@@ -111,7 +111,7 @@ const vid_config_t vid_config_pal_bg = {
 	.level          = 1.0, /* Overall signal level */
 	
 	.video_level    = 0.71, /* Power level of video */
-	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.fm_mono_level  = 0.15, /* FM audio carrier power level */
 	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
 	
 	.type           = VID_RASTER_625,
@@ -1691,6 +1691,10 @@ const int32_t fm_audio_75us_taps[65] = {
 	65,-123,147,-227,270,-385,440,-580,619,-752,726,-799,641,-588,231,6,-616,1073,-1956,2632,-3763,4603,-5910,6798,-8169,8898,-10227,10324,-11683,9020,-11904,-32509,116205,-32509,-11904,9020,-11683,10324,-10227,8898,-8169,6798,-5910,4603,-3763,2632,-1956,1073,-616,6,231,-588,641,-799,726,-752,619,-580,440,-385,270,-227,147,-123,65
 };
 
+const int32_t fm_audio_j17_taps[65] = {
+	-1,-2,-2,-3,-3,-3,-3,-5,-5,-6,-7,-9,-10,-13,-14,-18,-21,-27,-32,-42,-51,-69,-86,-120,-159,-233,-332,-524,-814,-1402,-2372,-4502,25590,-4502,-2372,-1402,-814,-524,-332,-233,-159,-120,-86,-69,-51,-42,-32,-27,-21,-18,-14,-13,-10,-9,-7,-6,-5,-5,-3,-3,-3,-3,-2,-2,-1
+};
+
 static double _dlimit(double v, double min, double max)
 {
 	if(v < min) return(min);
@@ -1824,7 +1828,7 @@ static int _init_fm_modulator(_mod_fm_t *fm, int sample_rate, double frequency, 
 	
 	fm->level   = round(INT16_MAX * level);
 	fm->counter = INT16_MAX;
-	fm->phase.i = INT16_MAX;
+	fm->phase.i = INT32_MAX;
 	fm->phase.q = 0;
 	fm->lut     = malloc(sizeof(cint32_t) * (UINT16_MAX + 1));
 	
@@ -1894,7 +1898,7 @@ static int _init_am_modulator(_mod_am_t *am, int sample_rate, double frequency, 
 	
 	am->level   = round(INT16_MAX * level);
 	am->counter = INT16_MAX;
-	am->phase.i = INT16_MAX;
+	am->phase.i = INT32_MAX;
 	am->phase.q = 0;
 	
 	d = 2.0 * M_PI / sample_rate * frequency;
@@ -1908,10 +1912,10 @@ static void inline _am_modulator_add(_mod_am_t *am, int16_t *dst, int16_t sample
 {
 	cint32_mul(&am->phase, &am->phase, &am->delta);
 	
-	sample = ((int32_t) sample + INT16_MIN) / 2;
+	sample = ((int32_t) sample - INT16_MIN) / 2;
 	
-	dst[0] += ((((am->phase.i >> 16) * sample) >> 16) * am->level) >> 15;
-	dst[1] += ((((am->phase.q >> 16) * sample) >> 16) * am->level) >> 15;
+	dst[0] += ((((am->phase.i >> 16) * sample) >> 15) * am->level) >> 15;
+	dst[1] += ((((am->phase.q >> 16) * sample) >> 15) * am->level) >> 15;
 	
 	/* Correct the amplitude after INT16_MAX samples */
 	if(--am->counter == 0)
@@ -2623,7 +2627,6 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 {
 	vid_line_t *l = lines[0];
 	int16_t audio[2] = { 0, 0 };
-	static int interp = 0;
 	int x;
 	
 	for(x = 0; x < s->width; x++)
@@ -2631,10 +2634,10 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 		int16_t add[2] = { 0, 0 };
 		
 		/* TODO: Replace this with a real FIR filter... */
-		interp += HACKTV_AUDIO_SAMPLE_RATE;
-		if(interp >= s->sample_rate)
+		s->interp += HACKTV_AUDIO_SAMPLE_RATE;
+		if(s->interp >= s->sample_rate)
 		{
-			interp -= s->sample_rate;
+			s->interp -= s->sample_rate;
 			
 			if(s->audiobuffer_samples == 0)
 			{
@@ -2673,6 +2676,10 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 				{
 					limiter_process(&s->fm_mono.limiter, &s->fm_mono.sample, &s->fm_mono.sample, &s->fm_mono.sample, 1, 1);
 				}
+				
+				/* Reduce volume of audio in A2 Stereo mode to
+				 * leave room for the pilot/mode signal */
+				if(s->conf.a2stereo) s->fm_mono.sample *= 0.95;
 			}
 			
 			if(s->conf.fm_left_level > 0 && s->conf.fm_left_carrier != 0)
@@ -2691,6 +2698,10 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 				{
 					limiter_process(&s->fm_right.limiter, &s->fm_right.sample, &s->fm_right.sample, &s->fm_right.sample, 1, 1);
 				}
+				
+				/* Reduce volume of audio in A2 Stereo mode to
+				 * leave room for the pilot/mode signal */
+				if(s->conf.a2stereo) s->fm_right.sample *= 0.95;
 			}
 			
 			if((s->conf.nicam_level > 0 && s->conf.nicam_carrier != 0) ||
@@ -2740,7 +2751,19 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 		
 		if(s->conf.fm_right_level > 0 && s->conf.fm_right_carrier != 0)
 		{
-			_fm_modulator_add(&s->fm_right, add, s->fm_right.sample);
+			int16_t a2 = 0;
+			
+			if(s->conf.a2stereo)
+			{
+				int16_t s1[2] = { 0, 0 };
+				int16_t s2[2] = { 0, 0 };
+				
+				_am_modulator_add(&s->a2stereo_signal, s1, 0);
+				_am_modulator_add(&s->a2stereo_pilot, s2, s1[0]);
+				a2 = s2[0];
+			}
+			
+			_fm_modulator_add(&s->fm_right, add, s->fm_right.sample + a2);
 		}
 		
 		if(s->conf.am_audio_level > 0 && s->conf.am_mono_carrier != 0)
@@ -3270,6 +3293,33 @@ int vid_init(vid_t *s, unsigned int sample_rate, const vid_config_t * const conf
 		_init_vfilter(s);
 	}
 	
+	if(s->conf.a2stereo)
+	{
+		/* Enable Zweikanalton / A2 Stereo */
+		s->conf.fm_right_level = s->conf.fm_mono_level * 0.446684; /* -7 dB */
+		s->conf.fm_right_carrier = s->conf.fm_mono_carrier + 242000;
+		s->conf.fm_right_deviation = s->conf.fm_mono_deviation;
+		s->conf.fm_right_preemph = s->conf.fm_mono_preemph;
+		
+		r = _init_am_modulator(&s->a2stereo_pilot, s->sample_rate, 54.6875e3, 0.05);
+		if(r != VID_OK)
+		{
+			vid_free(s);
+			return(r);
+		}
+		
+		/* 117.5 Hz == Stereo */
+		r = _init_am_modulator(&s->a2stereo_signal, s->sample_rate, 117.5, 1.0);
+		if(r != VID_OK)
+		{
+			vid_free(s);
+		}
+		
+		/* Disable NICAM */
+		s->conf.nicam_level = 0;
+		s->conf.nicam_carrier = 0;
+	}
+	
 	/* FM audio */
 	if(s->conf.fm_mono_level > 0 && s->conf.fm_mono_carrier != 0)
 	{
@@ -3294,6 +3344,10 @@ int vid_init(vid_t *s, unsigned int sample_rate, const vid_config_t * const conf
 			case VID_75US:
 				taps = fm_audio_75us_taps;
 				ntaps = sizeof(fm_audio_75us_taps) / sizeof(int32_t);
+				break;
+			case VID_J17:
+				taps = fm_audio_j17_taps;
+				ntaps = sizeof(fm_audio_j17_taps) / sizeof(int32_t);
 				break;
 			}
 			
@@ -3332,6 +3386,10 @@ int vid_init(vid_t *s, unsigned int sample_rate, const vid_config_t * const conf
 				taps = fm_audio_75us_taps;
 				ntaps = sizeof(fm_audio_75us_taps) / sizeof(int32_t);
 				break;
+			case VID_J17:
+				taps = fm_audio_j17_taps;
+				ntaps = sizeof(fm_audio_j17_taps) / sizeof(int32_t);
+				break;
 			}
 			
 			r = limiter_init(&s->fm_left.limiter, INT16_MAX, 21, taps, fm_audio_flat_taps, ntaps);
@@ -3368,6 +3426,10 @@ int vid_init(vid_t *s, unsigned int sample_rate, const vid_config_t * const conf
 			case VID_75US:
 				taps = fm_audio_75us_taps;
 				ntaps = sizeof(fm_audio_75us_taps) / sizeof(int32_t);
+				break;
+			case VID_J17:
+				taps = fm_audio_j17_taps;
+				ntaps = sizeof(fm_audio_j17_taps) / sizeof(int32_t);
 				break;
 			}
 			
@@ -3613,6 +3675,8 @@ void vid_free(vid_t *s)
 	_free_fm_modulator(&s->fm_mono);
 	_free_fm_modulator(&s->fm_left);
 	_free_fm_modulator(&s->fm_right);
+	_free_am_modulator(&s->a2stereo_pilot);
+	_free_am_modulator(&s->a2stereo_signal);
 	limiter_free(&s->fm_mono.limiter);
 	limiter_free(&s->fm_left.limiter);
 	limiter_free(&s->fm_right.limiter);
