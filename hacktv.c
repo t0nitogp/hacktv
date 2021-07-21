@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
 	s.output_type = "hackrf";
 	s.output = NULL;
 	s.mode = "i";
-	s.samplerate = 16000000;
+	s.samplerate = 20250000;
 	s.level = 1.0;
 	s.deviation = -1;
 	s.gamma = -1;
