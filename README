@@ -172,7 +172,7 @@ which card you want to use to decode video.
 
 WHAT'S IT DO
 
-Generates a PAL, NTSC, SECAM*, D/D2-MAC video signal from a video file, stream
+Generates a PAL, NTSC, SECAM, D/D2-MAC video signal from a video file, stream
 or test pattern. Also supports older 819, 405, 240 and 30 line standards, as
 well as the NASA Apollo video standards, both colour and mono.
 
@@ -189,8 +189,6 @@ It also supports:
 + Partial Nagravision Syster hardware support
 + Analogue Copy Protection system, similar to Macrovision
 + Eurocrypt hardware support
-
-* SECAM support is very basic and won't produce a good image
 
 
 WHAT'S IT NOT DO (yet)
