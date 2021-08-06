@@ -320,8 +320,8 @@ static void _print_line(av_font_t *font, int line_width, int line_height, int po
 {
 		if(box)
 		{
-			int x_box_start = pos_x - 5;
-			int x_box_end = x_box_start + line_width + 10;
+			int x_box_start = pos_x - 8;
+			int x_box_end = x_box_start + line_width + 15;
 			
 			int y_box_start = pos_y - (type == 1 ? 24 : (line_height * 1.15));
 			int y_box_end = y_box_start + (type == 1 ? 32 : (line_height * 1.425));
@@ -371,7 +371,7 @@ void print_subtitle(av_font_t *font, uint32_t *vid, char *fmt)
 				/* Centre line on screen */
 				x = font->video_width / 2 - line_width / 2;
 				
-				_print_line(font, line_width, line_height, x, y, text, 1, 1, 0x3A3A3A, 0.5, 1);
+				_print_line(font, line_width, line_height, x, y, text, 1, 1, 0x3A3A3A, 0.75, 1);
 				
 				/* Move starting y position */
 				y += spacing;
@@ -390,7 +390,7 @@ void print_subtitle(av_font_t *font, uint32_t *vid, char *fmt)
 		/* Centre line on screen */
 		x = font->video_width / 2 -  line_width / 2;
 		
-		_print_line(font, line_width, line_height, x, y + ((lines - 1) * spacing), text, 1, 1, 0x3A3A3A, 0.5, 1);
+		_print_line(font, line_width, line_height, x, y + ((lines - 1) * spacing), text, 1, 1, 0x3A3A3A, 0.75, 1);
 	}
 }
 

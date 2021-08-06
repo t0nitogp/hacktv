@@ -726,6 +726,32 @@ static void *_video_scaler_thread(void *arg)
 			INT_MAX
 		);
 		
+		/* Print logo, if enabled */
+		if(av->s->conf.logo)
+		{
+			overlay_image((uint32_t *) oframe->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, IMG_POS_TR);
+		}
+		
+		if(av->s->conf.timestamp)
+		{
+			char timestr[20];
+			int toffset;
+			toffset = 0;
+			
+			/* Hack to resolve time calculation differences between Windows and *nix */
+			#ifndef WIN32
+				toffset = 3600;
+			#endif
+			
+			time_t diff = time(0) - av->s->conf.timestamp  + (av->s->conf.position * 60) - toffset;
+			struct tm *d = localtime(&diff);
+			sprintf(timestr, "%02d:%02d:%02d", d->tm_hour, d->tm_min, d->tm_sec);
+			print_generic_text(	av->font[1],
+								(uint32_t *) oframe->data[0],
+								timestr,
+								10, 90, 1, 0, 0, 0);
+		}
+		
 		/* Print subtitles, if enabled */
 		if(av->s->conf.subtitles || av->s->conf.txsubtitles) 
 		{
@@ -816,32 +842,6 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
 							"PLEASE WAIT",
 							50, 53, 1, 0, 0, 0);
-	}
-
-	/* Print logo, if enabled */
-	if(av->s->conf.logo)
-	{
-		overlay_image((uint32_t *) frame->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, IMG_POS_TR);
-	}
-
-	if(av->s->conf.timestamp)
-	{
-		char timestr[20];
-		int toffset;
-		toffset = 0;
-		
-		/* Hack to resolve time calculation differences between Windows and *nix */
-		#ifndef WIN32
-			toffset = 3600;
-		#endif
-		
-		time_t diff = time(0) - av->s->conf.timestamp  + (av->s->conf.position * 60) - toffset;
-		struct tm *d = localtime(&diff);
-		sprintf(timestr, "%02d:%02d:%02d", d->tm_hour, d->tm_min, d->tm_sec);
-		print_generic_text(	av->font[1],
-							(uint32_t *) frame->data[0],
-							timestr,
-							10, 90, 1, 0, 0, 0);
 	}
 	
 	return ((uint32_t *) frame->data[0]);
