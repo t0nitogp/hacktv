@@ -2738,6 +2738,9 @@ static int _vid_filter_process(vid_t *s, void *arg, int nlines, vid_line_t **lin
 {
 	_vid_filter_process_t *p = arg;
 	vid_line_t *src = lines[nlines - 1];
+	
+	if(!src->width) return(1);
+	
 	int x1, x2;
 	
 	x1 = p->offset;
