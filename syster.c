@@ -834,7 +834,7 @@ int d11_init(ng_t *s, vid_t *vid, char *mode)
 	_ng_vbi_init(s, vid);
 	_ng_audio_init(s);
 	
-	s->d11_delay = (1 / 4433618.75) * 4 * vid->sample_rate;
+	s->d11_delay = (1 / 4433618.75) * 4 * vid->pixel_rate;
 	
 	_create_d11_delay_table(s);
 
@@ -843,7 +843,7 @@ int d11_init(ng_t *s, vid_t *vid, char *mode)
 
 int d11_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 {
-	int x, f, i, d11_field, index, delay;
+	int x, f, i, d11_field, index, delay, max_delay;
 	
 	ng_t *d = arg;
 	vid_line_t *l = lines[0];
@@ -860,11 +860,17 @@ int d11_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		
 		/* Calculate delay for this line */
 		delay = d->d11_line_delay[index] * d->d11_delay;
-	  
-		/* Delay line */		
-		for(x = s->active_left; x < s->active_left + s->active_width; x++)
+		
+		/* Calculate max delay in order to 'centre' the frame */
+		max_delay = d->d11_delay * 2;
+		
+		/* Delay line */
+		for(x = s->active_left + max_delay; x < s->active_left + s->active_width + max_delay; x++)
 		{
-			l->output[x * 2 + 1] = x < s->active_left + delay ? s->black_level : l->output[(x - delay) * 2];
+			/* Adjust end-of-line delay */
+			delay = x - d->d11_delay < (s->active_left + s->active_width) ? delay : max_delay;
+			
+			l->output[(x - max_delay) * 2 + 1] = l->output[(x - delay) * 2];
 		}
 		
 		/* Copy delayed line to output buffer */
