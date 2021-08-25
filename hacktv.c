@@ -339,6 +339,7 @@ static void print_usage(void)
 		"  cfrca           = (2) A valid Canal+ France 'key' is required to decode - subscription level access.\n"
 		"  cplfa           = (1) A valid Canal+ Poland 'key' is required to decode - free access.\n"
 		"  cesfa           = (1) A valid Canal+ Spain 'key' is required to decode - free access.\n"
+		"  chorfa          = (2) A valid Canal+ Horizons 'key' is required to decode - free access.\n"
 		"  ntvfa           = (2) A valid HTB+ Russia 'key' is required to decode - free access.\n"
 		"\n"
 		"By default, PAL providers use permutation table 1 and SECAM ones use table 2.\n"
