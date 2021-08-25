@@ -480,6 +480,9 @@ int _init_common(ng_t *s, vid_t *vid, char *mode, int ecm_type)
 		return(VID_ERROR);
 	}
 	
+	/* D11/CNR delay */
+	s->ng_delay = (1 / 4433618.75) * 4 * vid->pixel_rate;
+	
 	/* Date of broadcast */
 	uint16_t d = _get_date(n->date);
 	
@@ -644,7 +647,7 @@ static void _rotate_syster(int16_t *li, vid_line_t *lo, ng_t *n, int frame, cons
 	y = n->video_scale[SCNR_LEFT + SCNR_TOTAL_CUTS - shift];
 	for(x = n->video_scale[SCNR_LEFT]; x < n->video_scale[SCNR_LEFT + SCNR_TOTAL_CUTS]; x++, y++)
 	{
-		lo->output[x * 2 + 1] =  li[y * 2];
+		lo->output[x * 2 + 1] =  li[(y - n->ng_delay) * 2];
 		if(y >= n->video_scale[SCNR_LEFT + SCNR_TOTAL_CUTS])
 		{
 			y = n->video_scale[SCNR_LEFT + 5];
@@ -834,8 +837,6 @@ int d11_init(ng_t *s, vid_t *vid, char *mode)
 	_ng_vbi_init(s, vid);
 	_ng_audio_init(s);
 	
-	s->d11_delay = (1 / 4433618.75) * 4 * vid->pixel_rate;
-	
 	_create_d11_delay_table(s);
 
 	return(VID_OK);
@@ -859,16 +860,16 @@ int d11_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		index = ((d11_field == 5 ? 0 : d11_field + 1) * D11_LINES_PER_FIELD) + i ;
 		
 		/* Calculate delay for this line */
-		delay = d->d11_line_delay[index] * d->d11_delay;
+		delay = d->d11_line_delay[index] * d->ng_delay;
 		
 		/* Calculate max delay in order to 'centre' the frame */
-		max_delay = d->d11_delay * 2;
+		max_delay = d->ng_delay * 2;
 		
 		/* Delay line */
 		for(x = s->active_left + max_delay; x < s->active_left + s->active_width + max_delay; x++)
 		{
 			/* Adjust end-of-line delay */
-			delay = x - d->d11_delay < (s->active_left + s->active_width) ? delay : max_delay;
+			delay = x - d->ng_delay < (s->active_left + s->active_width) ? delay : max_delay;
 			
 			l->output[(x - max_delay) * 2 + 1] = l->output[(x - delay) * 2];
 		}

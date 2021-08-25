@@ -121,7 +121,7 @@ typedef struct {
 	int16_t *delay_line[NG_DELAY_LINES];
 
 	/* D11 delay values */
-	int d11_delay;
+	int ng_delay;
 	int d11_line_delay[D11_LINES_PER_FIELD * D11_FIELDS];
 
 	/* Audio inversion FIR filter */
