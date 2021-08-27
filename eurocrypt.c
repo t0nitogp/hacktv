@@ -729,12 +729,6 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 	pkt[x++] = 0x01;
 	pkt[x++] = 0x00;
 	
-		/* IDUP */
-	pkt[x++] = 0xA1;
-	pkt[x++] = 0x03;
-	/* Provider ID and M-key to use for decryption of op-key */
-	memcpy(&pkt[x], e->emmode->ppid, 3); x += 3;
-	
 	/* Date/theme */
 	pkt[x++] = 0xA8;
 	pkt[x++] = 0x06;
