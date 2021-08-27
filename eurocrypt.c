@@ -975,7 +975,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				{
 					memcpy(pkt, e->emmg_pkt + (i * ECM_PAYLOAD_BYTES), ECM_PAYLOAD_BYTES + 1);
 					
-					pkt[0] = e->emmode->emmtype;
+					pkt[0] = EMMG;
 					
 					/* Golay encode the payload */
 					mac_golay_encode(pkt + 1, 30);
