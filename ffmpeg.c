@@ -729,7 +729,7 @@ static void *_video_scaler_thread(void *arg)
 		/* Print logo, if enabled */
 		if(av->s->conf.logo)
 		{
-			overlay_image((uint32_t *) oframe->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, IMG_POS_TR);
+			overlay_image((uint32_t *) oframe->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, &av->s->vid_logo.position);
 		}
 		
 		if(av->s->conf.timestamp)

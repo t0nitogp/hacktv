@@ -26,25 +26,27 @@
 #include "resources.h"
 
 const pngs_t png_logos[] = {
-	{ "hacktv",         _png_hacktv,         sizeof(_png_hacktv) },
-	{ "cartoonnetwork", _png_cartoonnetwork, sizeof(_png_cartoonnetwork) },
-	{ "tv1000",         _png_tv1000,         sizeof(_png_tv1000) },
-	{ "filmnet1",       _png_filmnet1,       sizeof(_png_filmnet1) },
-	{ "canal+",         _png_canalplus,      sizeof(_png_canalplus) },
-	{ "eurotica",       _png_eurotica,       sizeof(_png_eurotica) },
-	{ "mtv",            _png_mtv,            sizeof(_png_mtv) },
-	{ "tac",            _png_tac,            sizeof(_png_tac) },
-	{ "filmnet",        _png_filmnet,        sizeof(_png_filmnet) },
-	{ "multichoice",    _png_multichoice,    sizeof(_png_multichoice) },
-	{ NULL,             NULL,                0 }
+	{ "hacktv",         _png_hacktv,         IMG_POS_TR, sizeof(_png_hacktv) },
+	{ "cartoonnetwork", _png_cartoonnetwork, IMG_POS_TR, sizeof(_png_cartoonnetwork) },
+	{ "tv1000",         _png_tv1000,         IMG_POS_TR, sizeof(_png_tv1000) },
+	{ "filmnet1",       _png_filmnet1,       IMG_POS_TR, sizeof(_png_filmnet1) },
+	{ "canal+",         _png_canalplus,      IMG_POS_TR, sizeof(_png_canalplus) },
+	{ "eurotica",       _png_eurotica,       IMG_POS_TR, sizeof(_png_eurotica) },
+	{ "mtv",            _png_mtv,            IMG_POS_TR, sizeof(_png_mtv) },
+	{ "tac",            _png_tac,            IMG_POS_TR, sizeof(_png_tac) },
+	{ "filmnet",        _png_filmnet,        IMG_POS_TR, sizeof(_png_filmnet) },
+	{ "multichoice",    _png_multichoice,    IMG_POS_TR, sizeof(_png_multichoice) },
+	{ "skyone",         _png_skyone,         IMG_POS_TL, sizeof(_png_skyone) },
+	{ "sky",            _png_sky,            IMG_POS_BR, sizeof(_png_sky) },
+	{ NULL,             NULL,                0,          0 }
 };
 
 const pngs_t png_tests[] = {
-	{ "pm5544",         _png_test_pm5544,    sizeof(_png_test_pm5544) },
-	{ "pm5644",         _png_test_pm5644,    sizeof(_png_test_pm5644) },
-	{ "fubk",           _png_test_fubk,      sizeof(_png_test_fubk) },
-	{ "ueitm",          _png_test_ueitm,     sizeof(_png_test_ueitm) },
-	{ NULL,             NULL,                0 }
+	{ "pm5544",         _png_test_pm5544, IMG_POS_CENTRE,  sizeof(_png_test_pm5544) },
+	{ "pm5644",         _png_test_pm5644, IMG_POS_CENTRE,  sizeof(_png_test_pm5644) },
+	{ "fubk",           _png_test_fubk,   IMG_POS_CENTRE,  sizeof(_png_test_fubk) },
+	{ "ueitm",          _png_test_ueitm,  IMG_POS_CENTRE,  sizeof(_png_test_ueitm) },
+	{ NULL,             NULL,             0,           0 }
 };
 
 static void _open_png_memory(png_mem_t *r, const uint8_t *data, int size)
@@ -222,7 +224,8 @@ int load_png(image_t *image, int width, int height, char *image_name, float scal
 	
 	if(_read_png_data(image, pngs) == HACKTV_OK)
 	{
-		image->img_width = image->width * scale / ratio / ((float) height / (float) width) * 1.02; /* 1.02 scaling = slight correction for my TV */
+		image->position = pngs->position;
+		image->img_width = image->width * scale / ratio / ((float) height / (float) width);
 		image->img_height = image->height * scale;
 		int i, j, k;
 		uint32_t *logo;
@@ -256,11 +259,29 @@ void overlay_image(uint32_t *framebuffer, image_t *l, int vid_width, int vid_hei
 	int x_start = 0;
 	int y_start = 0;
 
-	/* Set logo position - top right corner for logos */
+	/* Set logo positions */
 	if(pos == IMG_POS_TR)
 	{
 		x_start = ((float) vid_width * 0.9) - ((float) l->img_width * 0.8);
 		y_start = (float) (vid_height) * 0.08;
+	}
+	
+	if(pos == IMG_POS_TL)
+	{
+		x_start = ((float) vid_width * 0.085);
+		y_start = (float) (vid_height) * 0.08;
+	}
+	
+	if(pos == IMG_POS_BR)
+	{
+		x_start = ((float) vid_width * 0.9) - ((float) l->img_width * 0.8);
+		y_start = ((float) (vid_height) * 0.9) - ((float) l->img_height * 0.8);
+	}
+	
+	if(pos == IMG_POS_BL)
+	{
+		x_start = ((float) vid_width * 0.085);
+		y_start = ((float) (vid_height) * 0.90) - ((float) l->img_height * 0.8);
 	}
 	
 	/* Set logo position - centre */

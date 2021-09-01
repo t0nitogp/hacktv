@@ -41,6 +41,7 @@ typedef struct {
 	int img_height;
 	uint32_t *logo;
 	png_bytep *row_pointers;
+	int position;
 } image_t;
 
 typedef struct {
@@ -50,6 +51,7 @@ typedef struct {
 typedef struct {
 	const char *name;
 	const png_t *png;
+	const int position;
 	size_t size;
 } pngs_t;
 

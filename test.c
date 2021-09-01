@@ -210,7 +210,7 @@ int av_test_open(vid_t *s, char *test_screen)
 		}
 		else
 		{
-			overlay_image(av->video, &s->vid_logo, av->vid_width, av->vid_height, IMG_POS_TR);
+			overlay_image(av->video, &s->vid_logo, av->vid_width, av->vid_height, s->vid_logo.position);
 		}
 	}
 	
