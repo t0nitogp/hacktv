@@ -49,7 +49,7 @@ const static ec_mode_t _ec_modes[] = {
 	{ "ctv",      EC_M,    EC_M, { 0x84, 0x66, 0x30, 0xE4, 0xDA, 0xFA, 0x23 }, { 0x00, 0x04, 0x38 }, { "01/11/1995" }, { 0xFF, 0x00 }, "CTV (M)" },
 	{ "tvplus",   EC_M,    EC_M, { 0x12, 0x06, 0x28, 0x3A, 0x4B, 0x1D, 0xE2 }, { 0x00, 0x2C, 0x08 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV Plus (M)" },
 	{ "tv1000",   EC_M,    EC_M, { 0x48, 0x63, 0xC5, 0xB3, 0xDA, 0xE3, 0x29 }, { 0x00, 0x04, 0x18 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV1000 (M)" },
-	{ "tv3update",EC_M,    EC_M, { 0xE9, 0xF3, 0x34, 0x36, 0xB0, 0xBB, 0xF8 }, { 0x00, 0x04, 0x0C }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV3 (AU - M)" },
+	{ "tv3",      EC_M,    EC_M, { 0xE9, 0xF3, 0x34, 0x36, 0xB0, 0xBB, 0xF8 }, { 0x00, 0x04, 0x0C }, { "01/11/1996" }, { 0xFF, 0x00 }, "TV3 (AU - M)" },
 	{ "filmnet",  EC_M,    EC_M, { 0x21, 0x12, 0x31, 0x35, 0x8A, 0xC3, 0x4F }, { 0x00, 0x28, 0x08 }, { "28/02/1993" }, { 0xFF, 0x00 }, "FilmNet (M)" },
 	{ "nrk",      EC_S,    EC_M, { 0xE7, 0x19, 0x5B, 0x7C, 0x47, 0xF4, 0x66 }, { 0x47, 0x52, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "NRK (S2)" },
 	{ "tv2",      EC_S,    EC_M, { 0x70, 0xBF, 0x6E, 0x51, 0x9F, 0xB8, 0xA6 }, { 0x47, 0x51, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "TV2 Norway (S2)" },
@@ -63,7 +63,7 @@ const static ec_mode_t _ec_modes[] = {
 
 /* Data for EC controlled-access EMMs */
 const static em_mode_t _em_modes[] = {
-	{ "tv3update", EC_M, EC_M, { 0x99, 0xCF, 0xCA, 0x13, 0x7A, 0x53, 0x6D }, { 0x00, 0x04, 0x04 }, { 0x70, 0x31, 0x12 }, { 0, 0, 0, 0 }, EMMS },
+	{ "tv3",       EC_M, EC_M, { 0x99, 0xCF, 0xCA, 0x13, 0x7A, 0x53, 0x6D }, { 0x00, 0x04, 0x04 }, { 0x70, 0x31, 0x12 }, { 0, 0, 0, 0 }, EMMG },
 	{ "cplusfr43", EC_M, EC_M, { 0x39, 0x74, 0xD7, 0xC1, 0x3F, 0x1B, 0x0D }, { 0x10, 0x00, 0x15 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
 	{ "cplusfr169",EC_M, EC_M, { 0x12, 0x37, 0x5A, 0x43, 0xE4, 0xA1, 0x48 }, { 0x10, 0x00, 0x26 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
 	{ "cinecfr",   EC_M, EC_M, { 0xBF, 0x6D, 0xFE, 0x99, 0x69, 0x63, 0x40 }, { 0x10, 0x00, 0x35 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
@@ -576,16 +576,24 @@ static void _build_emms_hash_data(uint8_t *hash, eurocrypt_t *e)
 	_calc_ec_hash(hash, msg, e->mode->emode, msglen, e->emmode->key);
 }
 
-char *_get_sub_date(int b)
+char *_get_sub_date(int b, const char *date)
 {
 	const int months[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+	int d, m, y;
 	char *dtm;
-	int d;
 	
 	dtm = malloc(sizeof(char) * 24);
 	
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
+	
+	m = tm.tm_mon + 1;
+	y = tm.tm_year + 1900;
+	
+	if(strcmp(date, "today") != 0)
+	{
+		sscanf(date, "%d/%d/%d", &d, &m, &y);
+	}
 	
 	switch(b)
 	{
@@ -596,7 +604,7 @@ char *_get_sub_date(int b)
 			
 		/* Last day in a month */
 		case 31:
-			d = months[tm.tm_mon + 1];
+			d = months[m - 1];
 			break;
 		
 		/* Default to passed value */
@@ -605,7 +613,7 @@ char *_get_sub_date(int b)
 			break;
 	}
 	
-	sprintf(dtm, "\n%02d/%02d/%02d\n", d, tm.tm_mon + 1, tm.tm_year + 1900);
+	sprintf(dtm, "\n%02d/%02d/%02d\n", d, m, y);
 	
 	return (dtm);
 }
@@ -655,7 +663,7 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t)
 	/* CDATE + THEME/LEVEL */
 	pkt[x++] = 0xE1; /* PI */
 	pkt[x++] = 0x04; /* LI */
-	uint16_t d = _get_ec_date(strcmp(e->mode->date, "today") == 0 ? _get_sub_date(0) : e->mode->date, e->mode->emode);
+	uint16_t d = _get_ec_date(strcmp(e->mode->date, "today") == 0 ? _get_sub_date(0, e->mode->date) : e->mode->date, e->mode->emode);
 	pkt[x++] = (d & 0xFF00) >> 8;
 	pkt[x++] = (d & 0x00FF) >> 0;
 	memcpy(&pkt[x], e->mode->theme, 2); x += 2;
@@ -713,7 +721,7 @@ static void _update_emms_packet(eurocrypt_t *e)
 	mac_golay_encode(pkt + 1, 30);
 }
 
-/* Global EMM for French Visiopass */
+/* Global EMM */
 static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 {
 	int x;
@@ -749,10 +757,10 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 	/* Date/theme */
 	pkt[x++] = 0xA8;
 	pkt[x++] = 0x06;
-	d = _get_ec_date(_get_sub_date(1), e->emmode->emode);
+	d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
 	pkt[x++] = (d & 0xFF00) >> 8;
 	pkt[x++] = (d & 0x00FF) >> 0;
-	d = _get_ec_date(_get_sub_date(31), e->emmode->emode);
+	d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
 	pkt[x++] = (d & 0xFF00) >> 8;
 	pkt[x++] = (d & 0x00FF) >> 0;
 	memcpy(&pkt[x], e->mode->theme, 2); x += 2;
