@@ -584,7 +584,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 
 			if(mode2)
 			{
-				if(strcmp(mode2,"conditional") == 0 && (v->counter % 0x3F) == 0 ) _vc_seed_vc2(&v->blocks2[v->block2], VC2_MC);
+				if(strcmp(mode2,"conditional") == 0 && (v->counter & 0x3F) == 0x10 ) _vc_seed_vc2(&v->blocks2[v->block2], VC2_MC);
 				
 				/* OSD bytes 17 - 24 in OSD message 0x21 are used in seed generation in Videocrypt II. */
 				/* XOR with VC1 seed for simulcrypt. */
@@ -605,7 +605,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 				fprintf(stderr, "\n\nVC2 ECM In:  ");
 				for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks2[v->block2].messages[5][i]);
 				fprintf(stderr,"\nVC2 ECM Out: ");
-				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIx64 " ", v->blocks2[v->block2].codeword >> (8 * i) & 0xFF);
+				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIX64 " ", v->blocks2[v->block2].codeword >> (8 * i) & 0xFF);
 				
 				if(s->conf.enableemm || s->conf.disableemm)
 				{
