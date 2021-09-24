@@ -211,6 +211,7 @@ typedef struct {
 	int txsubtitles;
 	int vits;
 	char *eurocrypt;
+	int ec_mat_rating;
 	
 	/* RGB weights, should add up to 1.0 */
 	double rw_co;

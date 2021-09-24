@@ -630,7 +630,7 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e)
 	memcpy(data, emm, 8);
 }
 
-static uint8_t _update_ecm_packet(eurocrypt_t *e, int t)
+static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m)
 {
 	int x;
 	uint16_t b;
@@ -659,6 +659,13 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t)
 	/* Undocumented meaning of this byte but appears in captured logs from live transmissions */
 	pkt[x++] = 0xDF; /* PI */
 	pkt[x++] = 0x00; /* LI */
+	
+	/* CTRL */
+	pkt[x++] = 0xE0;
+	pkt[x++] = 0x01;
+	b  = 1 << 6;
+	b |= m;
+	pkt[x++] = b; 
 	
 	/* CDATE + THEME/LEVEL */
 	pkt[x++] = 0xE1; /* PI */
@@ -874,7 +881,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 		vid->mac.cw = _update_cw(e, t);
 		
 		/* Update the ECM packet */
-		e->ecm_cont = _update_ecm_packet(e, t);
+		e->ecm_cont = _update_ecm_packet(e, t, vid->mac.ec_mat_rating);
 		
 		/* Print ECM */
 		if(vid->conf.showecm)
@@ -1067,7 +1074,7 @@ int eurocrypt_init(vid_t *vid, const char *mode)
 	_update_cw(e, 1);
 	
 	/* Generate initial packet */
-	e->ecm_cont = _update_ecm_packet(e, 0);
+	e->ecm_cont = _update_ecm_packet(e, 0, vid->mac.ec_mat_rating);
 	
 	return(VID_OK);
 }

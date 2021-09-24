@@ -120,6 +120,7 @@ static void print_usage(void)
 		"      --single-cut               Enable D/D2-MAC single cut video scrambling.\n"
 		"      --double-cut               Enable D/D2-MAC double cut video scrambling.\n"
 		"      --eurocrypt <mode>         Enable Eurocrypt conditional access for D/D2-MAC.\n"
+		"      --ec-mat-rating <rating>   Enable Eurocrypt maturity rating.\n"
 		"      --scramble-audio           Scramble audio data when using D/D2-MAC modes.\n"
 		"      --chid <id>                Set the channel ID (D/D2-MAC).\n"
 		"      --key-table-1              Set permutation key table 1 in Syster.\n"
@@ -410,6 +411,7 @@ enum {
 	_OPT_SUBTITLES,
 	_OPT_TX_SUBTITLES,
 	_OPT_SMARTCRYPT,
+	_OPT_EC_MAT_RATING,
 	_OPT_LETTERBOX,
 	_OPT_PILLARBOX,
 	_OPT_SHOWSERIAL,
@@ -471,6 +473,7 @@ int main(int argc, char *argv[])
 		{ "single-cut",     no_argument,       0, _OPT_SINGLE_CUT },
 		{ "double-cut",     no_argument,       0, _OPT_DOUBLE_CUT },
 		{ "eurocrypt",      required_argument, 0, _OPT_EUROCRYPT },
+		{ "ec-mat-rating",  required_argument, 0, _OPT_EC_MAT_RATING },
 		{ "scramble-audio", no_argument,       0, _OPT_SCRAMBLE_AUDIO },
 		{ "chid",           required_argument, 0, _OPT_CHID },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
@@ -816,6 +819,10 @@ int main(int argc, char *argv[])
 			s.eurocrypt = strdup(optarg);
 			break;
 		
+		case _OPT_EC_MAT_RATING: /* --ec-mat-rating */
+			s.ec_mat_rating = atoi(optarg);
+			break;
+		
 		case _OPT_SCRAMBLE_AUDIO: /* --scramble-audio */
 			s.scramble_audio = 1;
 			break;
@@ -1108,6 +1115,16 @@ int main(int argc, char *argv[])
 			return(-1);
 		}
 		vid_conf.eurocrypt = s.eurocrypt;
+	}
+	
+	if(s.ec_mat_rating)
+	{
+		if(!s.eurocrypt)
+		{
+			fprintf(stderr, "Maturing rating option is only used in conjunction with Eurocrypt.\n");
+			return(-1);
+		}
+		vid_conf.ec_mat_rating = s.ec_mat_rating;
 	}
 	
 	if(s.enableemm)

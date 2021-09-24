@@ -8,6 +8,11 @@ I will try and keep this as up to date as possible with official releases.
 
 **All credit for original code goes to author (fsphil)**
 
+2021-09-25
+Add maturing rating to Eurocrypt for use with official cards. 
+Takes values from 0 (disabled) to 15.
+  Enable with --ec-mat-rating <0-15>
+
 2021-03-26
 Add teletext subtitles on page 888. Can be viewed either using teletext
 or selecting "English Subtitles" if using a D/D2MAC decoder.

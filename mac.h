@@ -175,6 +175,7 @@ typedef struct {
 	/* Eurocrypt state */
 	int eurocrypt;
 	eurocrypt_t ec;
+	int ec_mat_rating;
 	
 } mac_t;
 

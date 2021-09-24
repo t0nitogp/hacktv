@@ -925,6 +925,8 @@ int mac_init(vid_t *s)
 	
 	mac->vsam = MAC_VSAM_FREE_ACCESS;
 	
+	mac->ec_mat_rating = s->conf.ec_mat_rating ? s->conf.ec_mat_rating : 0;
+	
 	/* Initalise Eurocrypt, if required */
 	if(s->conf.eurocrypt)
 	{
