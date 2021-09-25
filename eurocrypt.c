@@ -660,12 +660,15 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m)
 	pkt[x++] = 0xDF; /* PI */
 	pkt[x++] = 0x00; /* LI */
 	
-	/* CTRL */
-	pkt[x++] = 0xE0;
-	pkt[x++] = 0x01;
-	b  = 1 << 6;
-	b |= m;
-	pkt[x++] = b; 
+	if(m && e->mode->cmode == EC_M)
+	{
+		/* CTRL */
+		pkt[x++] = 0xE0;
+		pkt[x++] = 0x01;
+		b  = 1 << 6;
+		b |= m;
+		pkt[x++] = b; 
+	}
 	
 	/* CDATE + THEME/LEVEL */
 	pkt[x++] = 0xE1; /* PI */
