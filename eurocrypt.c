@@ -33,15 +33,6 @@
 #define ROTATE_LEFT  1
 #define ROTATE_RIGHT 2
 
-#define IP_DIM  64
-#define IPP_DIM 64
-#define E_DIM   48
-#define S_BOXES  8
-#define S_DIM   64
-#define P_DIM   32
-#define PC2_DIM 48
-#define LS_DIM  16
-
 /* Data for EC controlled-access decoding */
 const static ec_mode_t _ec_modes[] = {
 	{ "tvs",      EC_S,    EC_S, { 0x5C, 0x8B, 0x11, 0x2F, 0x99, 0xA8, 0x2C }, { 0x00, 0x2B, 0x50 }, { "06/02/1999" }, { 0xFF, 0x00 }, "TV-S (S2)" },
@@ -71,7 +62,7 @@ const static em_mode_t _em_modes[] = {
 };
 
 /* Initial permutation for Eurocrypt-S2/3DES */
-static const uint8_t _ip[IP_DIM] = {
+static const uint8_t _ip[] = {
 	58, 50, 42, 34, 26, 18, 10, 2,
 	60, 52, 44, 36, 28, 20, 12, 4,
 	62, 54, 46, 38, 30, 22, 14, 6,
@@ -83,7 +74,7 @@ static const uint8_t _ip[IP_DIM] = {
 };
 
 /* Inverse/final permutation for Eurocrypt-S2/3DES */
-static const uint8_t _ipp[IPP_DIM] = {
+static const uint8_t _ipp[] = {
 	40, 8, 48, 16, 56, 24, 64, 32,
 	39, 7, 47, 15, 55, 23, 63, 31,
 	38, 6, 46, 14, 54, 22, 62, 30,
@@ -94,7 +85,7 @@ static const uint8_t _ipp[IPP_DIM] = {
 	33, 1, 41,  9, 49, 17, 57, 25,
 };
 
-static const uint8_t _exp[E_DIM] = {
+static const uint8_t _exp[] = {
 	32,  1,  2,  3,  4,  5,
 	 4,  5,  6,  7,  8,  9,
 	 8,  9, 10, 11, 12, 13,
@@ -105,7 +96,7 @@ static const uint8_t _exp[E_DIM] = {
 	28, 29, 30, 31, 32,  1
 };
 
-static const uint8_t _sb[S_BOXES][S_DIM] = {
+static const uint8_t _sb[][64] = {
 	{ 0xE, 0x0, 0x4, 0xF, 0xD, 0x7, 0x1, 0x4,
 	  0x2, 0xE, 0xF, 0x2, 0xB, 0xD, 0x8, 0x1,
 	  0x3, 0xA, 0xA, 0x6, 0x6, 0xC, 0xC, 0xB,
@@ -180,7 +171,7 @@ static const uint8_t _sb[S_BOXES][S_DIM] = {
 	}
 };
 
-static const uint8_t _perm[P_DIM] = {
+static const uint8_t _perm[] = {
 	16,  7, 20, 21,
 	29, 12, 28, 17,
 	 1, 15, 23, 26,
@@ -191,7 +182,19 @@ static const uint8_t _perm[P_DIM] = {
 	22, 11,  4, 25
 };
 
-static const uint8_t _pc2[PC2_DIM] = {
+/* Inverse PC1 table */
+static const uint8_t _ipc1[] = {
+	8, 16, 24, 56, 52, 44, 36, 57, 
+	7, 15, 23, 55, 51, 43, 35, 58, 
+	6, 14, 22, 54, 50, 42, 34, 59, 
+	5, 13, 21, 53, 49, 41, 33, 60, 
+	4, 12, 20, 28, 48, 40, 32, 61, 
+	3, 11, 19, 27, 47, 39, 31, 62, 
+	2, 10, 18, 26, 46, 38, 30, 63, 
+	1,  9, 17, 25, 45, 37, 29, 64
+};
+
+static const uint8_t _pc2[] = {
 	14, 17, 11, 24,  1,  5,
 	 3, 28, 15,  6, 21, 10,
 	23, 19, 12,  4, 26,  8,
@@ -202,7 +205,7 @@ static const uint8_t _pc2[PC2_DIM] = {
 	46, 42, 50, 36, 29, 32
 };
 
-static const uint8_t _lshift[LS_DIM] = {
+static const uint8_t _lshift[] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
 };
 
@@ -550,29 +553,40 @@ static void _build_emms_hash_data(uint8_t *hash, eurocrypt_t *e)
 	/* Clear hash memory */
 	memset(hash, 0, 8);
 	
-	/* Copy card's Shared Address into hash buffer */
-	hash[5] = e->emmode->sa[2];
-	hash[6] = e->emmode->sa[1];
-	hash[7] = e->emmode->sa[0];
-	
-	/* Do the initial hashing of the buffer */
-	_eurocrypt(hash, e->emmode->key, HASH, e->mode->emode, 1);
-	
 	/* Build the hash data */
 	msglen = 0;
-
-	/* Copy ADF into data buffer */
-	msg[msglen++] = 0x9e;
-	msg[msglen++] = 0x20;
-	memcpy(msg + msglen, e->emms_pkt + 6, 32); msglen += 32;
 	
-	_calc_ec_hash(hash, msg, e->mode->emode, msglen, e->emmode->key);
+	if(e->emmode->cmode == EC_M)
+	{
+		/* Copy card's Shared Address into hash buffer */
+		hash[5] = e->emmode->sa[2];
+		hash[6] = e->emmode->sa[1];
+		hash[7] = e->emmode->sa[0];
+		
+		/* Do the initial hashing of the buffer */
+		_eurocrypt(hash, e->emmode->key, HASH, e->mode->emode, 1);
+		
+		/* Copy ADF into data buffer */
+		msg[msglen++] = 0x9e;
+		msg[msglen++] = 0x20;
+		memcpy(msg + msglen, e->emms_pkt + 6, 32); msglen += 32;
+		
+		/* Hash it */
+		_calc_ec_hash(hash, msg, e->mode->emode, msglen, e->emmode->key);
+		
+		msglen = 0;
+		
+		/* Copy entitlements into data buffer */
+		memcpy(msg + msglen, e->emmg_pkt + 8, 15); msglen += 15;
+	}
+	else
+	{
+		/* Copy ADF into data buffer */
+		memcpy(msg + msglen, e->emms_pkt + 6, 35); msglen += 35;
+		memset(msg + msglen, 0xFF, 5); msglen += 5;
+	}
 	
-	msglen = 0;
-	
-	/* Copy entitlements into data buffer */
-	memcpy(msg + msglen, e->emmg_pkt + 8, 15); msglen += 15;
-	
+	/* Final hash */
 	_calc_ec_hash(hash, msg, e->mode->emode, msglen, e->emmode->key);
 }
 
@@ -624,6 +638,9 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e)
 	
 	memset(emm, 0, 8);
 	memcpy(emm, e->mode->key, 7);
+	
+	/* Do inverse permuted choice permutation for EC_S keys */
+	if(e->emmode->cmode == EC_S)	_permute_ec(emm, _ipc1, 64);
 	
 	_eurocrypt(emm, e->emmode->key, ECM, e->emmode->emode, 1);
 	
@@ -724,9 +741,33 @@ static void _update_emms_packet(eurocrypt_t *e)
 	/* ADF */
 	memset(&pkt[x], 0xFF, 32); x += 32;
 	
-	/* EMM hash */
-	_build_emms_hash_data(&pkt[x], e); x += 8;
-	memcpy(e->emm_hash, &pkt[x - 8], 8);
+	if(e->emmode->cmode == EC_S)
+	{
+		x -= 7;
+		
+		/* ID to use and update */
+		b  = 0x20;                      /* Key update */
+		b |= e->mode->ppid[2] & 0x0F;   /* Index to update */
+		pkt[x++] = b;
+		
+		b  = (e->emmode->ppid[2] & 0x0F) << 4;   /* Update key index */
+		b |= (e->mode->ppid[2] & 0xF0) >> 4;     /* PPID to update */
+		pkt[x++] = b;
+		
+		_encrypt_opkey(e->enc_op_key, e);
+		memcpy(&pkt[x], e->enc_op_key, 8);
+		x += 8;
+		
+		/* EMM hash */
+		_build_emms_hash_data(e->emm_hash, e);
+		memcpy(&pkt[x], e->emm_hash + 3, 5);
+	}
+	else
+	{
+		/* EMM hash */
+		_build_emms_hash_data(&pkt[x], e); x += 8;
+		memcpy(e->emm_hash, &pkt[x - 8], 8);
+	}
 	
 	mac_golay_encode(pkt + 1, 30);
 }
@@ -784,7 +825,8 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 	/* Encrypted op-key */
 	pkt[x++] = 0xEF;
 	pkt[x++] = 0x08;
-	_encrypt_opkey(&pkt[x], e); x += 8;
+	_encrypt_opkey(e->enc_op_key, e);
+	memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
 	
 	/* EMM hash */
 	pkt[x++] = 0xF0;
@@ -802,7 +844,7 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 {
 	int x;
-	uint16_t b;
+	uint16_t b, d;
 	uint8_t *pkt = e->emmg_pkt;
 	
 	memset(pkt, 0, MAC_PAYLOAD_BYTES * 2);
@@ -826,15 +868,32 @@ static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 	/* Provider ID and M-key to use for decryption of op-key */
 	memcpy(&pkt[x], e->emmode->ppid, 3); x += 3;
 	
-	/* IDUP */
-	pkt[x++] = 0xa1;
-	pkt[x++] = 0x03;
-	/* Provider ID and op-key to update */
-	memcpy(&pkt[x], e->mode->ppid, 3); x += 3;
-	
-	pkt[x++] = 0xEF;
-	pkt[x++] = 0x08;
-	_encrypt_opkey(&pkt[x], e); x += 8;
+	if(e->emmode->cmode == EC_M)
+	{
+		/* IDUP */
+		pkt[x++] = 0xA1;
+		pkt[x++] = 0x03;
+		/* Provider ID and op-key to update */
+		memcpy(&pkt[x], e->mode->ppid, 3); x += 3;
+		
+		pkt[x++] = 0xEF;
+		pkt[x++] = 0x08;
+		_encrypt_opkey(e->enc_op_key, e);
+		memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
+	}
+	else
+	{
+		/* Date/theme */
+		pkt[x++] = 0xA8;
+		pkt[x++] = 0x06;
+		d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		memcpy(&pkt[x], e->mode->theme, 2); x += 2;
+	}
 	
 	/* Update the CI command length */
 	pkt[2] = x - 3;
@@ -953,7 +1012,6 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				
 				int t = (vid->frame >> 8) & 1;
 				
-				/* Shared EMM packet requires EMM-Global packet before it */
 				e->emm_cont = _update_emmg_packet(e, t);
 				
 				/* Break up the EMM-G packet, if required */
@@ -968,22 +1026,6 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 					
 					/* Write the packet */
 					mac_write_packet(vid, 0, e->emm_addr, i, pkt, 0);
-				}
-				
-				/* Print EMM */
-				if(vid->conf.showecm)
-				{
-					int i;
-					fprintf(stderr, "\n\n ***** EMM-G *****");
-					fprintf(stderr, "\nManagement key   [%02X]:\t", e->emmode->ppid[2] & 0x0F);
-					for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->emmode->key[i]);
-					fprintf(stderr, "\nDecrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
-					for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->mode->key[i]);
-					fprintf(stderr, "\nEncrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
-					for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->emmg_pkt[31 + i]);
-					fprintf(stderr,"\nHash:\t\t\t");
-					for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->emm_hash[i]);
-					fprintf(stderr,"\n");
 				}
 			}
 			
@@ -1016,24 +1058,24 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				_update_emms_packet(e);
 				
 				mac_write_packet(vid, 0, e->emm_addr, 0, e->emms_pkt, 0);
-				
-				/* Print EMM */
-				if(vid->conf.showecm)
-				{
-					int i;
-					fprintf(stderr, "\n\n ***** EMM *****");
-					fprintf(stderr, "\nShared address:\t\t");
-					for(i = 0; i < 3; i++) fprintf(stderr, "%02X ", e->emmode->sa[2 - i]);
-					fprintf(stderr, "\nManagement key   [%02X]:\t", e->emmode->ppid[2] & 0x0F);
-					for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->emmode->key[i]);
-					fprintf(stderr, "\nDecrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
-					for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->mode->key[i]);
-					fprintf(stderr, "\nEncrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
-					for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->emmg_pkt[15 + i]);
-					fprintf(stderr,"\nHash:\t\t\t");
-					for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->emm_hash[i]);
-					fprintf(stderr,"\n");
-				}
+			}
+			
+			/* Print EMM to console */
+			if(vid->conf.showecm)
+			{
+				int i;
+				fprintf(stderr, "\n\n ***** EMM *****");
+				fprintf(stderr, "\nShared address:\t\t");
+				for(i = 0; i < 3; i++) fprintf(stderr, "%02X ", e->emmode->sa[2 - i]);
+				fprintf(stderr, "\nManagement key   [%02X]:\t", e->emmode->ppid[2] & 0x0F);
+				for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->emmode->key[i]);
+				fprintf(stderr, "\nDecrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
+				for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->mode->key[i]);
+				fprintf(stderr, "\nEncrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
+				for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->enc_op_key[i]);
+				fprintf(stderr,"\nHash:\t\t\t");
+				for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->emm_hash[i]);
+				fprintf(stderr,"\n");
 			}
 		}
 	}

@@ -75,6 +75,7 @@ typedef struct {
 	uint8_t emms_pkt[MAC_PAYLOAD_BYTES];
 	uint8_t emmu_pkt[MAC_PAYLOAD_BYTES * 2];
 	uint8_t emmg_pkt[MAC_PAYLOAD_BYTES * 2];
+	uint8_t enc_op_key[8];
 	
 } eurocrypt_t;
 
