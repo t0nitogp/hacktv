@@ -40,7 +40,7 @@ typedef struct {
 	const char *id;   /* Mode id */
 	int emode;        /* Eurocrypt M or S2 packet */
 	int cmode;        /* Eurocrypt M or S2 algo  */
-	uint8_t key[7];   /* Decryption key */
+	uint8_t key[14];   /* Decryption key */
 	uint8_t ppid[3];  /* Programme provider identifier */
 	uint8_t sa[3];    /* Shared Address */
 	uint8_t ua[4];    /* Unique Address */

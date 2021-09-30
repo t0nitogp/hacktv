@@ -205,6 +205,14 @@ static const uint8_t _pc2[] = {
 	46, 42, 50, 36, 29, 32
 };
 
+/* Triple DES key map table */
+static const uint8_t _tdesmap[4][2] = {
+	{ 0x00, 0x01 }, /* Index C */
+	{ 0x01, 0x02 }, /* Index D */
+	{ 0x02, 0x03 }, /* Index E */
+	{ 0x03, 0x00 }  /* Index F */
+};
+
 static const uint8_t _lshift[] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
 };
@@ -632,17 +640,23 @@ char *_get_sub_date(int b, const char *date)
 	return (dtm);
 }
 
-static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e)
+static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e, int t)
 {
+	int r;
 	uint8_t *emm = malloc(sizeof(e->mode->key) / sizeof(uint8_t));
 	
 	memset(emm, 0, 8);
-	memcpy(emm, e->mode->key, 7);
+	memcpy(emm, e->mode->key + (t ? 7 : 0), 7);
 	
-	/* Do inverse permuted choice permutation for EC_S keys */
-	if(e->emmode->cmode == EC_S)	_permute_ec(emm, _ipc1, 64);
+	/* Do inverse permuted choice permutation for EC-S2/3DES keys */
+	if(e->emmode->cmode != EC_M)	_permute_ec(emm, _ipc1, 64);
 	
-	_eurocrypt(emm, e->emmode->key, ECM, e->emmode->emode, 1);
+	/* Three rounds for 3DES mode, one round for others */
+	for(r = 0; r < (e->emmode->cmode != EC_3DES ? 1 : 3); r++)
+	{
+		/* Use second key on second round in 3DES */
+		_eurocrypt(emm, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->cmode, r + 1);
+	}
 	
 	memcpy(data, emm, 8);
 }
@@ -713,7 +727,7 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m)
 	return (x / ECM_PAYLOAD_BYTES);
 }
 
-static void _update_emms_packet(eurocrypt_t *e)
+static void _update_emms_packet(eurocrypt_t *e, int t)
 {
 	int x;
 	uint16_t b;
@@ -741,32 +755,40 @@ static void _update_emms_packet(eurocrypt_t *e)
 	/* ADF */
 	memset(&pkt[x], 0xFF, 32); x += 32;
 	
-	if(e->emmode->cmode == EC_S)
+	if(e->emmode->cmode == EC_M)
+	{
+		/* EMM hash */
+		_build_emms_hash_data(&pkt[x], e); x += 8;
+		memcpy(e->emm_hash, &pkt[x - 8], 8);
+	}
+	else
 	{
 		x -= 7;
 		
 		/* ID to use and update */
 		b  = 0x20;                      /* Key update */
-		b |= e->mode->ppid[2] & 0x0F;   /* Index to update */
+		
+		if(e->emmode->cmode == EC_3DES)
+		{
+			b |= _tdesmap[(e->mode->ppid[2] & 0x0F) - 0x0C][t];
+		}
+		else
+		{
+			b |= e->mode->ppid[2] & 0x0F;   /* Index to update */
+		}
 		pkt[x++] = b;
 		
 		b  = (e->emmode->ppid[2] & 0x0F) << 4;   /* Update key index */
 		b |= (e->mode->ppid[2] & 0xF0) >> 4;     /* PPID to update */
 		pkt[x++] = b;
 		
-		_encrypt_opkey(e->enc_op_key, e);
+		_encrypt_opkey(e->enc_op_key, e, t);
 		memcpy(&pkt[x], e->enc_op_key, 8);
 		x += 8;
 		
 		/* EMM hash */
 		_build_emms_hash_data(e->emm_hash, e);
 		memcpy(&pkt[x], e->emm_hash + 3, 5);
-	}
-	else
-	{
-		/* EMM hash */
-		_build_emms_hash_data(&pkt[x], e); x += 8;
-		memcpy(e->emm_hash, &pkt[x - 8], 8);
 	}
 	
 	mac_golay_encode(pkt + 1, 30);
@@ -825,7 +847,7 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 	/* Encrypted op-key */
 	pkt[x++] = 0xEF;
 	pkt[x++] = 0x08;
-	_encrypt_opkey(e->enc_op_key, e);
+	_encrypt_opkey(e->enc_op_key, e, t);
 	memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
 	
 	/* EMM hash */
@@ -878,7 +900,7 @@ static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 		
 		pkt[x++] = 0xEF;
 		pkt[x++] = 0x08;
-		_encrypt_opkey(e->enc_op_key, e);
+		_encrypt_opkey(e->enc_op_key, e, t);
 		memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
 	}
 	else
@@ -1055,7 +1077,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				}
 				
 				/* Generate the EMM-S packet (always fixed length) */
-				_update_emms_packet(e);
+				_update_emms_packet(e, t);
 				
 				mac_write_packet(vid, 0, e->emm_addr, 0, e->emms_pkt, 0);
 			}
