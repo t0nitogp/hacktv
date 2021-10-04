@@ -646,7 +646,14 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e, int t)
 	uint8_t *emm = malloc(sizeof(e->mode->key) / sizeof(uint8_t));
 	
 	memset(emm, 0, 8);
-	memcpy(emm, e->mode->key + (t ? 7 : 0), 7);
+	if(e->emmode->cmode == EC_3DES)
+	{
+		memcpy(emm, e->mode->key + (t ? 7 : 0), 7);
+	}
+	else
+	{
+		memcpy(emm, e->mode->key, 7);
+	}
 	
 	/* Do inverse permuted choice permutation for EC-S2/3DES keys */
 	if(e->emmode->cmode != EC_M)	_permute_ec(emm, _ipc1, 64);
