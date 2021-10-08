@@ -668,6 +668,7 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e, int t)
 	memcpy(data, emm, 8);
 }
 
+static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
 {
 	int x;
 	uint16_t b;
