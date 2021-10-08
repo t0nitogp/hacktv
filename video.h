@@ -212,6 +212,7 @@ typedef struct {
 	int vits;
 	char *eurocrypt;
 	int ec_mat_rating;
+	char *ec_ppv;
 	
 	/* RGB weights, should add up to 1.0 */
 	double rw_co;

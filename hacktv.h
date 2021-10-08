@@ -107,6 +107,7 @@ typedef struct {
 	int downmix;
 	int fmaudiotest;
 	int ec_mat_rating;
+	char *ec_ppv;
 	
 	/* Video encoder state */
 	vid_t vid;

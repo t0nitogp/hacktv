@@ -121,6 +121,7 @@ static void print_usage(void)
 		"      --double-cut               Enable D/D2-MAC double cut video scrambling.\n"
 		"      --eurocrypt <mode>         Enable Eurocrypt conditional access for D/D2-MAC.\n"
 		"      --ec-mat-rating <rating>   Enable Eurocrypt maturity rating.\n"
+		"      --ec-ppv <pnum,cost>       Enable Eurocrypt PPV.\n"
 		"      --scramble-audio           Scramble audio data when using D/D2-MAC modes.\n"
 		"      --chid <id>                Set the channel ID (D/D2-MAC).\n"
 		"      --key-table-1              Set permutation key table 1 in Syster.\n"
@@ -412,6 +413,7 @@ enum {
 	_OPT_TX_SUBTITLES,
 	_OPT_SMARTCRYPT,
 	_OPT_EC_MAT_RATING,
+	_OPT_EC_PPV,
 	_OPT_LETTERBOX,
 	_OPT_PILLARBOX,
 	_OPT_SHOWSERIAL,
@@ -474,6 +476,7 @@ int main(int argc, char *argv[])
 		{ "double-cut",     no_argument,       0, _OPT_DOUBLE_CUT },
 		{ "eurocrypt",      required_argument, 0, _OPT_EUROCRYPT },
 		{ "ec-mat-rating",  required_argument, 0, _OPT_EC_MAT_RATING },
+		{ "ec-ppv",         optional_argument, 0, _OPT_EC_PPV },
 		{ "scramble-audio", no_argument,       0, _OPT_SCRAMBLE_AUDIO },
 		{ "chid",           required_argument, 0, _OPT_CHID },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
@@ -560,6 +563,7 @@ int main(int argc, char *argv[])
 	s.txsubtitles = 0;
 	s.volume = 1;
 	s.downmix = 0;
+	s.ec_ppv = NULL;
 	
 	opterr = 0;
 	while((c = getopt_long(argc, argv, "o:m:s:D:G:irvf:al:g:A:t:p:", long_options, &option_index)) != -1)
@@ -823,6 +827,14 @@ int main(int argc, char *argv[])
 			s.ec_mat_rating = atoi(optarg);
 			break;
 		
+		case _OPT_EC_PPV: /* --ec-ppv */
+			s.ec_ppv = "0,0";
+			if(!optarg && NULL != argv[optind] && '-' != argv[optind][0])
+			{
+				s.ec_ppv = argv[optind++];
+			}
+			break;
+			
 		case _OPT_SCRAMBLE_AUDIO: /* --scramble-audio */
 			s.scramble_audio = 1;
 			break;
@@ -1125,6 +1137,16 @@ int main(int argc, char *argv[])
 			return(-1);
 		}
 		vid_conf.ec_mat_rating = s.ec_mat_rating;
+	}
+	
+	if(s.ec_ppv)
+	{
+		if(!s.eurocrypt)
+		{
+			fprintf(stderr, "PPV option is only used in conjunction with Eurocrypt.\n");
+			return(-1);
+		}
+		vid_conf.ec_ppv = s.ec_ppv;
 	}
 	
 	if(s.enableemm)

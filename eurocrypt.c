@@ -668,7 +668,6 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e, int t)
 	memcpy(data, emm, 8);
 }
 
-static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m)
 {
 	int x;
 	uint16_t b;
@@ -708,13 +707,41 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m)
 		pkt[x++] = b; 
 	}
 	
-	/* CDATE + THEME/LEVEL */
-	pkt[x++] = 0xE1; /* PI */
-	pkt[x++] = 0x04; /* LI */
-	uint16_t d = _get_ec_date(strcmp(e->mode->date, "today") == 0 ? _get_sub_date(0, e->mode->date) : e->mode->date, e->mode->emode);
-	pkt[x++] = (d & 0xFF00) >> 8;
-	pkt[x++] = (d & 0x00FF) >> 0;
-	memcpy(&pkt[x], e->mode->theme, 2); x += 2;
+	if(ppv != NULL)
+	{
+		
+		uint32_t ppvi[2] = { 0, 0 };
+		int i = 0;
+		
+		char tokens[0x7F];
+		strcpy(tokens, ppv);
+		
+		char *ptr = strtok(tokens, ",");
+		
+		while(ptr != NULL)
+		{
+			ppvi[i++] = (uint32_t) atof(ptr);
+			ptr = strtok(NULL, ",");
+		}
+		
+		pkt[x++] = 0xE4;
+		pkt[x++] = 0x05;
+		pkt[x++] = (ppvi[0] >> 16) & 0xFF;
+		pkt[x++] = (ppvi[0] >>  8) & 0xFF;
+		pkt[x++] = (ppvi[0] >>  0) & 0xFF;
+		pkt[x++] = ppvi[1] & 0xFF;
+		pkt[x++] = 0x00;
+	}
+	else
+	{
+		/* CDATE + THEME/LEVEL */
+		pkt[x++] = 0xE1; /* PI */
+		pkt[x++] = 0x04; /* LI */
+		uint16_t d = _get_ec_date(strcmp(e->mode->date, "today") == 0 ? _get_sub_date(0, e->mode->date) : e->mode->date, e->mode->emode);
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		memcpy(&pkt[x], e->mode->theme, 2); x += 2;
+	}
 	
 	/* ECW/OCW */
 	pkt[x++] = 0xEA; /* PI */
@@ -802,7 +829,7 @@ static void _update_emms_packet(eurocrypt_t *e, int t)
 }
 
 /* Global EMM */
-static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
+static uint8_t _update_emmg_packet(eurocrypt_t *e, int t, char *ppv)
 {
 	int x;
 	uint16_t b, d;
@@ -834,28 +861,41 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t)
 	pkt[x++] = 0x01;
 	pkt[x++] = 0x00;
 	
-	/* Date/theme */
-	pkt[x++] = 0xA8;
-	pkt[x++] = 0x06;
-	d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
-	pkt[x++] = (d & 0xFF00) >> 8;
-	pkt[x++] = (d & 0x00FF) >> 0;
-	d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
-	pkt[x++] = (d & 0xFF00) >> 8;
-	pkt[x++] = (d & 0x00FF) >> 0;
-	memcpy(&pkt[x], e->mode->theme, 2); x += 2;
-	
-	/* IDUP */
-	pkt[x++] = 0xA1;
-	pkt[x++] = 0x03;
-	/* Provider ID and op-key to update */
-	memcpy(&pkt[x], e->mode->ppid, 3); x += 3;
-	
-	/* Encrypted op-key */
-	pkt[x++] = 0xEF;
-	pkt[x++] = 0x08;
-	_encrypt_opkey(e->enc_op_key, e, t);
-	memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
+	if(ppv && t)
+	{
+		d = _get_ec_date(_get_sub_date(0, e->mode->date), e->mode->emode);
+		pkt[x++] = 0xAB;
+		pkt[x++] = 0x04;
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		pkt[x++] = 0x0F;
+		pkt[x++] = 0xFF;
+	}
+	else
+	{
+		/* Date/theme */
+		pkt[x++] = 0xA8;
+		pkt[x++] = 0x06;
+		d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
+		pkt[x++] = (d & 0xFF00) >> 8;
+		pkt[x++] = (d & 0x00FF) >> 0;
+		memcpy(&pkt[x], e->mode->theme, 2); x += 2;
+		
+		/* IDUP */
+		pkt[x++] = 0xA1;
+		pkt[x++] = 0x03;
+		/* Provider ID and op-key to update */
+		memcpy(&pkt[x], e->mode->ppid, 3); x += 3;
+		
+		/* Encrypted op-key */
+		pkt[x++] = 0xEF;
+		pkt[x++] = 0x08;
+		_encrypt_opkey(e->enc_op_key, e, t);
+		memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
+	}
 	
 	/* EMM hash */
 	pkt[x++] = 0xF0;
@@ -917,10 +957,10 @@ static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 		pkt[x++] = 0x06;
 		d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
 		pkt[x++] = (d & 0xFF00) >> 8;
-		pkt[x++] = (d & 0x00FF) >> 0;
+		pkt[x++] = ((d & 0x00FF) >> 0) | 0x80;
 		d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
 		pkt[x++] = (d & 0xFF00) >> 8;
-		pkt[x++] = (d & 0x00FF) >> 0;
+		pkt[x++] = ((d & 0x00FF) >> 0) | 0x80;
 		memcpy(&pkt[x], e->mode->theme, 2); x += 2;
 	}
 	
@@ -972,7 +1012,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 		vid->mac.cw = _update_cw(e, t);
 		
 		/* Update the ECM packet */
-		e->ecm_cont = _update_ecm_packet(e, t, vid->mac.ec_mat_rating);
+		e->ecm_cont = _update_ecm_packet(e, t, vid->mac.ec_mat_rating, vid->conf.ec_ppv);
 		
 		/* Print ECM */
 		if(vid->conf.showecm)
@@ -1041,7 +1081,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				
 				int t = (vid->frame >> 8) & 1;
 				
-				e->emm_cont = _update_emmg_packet(e, t);
+				e->emm_cont = _update_emmg_packet(e, t, vid->conf.ec_ppv);
 				
 				/* Break up the EMM-G packet, if required */
 				for(i = 0; i <= e->emm_cont; i++)
@@ -1148,7 +1188,7 @@ int eurocrypt_init(vid_t *vid, const char *mode)
 	_update_cw(e, 1);
 	
 	/* Generate initial packet */
-	e->ecm_cont = _update_ecm_packet(e, 0, vid->mac.ec_mat_rating);
+	e->ecm_cont = _update_ecm_packet(e, 0, vid->mac.ec_mat_rating, vid->conf.ec_ppv);
 	
 	return(VID_OK);
 }
