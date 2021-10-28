@@ -197,8 +197,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	{
 		s->blocks    = _sky03_blocks;
 		s->block_len = 2;
-		_vc_seed_p03(&s->blocks[0]);
-		_vc_seed_p03(&s->blocks[1]);
+		vc_seed_p03(&s->blocks[0]);
+		vc_seed_p03(&s->blocks[1]);
 	}
 	else if(strcmp(mode, "sky05") == 0)
 	{
@@ -209,8 +209,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	{
 		s->blocks    = _sky07_blocks;
 		s->block_len = 2;
-		_vc_seed_p07(&s->blocks[0], VC_SKY7);
-		_vc_seed_p07(&s->blocks[1], VC_SKY7);
+		vc_seed_p07(&s->blocks[0], VC_SKY7);
+		vc_seed_p07(&s->blocks[1], VC_SKY7);
 		
 		if(vid->conf.enableemm)
 		{
@@ -218,8 +218,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x2C: allow Sky Multichannels
 			 * 0x20: Enable card
 			 */
-			_vc_emm_p07(&s->blocks[0],0x2C,vid->conf.enableemm);
-			_vc_emm_p07(&s->blocks[1],0x20,vid->conf.enableemm);
+			vc_emm_p07(&s->blocks[0],0x2C,vid->conf.enableemm);
+			vc_emm_p07(&s->blocks[1],0x20,vid->conf.enableemm);
 		}
 		
 		if(vid->conf.disableemm)
@@ -228,16 +228,23 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x0C: switch off Sky Multichannels
 			 * 0x00: Disable card 
 			 */
-			_vc_emm_p07(&s->blocks[0],0x0C,vid->conf.disableemm);
-			_vc_emm_p07(&s->blocks[1],0x00,vid->conf.disableemm);
+			vc_emm_p07(&s->blocks[0],0x0C,vid->conf.disableemm);
+			vc_emm_p07(&s->blocks[1],0x00,vid->conf.disableemm);
 		}
+	}
+	else if(strcmp(mode, "sky09nano") == 0)
+	{
+		s->blocks    = _sky09nano_blocks;
+		s->block_len = 2;
+		vc_seed_p09(&s->blocks[0], 1);
+		vc_seed_p09(&s->blocks[1], 1);
 	}
 	else if(strcmp(mode, "sky09") == 0)
 	{
 		s->blocks    = _sky09_blocks;
 		s->block_len = 2;
-		_vc_seed_p09(&s->blocks[0]);
-		_vc_seed_p09(&s->blocks[1]);
+		vc_seed_p09(&s->blocks[0], 0);
+		vc_seed_p09(&s->blocks[1], 0);
 		
 		if(vid->conf.enableemm)
 		{
@@ -245,8 +252,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x2C: allow Sky Multichannels
 			 * 0x20: Enable card
 			 */
-			_vc_emm_p09(&s->blocks[0],0x2C,vid->conf.enableemm);
-			_vc_emm_p09(&s->blocks[1],0x20,vid->conf.enableemm);
+			vc_emm_p09(&s->blocks[0],0x2C,vid->conf.enableemm);
+			vc_emm_p09(&s->blocks[1],0x20,vid->conf.enableemm);
 		}
 		
 		if(vid->conf.disableemm)
@@ -255,8 +262,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x0C: switch off Sky Multichannels
 			 * 0x00: Disable card 
 			 */
-			_vc_emm_p09(&s->blocks[0],0x0C,vid->conf.disableemm);
-			_vc_emm_p09(&s->blocks[1],0x00,vid->conf.disableemm);
+			vc_emm_p09(&s->blocks[0],0x0C,vid->conf.disableemm);
+			vc_emm_p09(&s->blocks[1],0x00,vid->conf.disableemm);
 		}
 	}
 	else if(strcmp(mode, "sky10") == 0)
@@ -283,15 +290,15 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	{
 		s->blocks    = _tac_blocks;
 		s->block_len = 2;
-		_vc_seed_p07(&s->blocks[0], VC_TAC1);
-		_vc_seed_p07(&s->blocks[1], VC_TAC1);
+		vc_seed_p07(&s->blocks[0], VC_TAC1);
+		vc_seed_p07(&s->blocks[1], VC_TAC1);
 	}
 	else if (strcmp(mode, "tac2") == 0)
 	{
 		s->blocks    = _tac_blocks;
 		s->block_len = 2;
-		_vc_seed_p07(&s->blocks[0], VC_TAC2);
-		_vc_seed_p07(&s->blocks[1], VC_TAC2);
+		vc_seed_p07(&s->blocks[0], VC_TAC2);
+		vc_seed_p07(&s->blocks[1], VC_TAC2);
 		
 		/* Experimental EMMs for TAC cards */
 		if(vid->conf.enableemm)
@@ -301,8 +308,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x09: Enable card
 			 * 0x81: Set EXP date
 			 */
-			_vc_emm_p07(&s->blocks[0],0x08,vid->conf.enableemm);
-			_vc_emm_p07(&s->blocks[1],0x09,vid->conf.enableemm);
+			vc_emm_p07(&s->blocks[0],0x08,vid->conf.enableemm);
+			vc_emm_p07(&s->blocks[1],0x09,vid->conf.enableemm);
 		}
 		
 		if(vid->conf.disableemm)
@@ -311,16 +318,16 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			 * 0x28: Block channel
 			 * 0x29: Disable card
 			 */
-			_vc_emm_p07(&s->blocks[0],0x28,vid->conf.disableemm);
-			_vc_emm_p07(&s->blocks[1],0x29,vid->conf.disableemm);
+			vc_emm_p07(&s->blocks[0],0x28,vid->conf.disableemm);
+			vc_emm_p07(&s->blocks[1],0x29,vid->conf.disableemm);
 		}
 	}
 	else if (strcmp(mode, "xtea") == 0)
 	{
 		s->blocks    = _xtea_blocks;
 		s->block_len = 2;
-		_vc_seed_xtea(&s->blocks[0]);
-		_vc_seed_xtea(&s->blocks[1]);
+		vc_seed_xtea(&s->blocks[0]);
+		vc_seed_xtea(&s->blocks[1]);
 	}
 	else if (strcmp(mode, "ppv") == 0)
 	{
@@ -334,8 +341,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			s->_ppv_card_data[6] = 0x00; /* Key b */
 		}
 		
-		_vc_seed_ppv(&s->blocks[0], s->_ppv_card_data);
-		_vc_seed_ppv(&s->blocks[1], s->_ppv_card_data);
+		vc_seed_ppv(&s->blocks[0], s->_ppv_card_data);
+		vc_seed_ppv(&s->blocks[1], s->_ppv_card_data);
 	}
 	else
 	{
@@ -360,8 +367,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	{
 		s->blocks2    = _vc2_blocks;
 		s->block2_len = 2;
-		_vc_seed_vc2(&s->blocks2[0], VC2_MC);
-		_vc_seed_vc2(&s->blocks2[1], VC2_MC);
+		vc_seed_vc2(&s->blocks2[0], VC2_MC);
+		vc_seed_vc2(&s->blocks2[1], VC2_MC);
 		
 		/* If in simulcrypt mode, do the initial CW sync here */
 		if(mode)
@@ -377,7 +384,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			/*  
 			 * 0x1B: Enable card
 			 */
-			_vc2_emm(&s->blocks2[0],0x1B,vid->conf.enableemm, VC2_MC);
+			vc2_emm(&s->blocks2[0],0x1B,vid->conf.enableemm, VC2_MC);
 		}
 		
 		if(vid->conf.disableemm)
@@ -385,7 +392,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			/*  
 			 * 0x1A: Disable card
 			 */
-			_vc2_emm(&s->blocks2[0],0x1A,vid->conf.disableemm, VC2_MC);
+			vc2_emm(&s->blocks2[0],0x1A,vid->conf.disableemm, VC2_MC);
 		}
 	}
 	else
@@ -520,11 +527,12 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			/* Generate new seeds */
 			if(mode)
 			{
-				if(strcmp(mode,"tac1") == 0)  _vc_seed_p07(&v->blocks[v->block], VC_TAC1);
-				if(strcmp(mode,"tac2") == 0)  _vc_seed_p07(&v->blocks[v->block], VC_TAC2);
-				if(strcmp(mode,"sky07") == 0) _vc_seed_p07(&v->blocks[v->block], VC_SKY7);
-				if(strcmp(mode,"sky09") == 0) _vc_seed_p09(&v->blocks[v->block]);
-				if(strcmp(mode,"xtea") == 0)  _vc_seed_xtea(&v->blocks[v->block]);
+				if(strcmp(mode,"tac1") == 0)  vc_seed_p07(&v->blocks[v->block], VC_TAC1);
+				if(strcmp(mode,"tac2") == 0)  vc_seed_p07(&v->blocks[v->block], VC_TAC2);
+				if(strcmp(mode,"sky07") == 0) vc_seed_p07(&v->blocks[v->block], VC_SKY7);
+				if(strcmp(mode,"sky09") == 0) vc_seed_p09(&v->blocks[v->block], 0);
+				if(strcmp(mode,"sky09nano") == 0) vc_seed_p09(&v->blocks[v->block], 1);
+				if(strcmp(mode,"xtea") == 0)  vc_seed_xtea(&v->blocks[v->block]);
 				
 				if(strcmp(mode,"ppv") == 0)
 				{
@@ -544,7 +552,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 						
 					}
 					
-					_vc_seed_ppv(&v->blocks[v->block], v->_ppv_card_data);
+					vc_seed_ppv(&v->blocks[v->block], v->_ppv_card_data);
 				}
 				
 				if(s->conf.showserial) v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 1 : 0][0] = 0x24;
@@ -584,7 +592,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 
 			if(mode2)
 			{
-				if(strcmp(mode2,"conditional") == 0 && (v->counter & 0x3F) == 0x20 ) _vc_seed_vc2(&v->blocks2[v->block2], VC2_MC);
+				if(strcmp(mode2,"conditional") == 0 && (v->counter & 0x3F) == 0x20 ) vc_seed_vc2(&v->blocks2[v->block2], VC2_MC);
 				
 				/* OSD bytes 17 - 24 in OSD message 0x21 are used in seed generation in Videocrypt II. */
 				/* XOR with VC1 seed for simulcrypt. */

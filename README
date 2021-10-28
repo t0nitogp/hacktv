@@ -8,6 +8,10 @@ I will try and keep this as up to date as possible with official releases.
 
 **All credit for original code goes to author (fsphil)**
 
+2021-10-28
+Add Videocrypt nanocommands for Sky 09 cards. This will only work with official Sky 09 cards, which still have nanos active. Not many do.
+  Enable with --sky09nano
+
 2021-10-08
 Add PPV mode to Eurocrypt. Only works with official cards with, ideally, some credits loaded onto them.
   Enable with --ec-ppv <prog_num,prog_cost> (for example, --ec-ppv 12,54 will specify program number 12, which costs 54 tokens)

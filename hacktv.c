@@ -286,6 +286,7 @@ static void print_usage(void)
 		"  free            = Free-access, no subscription card is required to decode.\n"
 		"  sky07           = A valid Sky series 07 or 06 card is required to decode. Random control words.\n"
 		"  sky09           = A valid Sky series 09 card is required to decode. Random control words.\n"
+		"  sky09nano       = A valid Sky series 09 card with nanos enabled is required to decode. Random control words.\n"
 		"  sky10           = A valid Sky series 10 card is required to decode. Sample data from Sky One.\n"
 		"  sky10ppv        = A valid Sky series 10 card with PPV enabled is required to decode.\n"
 		"                    Sample data from Tyson fight in 1996.\n"

@@ -40,19 +40,19 @@ typedef struct {
 } _vc2_block_t;
 
 /* Videocrypt 1 */
-extern void _vc_seed_p03(_vc_block_t *s);
-extern void _vc_seed_p07(_vc_block_t *s, int ca);
-extern void _vc_seed_p09(_vc_block_t *s);
+extern void vc_seed_p03(_vc_block_t *s);
+extern void vc_seed_p07(_vc_block_t *s, int ca);
+extern void vc_seed_p09(_vc_block_t *s, int nanos);
 
-extern void _vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial);
-extern void _vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial);
+extern void vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial);
+extern void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial);
 
-extern void _vc_seed_xtea(_vc_block_t *s);
-extern void  _vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7]);
+extern void vc_seed_xtea(_vc_block_t *s);
+extern void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7]);
 
 /* Videocrypt 2 */
-extern void _vc_seed_vc2(_vc2_block_t *s, int ca);
-extern void _vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca);
+extern void vc_seed_vc2(_vc2_block_t *s, int ca);
+extern void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca);
 
 
 #endif
