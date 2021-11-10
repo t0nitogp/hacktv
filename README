@@ -8,6 +8,10 @@ I will try and keep this as up to date as possible with official releases.
 
 **All credit for original code goes to author (fsphil)**
 
+2021-11-10
+Rework Videocrypt routines for, hopefully, easier reading and adding new modes.
+Removed "tac1" and "tac2" Videocrypt modes and replaced with a single "tac" one. This works with all my TAC cards.
+
 2021-10-28
 Add Videocrypt nanocommands for Sky 09 cards. This will only work with official Sky 09 cards, which still have nanos active. Not many do.
   Enable with --sky09nano

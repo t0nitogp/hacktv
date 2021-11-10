@@ -233,7 +233,7 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	int oi = 0;	
 	uint8_t b;
 	
-	if(ca == VC_TAC2)
+	if(ca == VC_TAC)
 	/* TAC key offsets */
 	{
 		if (message[1] > 0x3A) offset = 0x20;
@@ -245,9 +245,6 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 		if (message[1] > 0x32) offset = 0x08;
 		if (message[1] > 0x3A) offset = 0x18;
 	}
-	
-	/* Change date code for old TAC cards */
-	if(ca == VC_TAC1) message[1] = 0x29;
 	
 	/* Reset answers */
 	for (i = 0; i < 8; i++) cw[i] = 0;
@@ -267,9 +264,8 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	/* Generate checksum */
 	message[31] = _crc(message);
 	
-	/* Iterate through _vc_kernel07 64 more times (99 in total)
-	   Odd bug(?) in newer TAC card where checksum is always 0x0d */
-	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, (ca == VC_TAC2) ? 0x0d : message[31], offset, ca);
+	/* Iterate through _vc_kernel07 64 more times (99 in total) */
+	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, message[31], offset, ca);
 }
 
 void vc_seed_p07(_vc_block_t *s, int ca)
@@ -645,8 +641,7 @@ void vc_seed(_vc_block_t *s, int mode)
 {
 	switch(mode)
 	{
-		case(VC_TAC1):
-		case(VC_TAC2): 
+		case(VC_TAC):
 		case(VC_SKY07):
 			vc_seed_p07(s, mode);
 			break;
@@ -675,7 +670,7 @@ void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
 	
 	switch(mode)
 	{
-		case(VC_TAC2):
+		case(VC_TAC):
 			/*
 			 * 0x08: Unblock channel
 			 * 0x09: Enable card

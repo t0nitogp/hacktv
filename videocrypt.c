@@ -58,8 +58,7 @@ const static _vc_mode_t _vc1_modes[] = {
 	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0      },
 	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0      },
 	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0      },
-	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _tac_blocks,       NULL, 2, 0      },
-	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _tac_blocks,       NULL, 2, VC_EMM },
+	{ "tac",         VC_CW_DYNAMIC, VC_TAC,        _tac_blocks,       NULL, 2, VC_EMM },
 	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0      },
 	{ NULL }
 };
@@ -430,13 +429,6 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			/* Generate new seeds */
 			if(mode)
 			{
-				// if(strcmp(mode,"tac1") == 0)  vc_seed_p07(&v->blocks[v->block], VC_TAC1);
-				// if(strcmp(mode,"tac2") == 0)  vc_seed_p07(&v->blocks[v->block], VC_TAC2);
-				// if(strcmp(mode,"sky07") == 0) vc_seed_p07(&v->blocks[v->block], VC_SKY7);
-				// if(strcmp(mode,"sky09") == 0) vc_seed_p09(&v->blocks[v->block], 0);
-				// if(strcmp(mode,"sky09nano") == 0) vc_seed_p09(&v->blocks[v->block], 1);
-				// if(strcmp(mode,"xtea") == 0)  vc_seed_xtea(&v->blocks[v->block]);
-				
 				if(v->mode->cwtype == VC_CW_DYNAMIC)
 				{
 					vc_seed(&v->blocks[v->block], v->mode->mode);
