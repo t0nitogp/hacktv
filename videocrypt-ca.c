@@ -202,11 +202,11 @@ void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, int offset, int ca)
 	
 	uint8_t key[32];
 	
-	if(ca == VC_SKY7)
+	if(ca == VC_SKY07)
 	{
 		memcpy(key, sky07_key + offset, 32);
 	}
-	else if(ca == VC2_MC)
+	else if(ca == VC_MC)
 	{
 		memcpy(key, vc2_key, 32);
 	}
@@ -239,7 +239,7 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 		if (message[1] > 0x3A) offset = 0x20;
 		if (message[1] > 0x48) offset = 0x40;
 	}
-	else if (ca == VC_SKY7)
+	else if (ca == VC_SKY07)
 	/* Sky 07 key offsets */
 	{
 		if (message[1] > 0x32) offset = 0x08;
@@ -272,12 +272,6 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, (ca == VC_TAC2) ? 0x0d : message[31], offset, ca);
 }
 
-void vc_seed_p03(_vc_block_t *s)
-{
-	/* Generate checksum */
-	s->messages[5][31] = _crc(s->messages[5]);
-}
-
 void vc_seed_p07(_vc_block_t *s, int ca)
 {
 	uint64_t cw[8];
@@ -306,7 +300,7 @@ void vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial)
 	_xor_serial(s->messages[2], cmd, cardserial, 0xA7);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, VC_SKY7);
+	_vc_process_p07_msg(s->messages[2], cw, VC_SKY07);
 }
 
 
@@ -338,7 +332,7 @@ void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca)
 	_xor_serial(s->messages[2], cmd, cardserial, 0x81);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, VC2_MC);
+	_vc_process_p07_msg(s->messages[2], cw, VC_MC);
 }
 
 void _vc_kernel09(const uint8_t in, uint64_t *out)
@@ -617,7 +611,7 @@ void _hash_ppv(uint64_t *answ, size_t len)
 	}
 }
 
-void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7])
+void vc_seed_ppv(_vc_block_t *s, uint8_t ppv_card_data[7])
 {
 	int i;
 	
@@ -631,12 +625,12 @@ void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7])
 	
 	/* Copy data into buffers */
 	for(i = 0; i < 31; i++)    msg[i] = s->messages[0][i];
-	for(i = 0; i <  5; i++) serial[i] = _ppv_card_data[i];
+	for(i = 0; i <  5; i++) serial[i] = ppv_card_data[i];
 	
 	_hash_ppv(serial, 5);
 	
-	msg[1] ^= serial[0] ^ _ppv_card_data[5];
-	msg[2] ^= serial[1] ^ _ppv_card_data[6];
+	msg[1] ^= serial[0] ^ ppv_card_data[5];
+	msg[2] ^= serial[1] ^ ppv_card_data[6];
 	
 	_hash_ppv(&msg[1], 22);
 	
@@ -645,4 +639,66 @@ void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7])
 	
 	/* Reverse calculated control word */
 	for(i = 0, s->codeword = 0; i < 8; i++)	s->codeword = msg[i + 1] << (i * 8) | s->codeword;
+}
+
+void vc_seed(_vc_block_t *s, int mode)
+{
+	switch(mode)
+	{
+		case(VC_TAC1):
+		case(VC_TAC2): 
+		case(VC_SKY07):
+			vc_seed_p07(s, mode);
+			break;
+			
+		case(VC_SKY09):
+			vc_seed_p09(s, 0);
+			break;
+			
+		case(VC_SKY09_NANO):
+			vc_seed_p09(s, 1);
+			break;
+			
+		case(VC_XTEA):
+			vc_seed_xtea(s);
+			break;
+			
+		default:
+			break;
+	}
+}
+
+void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
+{
+	uint8_t cmd_tac[] = { 0x08, 0x09, 0x28, 0x29 };
+	uint8_t cmd_sky[] = { 0x2C, 0x20, 0x0C, 0x00 };
+	
+	switch(mode)
+	{
+		case(VC_TAC2):
+			/*
+			 * 0x08: Unblock channel
+			 * 0x09: Enable card
+			 * 0x81: Set EXP date
+			 * 0x28: Block channel
+			 * 0x29: Disable card
+			 */
+			vc_emm_p07(s, (b ? cmd_tac[i] : cmd_tac[i + 1]), cardserial);
+			break;
+		
+		case(VC_SKY07):
+			/*  
+			 * 0x2C: allow Sky Multichannels
+			 * 0x20: Enable card
+			 * 0x0C: switch off Sky Multichannels
+			 * 0x00: Disable card 
+			 */
+			vc_emm_p07(s, (b ? cmd_sky[i] : cmd_sky[i + 1]), cardserial);
+			break;
+		
+		case(VC_SKY09):
+		case(VC_SKY09_NANO):
+			vc_emm_p09(s, (b ? cmd_sky[i] : cmd_sky[i + 1]), cardserial);
+			break;
+	}
 }

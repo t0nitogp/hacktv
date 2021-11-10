@@ -51,9 +51,18 @@
 #define VC2_VBI_FIELD_2_START (VC_VBI_FIELD_2_START - 4)
 
 typedef struct {
+	const char *id;         /* Name of Videocrypt mode */
+	int cwtype;             /* Static or dynamic CW */
+	int mode;               /* Mode */
+	_vc_block_t *blocks;    /* VC1 blocks */
+	_vc2_block_t *blocks2;  /* VC2 blocks */
+	int len;                /* Block length */
+	int emm;                /* EMM mode? */
+} _vc_mode_t;
+
+typedef struct {
 	
 	uint8_t counter;
-	uint8_t mode;
 	
 	/* VC1 blocks */
 	_vc_block_t *blocks;
@@ -77,10 +86,12 @@ typedef struct {
 	
 	int video_scale[VC_WIDTH];
 	
-	const char *vcmode;
+	const char *vcmode1;
 	const char *vcmode2;
+	const _vc_mode_t *mode;
 	
-	uint8_t _ppv_card_data[7];
+	
+	uint8_t ppv_card_data[7];
 } vc_t;
 
 extern int vc_init(vc_t *s, vid_t *vs, const char *mode, const char *mode2);

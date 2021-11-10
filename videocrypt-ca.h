@@ -20,11 +20,6 @@
 
 #include <stdint.h>
 
-#define VC_TAC1 3001
-#define VC_TAC2 3002
-#define VC_SKY7 3003
-#define VC2_MC  3004
-
 typedef struct {
 	uint8_t mode;
 	uint64_t codeword;
@@ -38,6 +33,27 @@ typedef struct {
 	/* Random bytes */
 	uint8_t b1, b2, b3;
 } _vc2_block_t;
+
+enum {
+	VC_CW_STATIC = 100,
+	VC_CW_DYNAMIC,
+	VC_EMM,
+	VC_FREE,
+	VC_SKY03,
+	VC_SKY05,
+	VC_SKY07,
+	VC_SKY09,
+	VC_SKY09_NANO,
+	VC_SKY10,
+	VC_SKY10_PPV,
+	VC_SKY11,
+	VC_SKY12,
+	VC_TAC1,
+	VC_TAC2,
+	VC_XTEA,
+	VC_MC,
+	VC_PPV
+};
 
 /* Videocrypt 1 */
 extern void vc_seed_p03(_vc_block_t *s);
@@ -54,5 +70,7 @@ extern void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7]);
 extern void vc_seed_vc2(_vc2_block_t *s, int ca);
 extern void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca);
 
+extern void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i);
+extern void vc_seed(_vc_block_t *s, int mode);
 
 #endif
