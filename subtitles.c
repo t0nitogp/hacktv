@@ -111,11 +111,11 @@ static char *_get_subtitle_string(char *fmt)
 	
 	for(int a = 0; a < l; a++) txt[a] = '\0';
 	
-	for(i = 0; i < l - 3; i++)
+	for(i = 0; i < l; i++)
 	{
 		if(fmt[i] == ',') c++;
 		
-		if(c > 8)
+		if(c > 7)
 		{
 			txt[s] = fmt[i + 1];
 			s++;
@@ -334,7 +334,7 @@ char *get_text_subtitle(av_subs_t *subs, uint32_t ts)
 			break;
 		}
 	}
-	
+
 	return fmt;
 }
 
