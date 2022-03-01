@@ -37,11 +37,6 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 9
-#define CHARS 40
-#define LOGO_SCALE  4
-
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 #endif
@@ -115,6 +110,8 @@ typedef struct {
 	uint32_t *video;
 	vid_t *s;
 	int seekflag;
+	uint8_t background;
+	int bstat;
 	
 	av_font_t *font[10];
 	
@@ -750,6 +747,8 @@ static void *_video_scaler_thread(void *arg)
 								(uint32_t *) oframe->data[0],
 								timestr,
 								10, 90, 1, 0, 0, 0);
+			
+			fprintf(stderr,"\r%s", timestr);
 		}
 		
 		/* Print subtitles, if enabled */
@@ -834,7 +833,18 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 	
 	if(!av->seekflag)
 	{
-		memset(frame->data[0],0x00, vid_get_framebuffer_length(av->s));
+		if(av->bstat)
+		{
+			if(av->background == 0x50) av->bstat = 0;
+			av->background++;
+		}
+		else
+		{
+			if(av->background == 0x25) av->bstat = 1;
+			av->background--;
+		}
+
+		memset(frame->data[0], av->background, vid_get_framebuffer_length(av->s));
 		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
 							"SEEKING VIDEO",
 							50, 47, 1, 0, 0, 0);
@@ -842,6 +852,12 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
 							"PLEASE WAIT",
 							50, 53, 1, 0, 0, 0);
+
+		/* Print logo, if enabled */
+		if(av->s->conf.logo)
+		{
+			overlay_image((uint32_t *) frame->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, av->s->vid_logo.position);
+		}
 	}
 	
 	return ((uint32_t *) frame->data[0]);
@@ -1548,6 +1564,8 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 			return(HACKTV_ERROR);
 		};
 		
+		av->bstat = 0;
+
 		av->font[0] = s->av_font;
 	}
 	else
