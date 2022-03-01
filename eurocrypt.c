@@ -41,7 +41,7 @@ const static ec_mode_t _ec_modes[] = {
 	{ "tvplus",   EC_M,    EC_M, { 0x12, 0x06, 0x28, 0x3A, 0x4B, 0x1D, 0xE2 }, { 0x00, 0x2C, 0x08 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV Plus (M)" },
 	{ "tv1000",   EC_M,    EC_M, { 0x48, 0x63, 0xC5, 0xB3, 0xDA, 0xE3, 0x29 }, { 0x00, 0x04, 0x18 }, { "01/11/1995" }, { 0xFF, 0x00 }, "TV1000 (M)" },
 	{ "tv3",      EC_M,    EC_M, { 0xE9, 0xF3, 0x34, 0x36, 0xB0, 0xBB, 0xF8 }, { 0x00, 0x04, 0x0C }, { "01/11/1996" }, { 0xFF, 0x00 }, "TV3 (AU - M)" },
-	{ "filmnet",  EC_M,    EC_M, { 0x21, 0x12, 0x31, 0x35, 0x8A, 0xC3, 0x4F }, { 0x00, 0x28, 0x08 }, { "28/02/1993" }, { 0xFF, 0x00 }, "FilmNet (M)" },
+	{ "filmnet",  EC_M,    EC_M, { 0x21, 0x12, 0x31, 0x35, 0x8A, 0xC3, 0x4F }, { 0x00, 0x28, 0x08 }, { "today"      }, { 0xFF, 0x00 }, "FilmNet (M)" },
 	{ "nrk",      EC_S,    EC_M, { 0xE7, 0x19, 0x5B, 0x7C, 0x47, 0xF4, 0x66 }, { 0x47, 0x52, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "NRK (S2)" },
 	{ "tv2",      EC_S,    EC_M, { 0x70, 0xBF, 0x6E, 0x51, 0x9F, 0xB8, 0xA6 }, { 0x47, 0x51, 0x00 }, { "06/02/1999" }, { 0xFF, 0x00 }, "TV2 Norway (S2)" },
 	{ "cplusfr43",EC_M,    EC_M, { 0x69, 0x41, 0x2D, 0x4C, 0x56, 0x28, 0xCF }, { 0x10, 0x00, 0x18 }, { "01/01/1997" }, { 0xFF, 0x00 }, "Canal+ 4/3 (M)" },
@@ -54,10 +54,21 @@ const static ec_mode_t _ec_modes[] = {
 
 /* Data for EC controlled-access EMMs */
 const static em_mode_t _em_modes[] = {
-	{ "tv3",       EC_M, EC_M, { 0x99, 0xCF, 0xCA, 0x13, 0x7A, 0x53, 0x6D }, { 0x00, 0x04, 0x04 }, { 0x70, 0x31, 0x12 }, { 0, 0, 0, 0 }, EMMG },
-	{ "cplusfr43", EC_M, EC_M, { 0x39, 0x74, 0xD7, 0xC1, 0x3F, 0x1B, 0x0D }, { 0x10, 0x00, 0x15 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
-	{ "cplusfr169",EC_M, EC_M, { 0x12, 0x37, 0x5A, 0x43, 0xE4, 0xA1, 0x48 }, { 0x10, 0x00, 0x26 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
-	{ "cinecfr",   EC_M, EC_M, { 0xBF, 0x6D, 0xFE, 0x99, 0x69, 0x63, 0x40 }, { 0x10, 0x00, 0x35 }, { 0x00, 0x00, 0x00 }, { 0, 0, 0, 0 }, EMMG },
+	{ "tv3",       EC_M, EC_M, { 0x99, 0xCF, 0xCA, 0x13, 0x7A, 0x53, 0x6D }, { 0x00, 0x04, 0x04 }, { 0x70, 0x31, 0x12 }, { 0xF0, 0xF0, 0xF0, 0xF0, 0xF0 }, EMMU },
+	{ "cplusfr43", EC_M, EC_M, { 0x39, 0x74, 0xD7, 0xC1, 0x3F, 0x1B, 0x0D }, { 0x10, 0x00, 0x15 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "cplusfr169",EC_M, EC_M, { 0x12, 0x37, 0x5A, 0x43, 0xE4, 0xA1, 0x48 }, { 0x10, 0x00, 0x26 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "cinecfr",   EC_M, EC_M, { 0xBF, 0x6D, 0xFE, 0x99, 0x69, 0x63, 0x40 }, { 0x10, 0x00, 0x35 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "filmnet",   EC_M, EC_M, { 0x13, 0x39, 0x6F, 0xDB, 0x3A, 0x88, 0x60 }, { 0x00, 0x28, 0x06 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "ctv",       EC_M, EC_M, { 0x5E, 0xC9, 0xD7, 0x19, 0x89, 0x64, 0xE6 }, { 0x00, 0x04, 0x34 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMS },
+	{ "ctvs",   EC_3DES, EC_S, { 0x10, 0xDD, 0x38, 0x71, 0xCB, 0xCB, 0x6A,
+	                             0x52, 0xA8, 0x54, 0xA1, 0xA7, 0xE5, 0x0D }, { 0x00, 0x2B, 0x20 }, { 0x80, 0x09, 0x3D }, { 0xA1, 0x6C, 0xAF, 0x2F, 0x00 }, EMMS },
+	// { "ctvs",   EC_3DES, EC_S, { 0x64, 0x34, 0xF4, 0x14, 0x0B, 0x01, 0x00,
+	//                              0xA3, 0x8E, 0xEF, 0x1A, 0x65, 0x6A, 0x2C }, { 0x00, 0x2B, 0x20 }, { 0x80, 0x09, 0x3D }, { 0xA1, 0x6C, 0xAF, 0x2F, 0x00 }, EMMU },
+	{ "tvplus",    EC_M, EC_M, { 0x21, 0xF5, 0x50, 0xAC, 0x0E, 0xF4, 0xA7 }, { 0x00, 0x2C, 0x03 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "btv",       EC_M, EC_M, { 0xBB, 0x2D, 0x2E, 0xC5, 0x50, 0x28, 0x1E }, { 0x00, 0x2C, 0x43 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMG },
+	{ "rdv",       EC_S, EC_S, { 0x13, 0x39, 0x6F, 0xDB, 0x3A, 0x88, 0x60 }, { 0x00, 0x2d, 0x80 }, { 0x70, 0x31, 0x12 }, { 0x00, 0x00, 0x00, 0x00, 0x00 }, EMMS },
+	{ "tv2",    EC_3DES, EC_M, { 0xEA, 0xC5, 0xE3, 0x45, 0x8E, 0x82, 0xCE,
+	                             0x83, 0x2A, 0x98, 0x4C, 0xD9, 0xBA, 0x31 }, { 0x00, 0x00, 0x00 }, { 0x00, 0x00, 0x00 }, { 0x3E, 0xE3, 0x8E, 0x06, 0x00 }, EMMU },
 	{ NULL } 
 };
 
@@ -216,6 +227,8 @@ static const uint8_t _tdesmap[4][2] = {
 static const uint8_t _lshift[] = {
 	1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
 };
+
+static uint8_t flag = 0;
 
 static void _permute_ec(uint8_t *data, const uint8_t *pr, int n)
 {
@@ -564,7 +577,7 @@ static void _build_emms_hash_data(uint8_t *hash, eurocrypt_t *e)
 	/* Build the hash data */
 	msglen = 0;
 	
-	if(e->emmode->cmode == EC_M)
+	if(e->emmode->emode == EC_M)
 	{
 		/* Copy card's Shared Address into hash buffer */
 		hash[5] = e->emmode->sa[2];
@@ -595,7 +608,7 @@ static void _build_emms_hash_data(uint8_t *hash, eurocrypt_t *e)
 	}
 	
 	/* Final hash */
-	_calc_ec_hash(hash, msg, e->mode->emode, msglen, e->emmode->key);
+	_calc_ec_hash(hash, msg, e->emmode->emode, msglen, e->emmode->key);
 }
 
 char *_get_sub_date(int b, const char *date)
@@ -646,27 +659,48 @@ static void _encrypt_opkey(uint8_t *data, eurocrypt_t *e, int t)
 	uint8_t *emm = malloc(sizeof(e->mode->key) / sizeof(uint8_t));
 	
 	memset(emm, 0, 8);
-	if(e->emmode->cmode == EC_3DES)
+
+	/* Pick the right key */
+	if(e->mode->emode == EC_3DES)
 	{
 		memcpy(emm, e->mode->key + (t ? 7 : 0), 7);
 	}
 	else
 	{
-		memcpy(emm, e->mode->key, 7);
+		memcpy(emm, e->mode->key, 8);
 	}
 	
 	/* Do inverse permuted choice permutation for EC-S2/3DES keys */
-	if(e->emmode->cmode != EC_M)	_permute_ec(emm, _ipc1, 64);
+	if(e->emmode->emode != EC_M) 
+	{
+		_permute_ec(emm, _ipc1, 64);
+	}
+
 	
 	/* Three rounds for 3DES mode, one round for others */
-	for(r = 0; r < (e->emmode->cmode != EC_3DES ? 1 : 3); r++)
+	for(r = 0; r < (e->emmode->emode != EC_3DES ? 1 : 3); r++)
 	{
 		/* Use second key on second round in 3DES */
-		_eurocrypt(emm, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->cmode, r + 1);
+		_eurocrypt(emm, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->emode, r + 1);
 	}
 	
 	memcpy(data, emm, 8);
 }
+
+static void _encrypt_date(uint8_t *outdata, eurocrypt_t *e, uint8_t indata[8])
+{
+	int r;
+
+	/* Three rounds for 3DES mode, one round for others */
+	for(r = 0; r < (e->emmode->emode != EC_3DES ? 1 : 3); r++)
+	{
+		/* Use second key on second round in 3DES */
+		_eurocrypt(indata, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->emode, r + 1);
+	}
+	
+	memcpy(outdata, indata, 8);
+}
+
 
 static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
 {
@@ -694,11 +728,11 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
 	pkt[x++] = 0x03; /* LI */
 	memcpy(&pkt[x], e->mode->ppid, 3); x += 3;
 	
-	/* Undocumented meaning of this byte but appears in captured logs from live transmissions */
+	/* Undocumented meaning of this byte but appears to be padding */
 	pkt[x++] = 0xDF; /* PI */
 	pkt[x++] = 0x00; /* LI */
 	
-	if(m && e->mode->cmode == EC_M)
+	if(m && e->mode->emode == EC_M)
 	{
 		/* CTRL */
 		pkt[x++] = 0xE0;
@@ -762,6 +796,148 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
 	return (x / ECM_PAYLOAD_BYTES);
 }
 
+static void _build_emmu_hash_data(uint8_t *hash, eurocrypt_t *e, int x)
+{
+	uint8_t msg[MAC_PAYLOAD_BYTES];
+	int msglen;
+	
+	/* Clear hash memory */
+	memset(hash, 0, 8);
+	memset(msg, 0, MAC_PAYLOAD_BYTES);
+	
+	/* Build the hash data */
+	msglen = 0;
+	
+	/* Copy provider ID into data buffer */
+	memcpy(msg + msglen, e->emmode->ppid, 3); msglen += 3;
+	
+	/* Copy LABEL + 1 byte into data buffer */
+	memcpy(msg + msglen, e->emmu_pkt + 15, 0x0C); msglen += 0x0C;
+	
+	/* Copy "what to do" byte */
+	memcpy(msg + msglen, e->emmu_pkt + 40, 0x01); msglen += 0x01;
+	
+	/* Copy key */
+	memcpy(msg + msglen, e->emmu_pkt + 28, 0x06); msglen += 0x06;
+	memcpy(msg + msglen, e->emmu_pkt + 38, 0x02); msglen += 0x02;
+	
+	_calc_ec_hash(hash, msg, e->emmode->emode, msglen, e->emmode->key);
+}
+
+static uint8_t _update_emmu_packet(eurocrypt_t *e, int t)
+{
+	int x;
+	uint16_t b;
+	uint8_t *pkt = e->emmu_pkt;
+	
+	memset(pkt, 0, MAC_PAYLOAD_BYTES * 2);
+	
+	/* Packet Type */
+	x = 0;
+	pkt[x++] = 0;
+
+	/* Unique Address - reversed */
+	memcpy(&pkt[x], e->emmode->ua, 5); x += 5;
+	
+	/* Command Identifier, CI */
+	b  = (e->emmode->cmode & 0x30) << 2; /* Crypto-algo type */
+	b |= 1 << 1;                         /* Format bit - 0: fixed, 1: variable */
+	b |= 1 << 0;                         /* 1 */
+	pkt[x++] = b;
+	
+	/* Command Length Indicator, CLI -- updated later */
+	pkt[x++] = 0;
+	
+	/* PPID */
+	pkt[x++] = 0x90; /* PI */
+	pkt[x++] = 0x03; /* LI */
+	/* Provider ID and op-key to use */
+	memcpy(&pkt[x], e->emmode->ppid, 3); x += 3;
+	
+	/* LABEL string - always included */
+	pkt[x++] = 0xA7;
+	pkt[x++] = 0x0B;
+	pkt[x++] = 'H';
+	pkt[x++] = 'a';
+	pkt[x++] = 'c';
+	pkt[x++] = 'k';
+	pkt[x++] = 'T';
+	pkt[x++] = 'V';
+	memset(&pkt[x], 0x20, 0x05); x += 0x05;
+		
+	/* CLE - key */
+	pkt[x++] = 0xEF;
+	pkt[x++] = 0x06;
+
+	if(++flag % 3 == 0)
+	{
+		uint8_t data[8];
+		uint16_t d;
+
+		/* Date/theme */
+		d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
+		data[0] = (d & 0xFF00) >> 8;
+		data[1] = (d & 0x00FF) >> 0;
+		d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
+		data[2] = (d & 0xFF00) >> 8;
+		data[3] = (d & 0x00FF) >> 0;
+
+		/* Theme/level */
+		memcpy(&data[4], e->mode->theme, 2);
+
+		/* Padding */
+		data[6] = 0x00;
+		data[7] = 0x00;
+
+		/* Date is encrypted in S2 mode */
+		_encrypt_date(e->enc_data, e, data);
+	}
+	else
+	{
+		_encrypt_opkey(e->enc_data, e, t);
+	}
+
+	memcpy(&pkt[x], e->enc_data, 6); x += 6;	
+	
+	/* Padding */
+	pkt[x++] = 0xDF;
+	pkt[x++] = 0x00;
+	
+	/* EMM hash */
+	pkt[x++] = 0xF0;
+	pkt[x++] = 0x08;
+	memcpy(&pkt[x], e->enc_data + 6, 2); x += 2;
+	
+	/* Action byte */
+	/*
+		01/02: dates (also writes label)
+		10: first 8-bytes for label
+		11: last 3 bytes for label
+		2x: update key, where x is key number
+		30: update issuer key 0
+		31: update issuer key 1
+		40: write "CA" byte in 10 02 CA >20<
+		50: write prov-id
+	*/
+	if(flag % 3 == 0)
+	{
+		pkt[x++] = 0x02;
+	}
+	else
+	{
+		pkt[x++] = 0x20 | (e->mode->ppid[2] & 0x0F); /* Update key */
+	}
+
+	_build_emmu_hash_data(&pkt[x], e, x);
+	memcpy(e->emm_hash, &pkt[x], 8);
+	memcpy(&pkt[x], e->emm_hash + 3, 5); x += 5;
+
+	/* Update the CI command length */
+	pkt[7] = x - 8;
+
+	return(x / ECM_PAYLOAD_BYTES);
+}
+
 static void _update_emms_packet(eurocrypt_t *e, int t)
 {
 	int x;
@@ -790,7 +966,7 @@ static void _update_emms_packet(eurocrypt_t *e, int t)
 	/* ADF */
 	memset(&pkt[x], 0xFF, 32); x += 32;
 	
-	if(e->emmode->cmode == EC_M)
+	if(e->emmode->emode == EC_M)
 	{
 		/* EMM hash */
 		_build_emms_hash_data(&pkt[x], e); x += 8;
@@ -801,25 +977,71 @@ static void _update_emms_packet(eurocrypt_t *e, int t)
 		x -= 7;
 		
 		/* ID to use and update */
-		b  = 0x20;                      /* Key update */
+		if(++flag % 3 == 0)
+		{
+			b = 0x02; /* Update date */
+		}
+		else
+		{
+			b = 0x20; /* Update key */
+		}
 		
-		if(e->emmode->cmode == EC_3DES)
+		/* Index to update */
+		if(e->emmode->emode == EC_3DES && e->emmode->cmode == EC_3DES)
 		{
 			b |= _tdesmap[(e->mode->ppid[2] & 0x0F) - 0x0C][t];
 		}
 		else
 		{
-			b |= e->mode->ppid[2] & 0x0F;   /* Index to update */
+			b |= e->mode->ppid[2] & 0x0F;
 		}
+		
 		pkt[x++] = b;
 		
-		b  = (e->emmode->ppid[2] & 0x0F) << 4;   /* Update key index */
-		b |= (e->mode->ppid[2] & 0xF0) >> 4;     /* PPID to update */
-		pkt[x++] = b;
+		/* Update key index */
+		b  = (e->emmode->ppid[2] & 0x0F) << 4; 
 		
-		_encrypt_opkey(e->enc_op_key, e, t);
-		memcpy(&pkt[x], e->enc_op_key, 8);
-		x += 8;
+		/* PPID to update */
+		if(e->emmode->cmode == EC_M)
+		{
+			b |= (e->mode->ppid[1] & 0x0F);
+		}
+		else
+		{
+			b |= (e->mode->ppid[2] & 0xF0) >> 4;
+		}
+		
+		pkt[x++] = b;
+				
+		if(flag % 3 == 0)
+		{
+			uint8_t data[8];
+			uint16_t d;
+
+			/* Date */
+			d = _get_ec_date(_get_sub_date(1, e->mode->date), e->emmode->emode);
+			data[0] = (d & 0xFF00) >> 8;
+			data[1] = (d & 0x00FF) >> 0;
+			d = _get_ec_date(_get_sub_date(31, e->mode->date), e->emmode->emode);
+			data[2] = (d & 0xFF00) >> 8;
+			data[3] = (d & 0x00FF) >> 0;
+
+			/* Theme/level */
+			memcpy(&data[4], e->mode->theme, 2);
+
+			/* Padding */
+			data[6] = 0x00;
+			data[7] = 0x00;
+
+			/* Date is encrypted in S2 mode */
+			_encrypt_date(e->enc_data, e, data);
+		}
+		else
+		{
+			_encrypt_opkey(e->enc_data, e, t);
+		}
+
+		memcpy(&pkt[x], e->enc_data, 8); x += 8;
 		
 		/* EMM hash */
 		_build_emms_hash_data(e->emm_hash, e);
@@ -894,8 +1116,8 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t, char *ppv)
 		/* Encrypted op-key */
 		pkt[x++] = 0xEF;
 		pkt[x++] = 0x08;
-		_encrypt_opkey(e->enc_op_key, e, t);
-		memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
+		_encrypt_opkey(e->enc_data, e, t);
+		memcpy(&pkt[x], e->enc_data, 8); x += 8;
 	}
 	
 	/* EMM hash */
@@ -938,7 +1160,7 @@ static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 	/* Provider ID and M-key to use for decryption of op-key */
 	memcpy(&pkt[x], e->emmode->ppid, 3); x += 3;
 	
-	if(e->emmode->cmode == EC_M)
+	if(e->emmode->emode == EC_M)
 	{
 		/* IDUP */
 		pkt[x++] = 0xA1;
@@ -948,11 +1170,20 @@ static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 		
 		pkt[x++] = 0xEF;
 		pkt[x++] = 0x08;
-		_encrypt_opkey(e->enc_op_key, e, t);
-		memcpy(&pkt[x], e->enc_op_key, 8); x += 8;
+		_encrypt_opkey(e->enc_data, e, t);
+		memcpy(&pkt[x], e->enc_data, 8); x += 8;
 	}
 	else
 	{
+		/* Padding ?? */
+		pkt[x++] = 0xDF;
+		pkt[x++] = 0x05;
+		pkt[x++] = 0x00;
+		pkt[x++] = 0x00;
+		pkt[x++] = 0x00;
+		pkt[x++] = 0x00;
+		pkt[x++] = 0x00;
+	
 		/* Date/theme */
 		pkt[x++] = 0xA8;
 		pkt[x++] = 0x06;
@@ -1099,6 +1330,33 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				}
 			}
 			
+			/* Generate EMM-Unique packet */
+			if(e->emmode->emmtype == EMMU)
+			{
+				uint8_t pkt[MAC_PAYLOAD_BYTES];
+				memset(pkt, 0, MAC_PAYLOAD_BYTES);
+				
+				int i;
+				
+				int t = (vid->frame >> 8) & 1;
+				
+				e->emm_cont = _update_emmu_packet(e, t);
+				
+				/* Break up the EMM-U packet, if required */
+				for(i = 0; i <= e->emm_cont; i++)
+				{
+					memcpy(pkt, e->emmu_pkt + (i * ECM_PAYLOAD_BYTES), ECM_PAYLOAD_BYTES + 1);
+					
+					pkt[0] = EMMU;
+
+					/* Golay encode the payload */
+					mac_golay_encode(pkt + 1, 30);
+					
+					/* Write the packet */
+					mac_write_packet(vid, 0, e->emm_addr, i, pkt, 0);
+				}
+			}
+			
 			/* Generate EMM-Shared packet */
 			if(e->emmode->emmtype == EMMS)
 			{
@@ -1135,6 +1393,8 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 			{
 				int i;
 				fprintf(stderr, "\n\n ***** EMM *****");
+				fprintf(stderr, "\nUnique address:\t\t");
+				for(i = 0; i < 4; i++) fprintf(stderr, "%02X ", e->emmode->ua[3 - i]);
 				fprintf(stderr, "\nShared address:\t\t");
 				for(i = 0; i < 3; i++) fprintf(stderr, "%02X ", e->emmode->sa[2 - i]);
 				fprintf(stderr, "\nManagement key   [%02X]:\t", e->emmode->ppid[2] & 0x0F);
@@ -1142,7 +1402,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 				fprintf(stderr, "\nDecrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
 				for(i = 0; i < 7; i++) fprintf(stderr, "%02X ", e->mode->key[i]);
 				fprintf(stderr, "\nEncrypted op key [%02X]:\t", e->mode->ppid[2] & 0x0F);
-				for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->enc_op_key[i]);
+				for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", e->enc_data[i]);
 				fprintf(stderr,"\nHash:\t\t\t");
 				for(i = 0; i < 8; i++) fprintf(stderr, "%02X ", (uint8_t) e->emm_hash[i]);
 				fprintf(stderr,"\n");

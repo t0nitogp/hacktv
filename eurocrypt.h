@@ -38,12 +38,12 @@ typedef struct {
 
 typedef struct {
 	const char *id;   /* Mode id */
-	int emode;        /* Eurocrypt M or S2 packet */
-	int cmode;        /* Eurocrypt M or S2 algo  */
+	int emode;        /* Eurocrypt M or S2 algo */
+	int cmode;        /* Eurocrypt M or S2 packet  */
 	uint8_t key[14];   /* Decryption key */
 	uint8_t ppid[3];  /* Programme provider identifier */
 	uint8_t sa[3];    /* Shared Address */
-	uint8_t ua[4];    /* Unique Address */
+	uint8_t ua[5];    /* Unique Address */
 	int emmtype;
 } em_mode_t;
 
@@ -75,7 +75,7 @@ typedef struct {
 	uint8_t emms_pkt[MAC_PAYLOAD_BYTES];
 	uint8_t emmu_pkt[MAC_PAYLOAD_BYTES * 2];
 	uint8_t emmg_pkt[MAC_PAYLOAD_BYTES * 2];
-	uint8_t enc_op_key[8];
+	uint8_t enc_data[8];
 	
 } eurocrypt_t;
 
