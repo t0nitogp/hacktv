@@ -49,8 +49,8 @@
 const static _vc_mode_t _vc1_modes[] = {
 	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0      },
 	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0      },
-	{ "sky03",       VC_CW_STATIC,  VC_SKY03,      _sky03_blocks,     NULL, 2, 0      },
-	{ "sky05",       VC_CW_STATIC,  VC_SKY05,      _sky05_blocks,     NULL, 2, 0      },
+	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _jstv_blocks,      NULL, 2, 0      },
+	{ "sky",         VC_CW_DYNAMIC, VC_SKY,        _sky_blocks,       NULL, 2, 0      },
 	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _sky07_blocks,     NULL, 2, VC_EMM },
 	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _sky09_blocks,     NULL, 2, VC_EMM },
 	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _sky09nano_blocks, NULL, 2, VC_EMM },
@@ -325,6 +325,20 @@ void vc_free(vc_t *s)
 	/* Nothing */
 }
 
+/* Calculate Videocrypt message CRC */
+static uint8_t _crc(uint8_t *data)
+{
+	int x;
+	uint8_t crc;
+
+	for(crc = x = 0; x < 31; x++)
+	{
+		crc += data[x];
+	}
+		
+	return (~crc + 1);
+}
+
 int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 {
 	vc_t *v = arg;
@@ -463,7 +477,8 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			if(s->conf.showecm && mode)
 			{
 				fprintf(stderr, "\n\nVC1 ECM In:  ");
-				for(i = 0; i < 32; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5][i]);
+				for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5][i]);
+				fprintf(stderr,"%02X ", _crc(v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5]));
 				fprintf(stderr,"\nVC1 ECM Out: ");
 				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIX64 " ", v->cw >> (8 * i) & 0xFF);
 				
