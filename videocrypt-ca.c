@@ -158,7 +158,7 @@ static inline uint8_t _rnibble(uint8_t a)
 
 void _rand_vc_seed(uint8_t *message)
 {
-	for(int i = 11; i < 27; i++) message[i] = rand() + 0xFF;
+	for(int i = 12; i < 27; i++) message[i] = rand() + 0xFF;
 }
 
 /* Reverse calculated control word */
