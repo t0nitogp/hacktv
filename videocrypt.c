@@ -58,7 +58,8 @@ const static _vc_mode_t _vc1_modes[] = {
 	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0      },
 	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0      },
 	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0      },
-	{ "tac",         VC_CW_DYNAMIC, VC_TAC,        _tac_blocks,       NULL, 2, VC_EMM },
+	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _tac_blocks,       NULL, 2, VC_EMM },
+	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _tac_blocks,       NULL, 2, VC_EMM },
 	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0      },
 	{ NULL }
 };

@@ -250,9 +250,10 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	int oi = 0;	
 	uint8_t b;
 	
-	if(ca == VC_TAC)
+	if(ca == VC_TAC1 || ca == VC_TAC2)
 	/* TAC key offsets */
 	{
+		if (ca == VC_TAC2) message[1] = 0x49;
 		if (message[1] > 0x3A) offset = 0x20;
 		if (message[1] > 0x48) offset = 0x40;
 	}
@@ -672,7 +673,8 @@ void vc_seed(_vc_block_t *s, int mode)
 {
 	switch(mode)
 	{
-		case(VC_TAC):
+		case(VC_TAC1):
+		case(VC_TAC2):
 		case(VC_SKY):
 		case(VC_SKY07):
 		case(VC_JSTV):
@@ -703,7 +705,8 @@ void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
 	
 	switch(mode)
 	{
-		case(VC_TAC):
+		case(VC_TAC1):
+		case(VC_TAC2):
 			/*
 			 * 0x08: Unblock channel
 			 * 0x09: Enable card

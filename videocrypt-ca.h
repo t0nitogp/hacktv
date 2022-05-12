@@ -48,7 +48,8 @@ enum {
 	VC_SKY10_PPV,
 	VC_SKY11,
 	VC_SKY12,
-	VC_TAC,
+	VC_TAC1,
+	VC_TAC2,
 	VC_XTEA,
 	VC_MC,
 	VC_PPV
