@@ -41,6 +41,7 @@ enum {
 	VC_FREE,
 	VC_JSTV,
 	VC_SKY,
+	VC_SKY04,
 	VC_SKY07,
 	VC_SKY09,
 	VC_SKY09_NANO,
