@@ -630,6 +630,8 @@ char *_get_sub_date(int b, const char *date)
 	y = tm.tm_year + 1900;
 	
 	if(strcmp(date, "TODAY") != 0)
+	/* Final iteration - EC M only */
+	if(mode->emode == EC_M)
 	{
 		sscanf(date, "%d/%d/%d", &d, &m, &y);
 	}

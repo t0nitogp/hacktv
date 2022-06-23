@@ -297,7 +297,7 @@ static void print_usage(void)
 		"                    supplied hex files. Random control words.\n"
 		"  ppv             = Memory cards, such as old phone cards, may work in this mode.\n"
 		"\n"
-		"Videocrypt is only compatiable with 625 line PAL modes. This version\n"
+		"Videocrypt is only compatible with 625 line PAL modes. This version\n"
 		"works best when used with samples rates at multiples of 14MHz.\n"
 		"\n"
 		"Enable/Disable EMM\n"

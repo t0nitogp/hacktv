@@ -1188,6 +1188,47 @@ const vid_config_t vid_config_405_a = {
 	.am_mono_bandwidth = 10000, /* Hz */
 };
 
+const vid_config_t vid_config_405_i = {
+	
+	/* System A (405 line monochrome) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.80, /* Power level of video */
+	.fm_mono_level  = 0.19, /* FM audio carrier power level */
+	
+	.type           = VID_RASTER_405,
+	.frame_rate_num = 25,
+	.frame_rate_den = 1,
+	.lines          = 405,
+	.hline          = 203,
+	
+	.active_lines   = 376,
+	.active_width   = 0.00008030, /* 80.3µs */
+	.active_left    = 0.00001680, /* |-->| 16.8µs */
+	
+	.hsync_width       = 0.00000900, /* 9.00 ±1.00µs */
+	.vsync_long_width  = 0.00004000, /* 40.0 ±2.00µs */
+	
+	.white_level    = 0.20,
+	.black_level    = 0.76,
+	.blanking_level = 0.76,
+	.sync_level     = 1.00,
+	
+	.rw_co          = 0.299, /* R weight */
+	.gw_co          = 0.587, /* G weight */
+	.bw_co          = 0.114, /* B weight */
+	
+	.fm_mono_carrier   = 6000000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+};
+
 const vid_config_t vid_config_405 = {
 	
 	/* 405 line video */
@@ -1619,7 +1660,7 @@ const vid_config_t vid_config_cbs405_m = {
 	
 	.fm_mono_carrier   = 4500000, /* Hz */
 	.fm_mono_deviation = 25000, /* +/- Hz */
-	.fm_mono_preemph   = 0.000075, /* Seconds */
+	.fm_mono_preemph   = VID_75US,
 };
 
 const vid_config_t vid_config_cbs405 = {
@@ -1685,6 +1726,7 @@ const vid_configs_t vid_configs[] = {
 	{ "e",             &vid_config_819_e            },
 	{ "819",           &vid_config_819              },
 	{ "a",             &vid_config_405_a            },
+	{ "405-i",         &vid_config_405_i            },
 	{ "405",           &vid_config_405              },
 	{ "240-am",        &vid_config_baird_240_am     },
 	{ "240",           &vid_config_baird_240        },
@@ -3487,7 +3529,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	s->olines = 1;
 	s->audio = 0;
 	
-	/* Initalise D/D2-MAC state */
+	/* Initialise D/D2-MAC state */
 	if(s->conf.type == VID_MAC)
 	{
 		r = mac_init(s);
@@ -3504,7 +3546,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		_add_lineprocess(s, "raster", 1, NULL, _vid_next_line_raster, NULL);
 	}
 	
-	/* Initalise VITS inserter */
+	/* Initialise VITS inserter */
 	if(s->conf.vits)
 	{
 		if((r = vits_init(&s->vits, s->pixel_rate, s->width, s->conf.lines, s->white_level - s->blanking_level)) != VID_OK)
@@ -3516,7 +3558,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		_add_lineprocess(s, "vits", 1, &s->vits, vits_render, NULL);
 	}
 	
-	/* Initalise the WSS system */
+	/* Initialise the WSS system */
 	if(s->conf.wss)
 	{
 		if((r = wss_init(&s->wss, s, s->conf.wss)) != VID_OK)
@@ -3576,7 +3618,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		_add_lineprocess(s, "discret11", 2, &s->ng, d11_render_line, NULL);
 	}
 	
-	/* Initalise ACP renderer */
+	/* Initialise ACP renderer */
 	if(s->conf.acp)
 	{
 		if((r = acp_init(&s->acp, s)) != VID_OK)
