@@ -1114,7 +1114,6 @@ static int _av_ffmpeg_close(void *private)
 int av_ffmpeg_open(vid_t *s, char *input_url)
 {
 	av_ffmpeg_t *av;
-	AVCodec *codec;
 	AVRational time_base;
 	int64_t start_time = 0;
 	int r;
@@ -1219,7 +1218,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		av->video_codec_ctx->thread_count = 0; /* Let ffmpeg decide number of threads */
 		
 		/* Find the decoder for the video stream */
-		codec = avcodec_find_decoder(av->video_codec_ctx->codec_id);
+		const AVCodec *codec = avcodec_find_decoder(av->video_codec_ctx->codec_id);
 		if(codec == NULL)
 		{
 			fprintf(stderr, "Unsupported video codec\n");
@@ -1238,7 +1237,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		/* Video filter declarations */
 		char *_vfi;
 		char *_filter_args;
-		enum AVPixelFormat pix_fmts[] = {AV_PIX_FMT_RGB32 };
+		enum AVPixelFormat pix_fmts[] = { AV_PIX_FMT_RGB32 };
 			
 		AVFilterGraph *vfilter_graph;
 
@@ -1266,7 +1265,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		}
 		
 		/* Buffer video sink to terminate the filter chain */
-		buffersink_params = av_buffersink_params_alloc();
+		buffersink_params = av_malloc(sizeof(AVBufferSinkParams));
 		buffersink_params->pixel_fmts = pix_fmts;
 		
 		if(avfilter_graph_create_filter(&av->vbuffersink_ctx, vbuffersink, "out", NULL, buffersink_params, vfilter_graph) < 0) 
@@ -1391,7 +1390,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		av->audio_codec_ctx->thread_count = 0; /* Let ffmpeg decide number of threads */
 		
 		/* Find the decoder for the audio stream */
-		codec = avcodec_find_decoder(av->audio_codec_ctx->codec_id);
+		const AVCodec *codec = avcodec_find_decoder(av->audio_codec_ctx->codec_id);
 		if(codec == NULL)
 		{
 			fprintf(stderr, "Unsupported audio codec\n");
@@ -1541,7 +1540,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 		av->subtitle_codec_ctx->pkt_timebase = av->subtitle_stream->time_base;
 		
 		/* Find the decoder for the subtitle stream */
-		codec = avcodec_find_decoder(av->subtitle_codec_ctx->codec_id);
+		const AVCodec *codec = avcodec_find_decoder(av->subtitle_codec_ctx->codec_id);
 		if(codec == NULL)
 		{
 			fprintf(stderr, "Unsupported subtitle codec\n");

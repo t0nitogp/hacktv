@@ -1102,7 +1102,7 @@ int mac_write_audio(vid_t *s, const int16_t *audio)
 	return(0);
 }
 
-static uint8_t _hsync_word(int frame, int line)
+static uint64_t _hsync_word(int frame, int line)
 {
 	int hsync = (frame + line) & 1;
 	

@@ -1153,7 +1153,7 @@ static uint8_t _update_emmg_packet(eurocrypt_t *e, int t, char *ppv)
 static uint8_t _update_emmgs_packet(eurocrypt_t *e, int t)
 {
 	int x;
-	uint16_t b, d;
+	uint16_t b;
 	uint8_t *pkt = e->emmg_pkt;
 	
 	memset(pkt, 0, MAC_PAYLOAD_BYTES * 2);
