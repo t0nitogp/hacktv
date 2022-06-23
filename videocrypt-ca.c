@@ -210,26 +210,25 @@ void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, int offset, int ca)
 	uint8_t b, c;
 	
 	uint8_t key[32];
-	
-	if(ca == VC_SKY07)
+
+	switch(ca)
 	{
-		memcpy(key, sky07_key + offset, 32);
-	}
-	else if(ca == VC_SKY)
-	{
-		memcpy(key, sky07_key, 32);
-	}
-	else if(ca == VC_JSTV)
-	{
-		memcpy(key, jstv_key, 32);
-	}
-	else if(ca == VC_MC)
-	{
-		memcpy(key, vc2_key, 32);
-	}
-	else
-	{
-		memcpy(key, tac_key + offset, 32);
+		case(VC_SKY05):
+			memcpy(key, sky07_key, 32);
+			break;
+		case(VC_SKY07):
+			memcpy(key, sky07_key + offset, 32);
+			break;
+		case(VC_JSTV):
+			memcpy(key, jstv_key, 32);
+			break;
+		case(VC_MC):
+			memcpy(key, vc2_key, 32);
+			break;
+		case(VC_TAC1):
+		case(VC_TAC2):
+			memcpy(key, tac_key + offset, 32);
+			break;
 	}
 	
 	out[*oi] ^= in;
@@ -272,7 +271,7 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	for (i = 0; i < 27; i++) _vc_kernel07(cw, &oi, message[i], offset, ca);
 	
 	/* Calculate signature */
-	if(ca == VC_SKY)
+	if(ca == VC_SKY05)
 	{
 		for (i = 27, b = 0; i < 31; i++)
 		{
@@ -675,7 +674,7 @@ void vc_seed(_vc_block_t *s, int mode)
 	{
 		case(VC_TAC1):
 		case(VC_TAC2):
-		case(VC_SKY):
+		case(VC_SKY05):
 		case(VC_SKY07):
 		case(VC_JSTV):
 			vc_seed_p07(s, mode);
