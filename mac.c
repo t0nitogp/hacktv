@@ -26,7 +26,7 @@
 
 /* MAC sync codes */
 #define MAC_CLAMP 0xEAF3927FUL
-#define MAC_LSW   0x0BUL
+#define MAC_LSW   0x0B
 #define MAC_CRI   0x55555555UL
 #define MAC_FSW   0x65AEF3153F41C246ULL
 
@@ -1102,7 +1102,7 @@ int mac_write_audio(vid_t *s, const int16_t *audio)
 	return(0);
 }
 
-static uint64_t _hsync_word(int frame, int line)
+static uint8_t _hsync_word(int frame, int line)
 {
 	int hsync = (frame + line) & 1;
 	
