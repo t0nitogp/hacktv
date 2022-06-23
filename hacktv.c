@@ -410,6 +410,7 @@ enum {
 	_OPT_SHOW_ECM,
 	_OPT_SUBTITLES,
 	_OPT_TX_SUBTITLES,
+	_OPT_NODATE,
 	_OPT_SMARTCRYPT,
 	_OPT_EC_MAT_RATING,
 	_OPT_EC_PPV,
@@ -466,6 +467,7 @@ int main(int argc, char *argv[])
 		{ "filter",         no_argument,       0, _OPT_FILTER },
 		{ "subtitles",      optional_argument, 0, _OPT_SUBTITLES },
 		{ "tx-subtitles",   optional_argument, 0, _OPT_TX_SUBTITLES },
+		{ "nodate",         no_argument,       0, _OPT_NODATE },
 		{ "nocolour",       no_argument,       0, _OPT_NOCOLOUR },
 		{ "nocolor",        no_argument,       0, _OPT_NOCOLOUR },
 		{ "noaudio",        no_argument,       0, _OPT_NOAUDIO },
@@ -563,6 +565,7 @@ int main(int argc, char *argv[])
 	s.volume = 1;
 	s.downmix = 0;
 	s.ec_ppv = NULL;
+	s.nodate = 0;
 	
 	opterr = 0;
 	while((c = getopt_long(argc, argv, "o:m:s:D:G:irvf:al:g:A:t:p:", long_options, &option_index)) != -1)
@@ -778,6 +781,10 @@ int main(int argc, char *argv[])
 			{
 				s.txsubtitles = atof(argv[optind++]);
 			}
+			break;
+		
+		case _OPT_NODATE: /* --nodate */
+			s.nodate = 1;
 			break;
 			
 		case _OPT_LOGO: /* --logo <path> */
@@ -1267,6 +1274,11 @@ int main(int argc, char *argv[])
 	if(s.txsubtitles)
 	{
 		vid_conf.txsubtitles = s.txsubtitles;
+	}
+
+	if(s.nodate)
+	{
+		vid_conf.nodate = s.nodate;
 	}
 	
 	if(s.vits)

@@ -706,7 +706,7 @@ static void _encrypt_date(uint8_t *outdata, eurocrypt_t *e, uint8_t indata[8])
 }
 
 
-static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
+static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv, int nd)
 {
 	int x;
 	uint16_t b;
@@ -736,19 +736,19 @@ static uint8_t _update_ecm_packet(eurocrypt_t *e, int t, int m, char *ppv)
 	pkt[x++] = 0xDF; /* PI */
 	pkt[x++] = 0x00; /* LI */
 	
-	if(m && e->mode->emode == EC_M)
+	if(e->mode->emode == EC_M)
 	{
 		/* CTRL */
 		pkt[x++] = 0xE0;
 		pkt[x++] = 0x01;
-		b  = 1 << 6;
-		b |= m;
-		pkt[x++] = b; 
+		b  = m ? 1 : 0 << 6;	/* Enable maturity rating */
+		b = (nd ? 1 : 0) << 5;	/* Date verification */
+		b |= m ? m : 0;			/* Maturity rating (4 bits) */
+		pkt[x++] = b;
 	}
 	
 	if(ppv != NULL)
 	{
-		
 		uint32_t ppvi[2] = { 0, 0 };
 		int i = 0;
 		
@@ -1257,7 +1257,7 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 		vid->mac.cw = _update_cw(e, t);
 		
 		/* Update the ECM packet */
-		e->ecm_cont = _update_ecm_packet(e, t, vid->mac.ec_mat_rating, vid->conf.ec_ppv);
+		e->ecm_cont = _update_ecm_packet(e, t, vid->mac.ec_mat_rating, vid->conf.ec_ppv, vid->conf.nodate);
 		
 		/* Print ECM */
 		if(vid->conf.showecm)
@@ -1462,7 +1462,7 @@ int eurocrypt_init(vid_t *vid, const char *mode)
 	_update_cw(e, 1);
 	
 	/* Generate initial packet */
-	e->ecm_cont = _update_ecm_packet(e, 0, vid->mac.ec_mat_rating, vid->conf.ec_ppv);
+	e->ecm_cont = _update_ecm_packet(e, 0, vid->mac.ec_mat_rating, vid->conf.ec_ppv, vid->conf.nodate);
 	
 	return(VID_OK);
 }

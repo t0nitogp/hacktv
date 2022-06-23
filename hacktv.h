@@ -108,6 +108,7 @@ typedef struct {
 	int fmaudiotest;
 	int ec_mat_rating;
 	char *ec_ppv;
+	int nodate;
 	
 	/* Video encoder state */
 	vid_t vid;
