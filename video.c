@@ -2775,7 +2775,9 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	{
 		for(x = s->burst_left; x < s->burst_left + s->burst_width; x++)
 		{
-			l->output[x * 2] += (lut_b[x] * s->burst_win[x - s->burst_left]) >> 15;
+			/* Nasty hack for Videocrypt-S */
+			int y = s->conf.videocrypts ? x + 2 : x;
+			l->output[x * 2] += (lut_b[y] * s->burst_win[y - s->burst_left]) >> 15;
 		}
 	}
 	
