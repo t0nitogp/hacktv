@@ -80,10 +80,6 @@ typedef struct {
 	_packet_queue_item_t *first;
 	_packet_queue_item_t *last;
 	
-	/* Thread locking and signaling */
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-	
 } _packet_queue_t;
 
 typedef struct {
@@ -157,6 +153,11 @@ typedef struct {
 	pthread_t audio_decode_thread;
 	pthread_t audio_scaler_thread;
 	volatile int thread_abort;
+	int input_stall;
+	
+	/* Thread locking and signaling for input queues */
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 	
 	/* Video filter buffers */
 	AVFilterContext *vbuffersink_ctx;
@@ -197,24 +198,21 @@ void _audio_offset(uint8_t const **dst, uint8_t const * const *src, int offset, 
 	}
 }
 
-static int _packet_queue_init(_packet_queue_t *q)
+static int _packet_queue_init(av_ffmpeg_t *av, _packet_queue_t *q)
 {
 	q->length = 0;
 	q->size = 0;
 	q->eof = 0;
 	q->abort = 0;
 	
-	pthread_mutex_init(&q->mutex, NULL);
-	pthread_cond_init(&q->cond, NULL);
-	
 	return(0);
 }
 
-static int _packet_queue_flush(_packet_queue_t *q)
+static int _packet_queue_flush(av_ffmpeg_t *av, _packet_queue_t *q)
 {
 	_packet_queue_item_t *p;
 	
-	pthread_mutex_lock(&q->mutex);
+	pthread_mutex_lock(&av->mutex);
 	
 	while(q->length--)
 	{
@@ -226,35 +224,32 @@ static int _packet_queue_flush(_packet_queue_t *q)
 		free(p);
 	}
 	
-	pthread_cond_signal(&q->cond);
-	pthread_mutex_unlock(&q->mutex);
+	pthread_cond_signal(&av->cond);
+	pthread_mutex_unlock(&av->mutex);
 	
 	return(0);
 }
 
-static void _packet_queue_free(_packet_queue_t *q)
+static void _packet_queue_free(av_ffmpeg_t *av, _packet_queue_t *q)
 {
-	_packet_queue_flush(q);
-	
-	pthread_cond_destroy(&q->cond);
-	pthread_mutex_destroy(&q->mutex);
+	_packet_queue_flush(av, q);
 }
 
-static void _packet_queue_abort(_packet_queue_t *q)
+static void _packet_queue_abort(av_ffmpeg_t *av, _packet_queue_t *q)
 {
-	pthread_mutex_lock(&q->mutex);
+	pthread_mutex_lock(&av->mutex);
 	
 	q->abort = 1;
 	
-	pthread_cond_signal(&q->cond);
-	pthread_mutex_unlock(&q->mutex);
+	pthread_cond_signal(&av->cond);
+	pthread_mutex_unlock(&av->mutex);
 }
 
-static int _packet_queue_write(_packet_queue_t *q, AVPacket *pkt)
+static int _packet_queue_write(av_ffmpeg_t *av, _packet_queue_t *q, AVPacket *pkt)
 {
 	_packet_queue_item_t *p;
 	
-	pthread_mutex_lock(&q->mutex);
+	pthread_mutex_lock(&av->mutex);
 	
 	/* A NULL packet signals the end of the stream / file */
 	if(pkt == NULL)
@@ -266,16 +261,20 @@ static int _packet_queue_write(_packet_queue_t *q, AVPacket *pkt)
 		/* Limit the size of the queue */
 		while(q->abort == 0 && q->size + pkt->size + sizeof(_packet_queue_item_t) > MAX_QUEUE_SIZE)
 		{
-			pthread_cond_wait(&q->cond, &q->mutex);
+			av->input_stall = 1;
+			pthread_cond_signal(&av->cond);
+			pthread_cond_wait(&av->cond, &av->mutex);
 		}
+		
+		av->input_stall = 0;
 		
 		if(q->abort == 1)
 		{
 			/* Abort was called while waiting for the queue size to drop */
 			av_packet_unref(pkt);
 			
-			pthread_cond_signal(&q->cond);
-			pthread_mutex_unlock(&q->mutex);
+			pthread_cond_signal(&av->cond);
+			pthread_mutex_unlock(&av->mutex);
 			
 			return(-2);
 		}
@@ -300,27 +299,33 @@ static int _packet_queue_write(_packet_queue_t *q, AVPacket *pkt)
 		q->size += pkt->size + sizeof(_packet_queue_item_t);
 	}
 	
-	pthread_cond_signal(&q->cond);
-	pthread_mutex_unlock(&q->mutex);
+	pthread_cond_signal(&av->cond);
+	pthread_mutex_unlock(&av->mutex);
 	
 	return(0);
 }
 
-static int _packet_queue_read(_packet_queue_t *q, AVPacket *pkt)
+static int _packet_queue_read(av_ffmpeg_t *av, _packet_queue_t *q, AVPacket *pkt)
 {
 	_packet_queue_item_t *p;
 	
-	pthread_mutex_lock(&q->mutex);
+	pthread_mutex_lock(&av->mutex);
 	
 	while(q->length == 0)
 	{
+		if(av->input_stall)
+		{
+			pthread_mutex_unlock(&av->mutex);
+			return(0);
+		}
+		
 		if(q->abort == 1 || q->eof == 1)
 		{
-			pthread_mutex_unlock(&q->mutex);
+			pthread_mutex_unlock(&av->mutex);
 			return(q->abort == 1 ? -2 : -1);
 		}
 		
-		pthread_cond_wait(&q->cond, &q->mutex);
+		pthread_cond_wait(&av->cond, &av->mutex);
 	}
 	
 	p = q->first;
@@ -332,8 +337,8 @@ static int _packet_queue_read(_packet_queue_t *q, AVPacket *pkt)
 	
 	free(p);
 	
-	pthread_cond_signal(&q->cond);
-	pthread_mutex_unlock(&q->mutex);
+	pthread_cond_signal(&av->cond);
+	pthread_mutex_unlock(&av->mutex);
 	
 	return(0);
 }
@@ -477,11 +482,11 @@ static void *_input_thread(void *arg)
 		
 		if(av->video_stream && pkt.stream_index == av->video_stream->index)
 		{
-			_packet_queue_write(&av->video_queue, &pkt);
+			_packet_queue_write(av, &av->video_queue, &pkt);
 		}
 		else if(av->audio_stream && pkt.stream_index == av->audio_stream->index)
 		{
-			_packet_queue_write(&av->audio_queue, &pkt);
+			_packet_queue_write(av, &av->audio_queue, &pkt);
 		}
 		else if(av->subtitle_stream && pkt.stream_index == av->subtitle_stream->index && (av->s->conf.subtitles || av->s->conf.txsubtitles))
 		{
@@ -573,8 +578,8 @@ static void *_input_thread(void *arg)
 	}
 	
 	/* Set the EOF flag in the queues */
-	_packet_queue_write(&av->video_queue, NULL);
-	_packet_queue_write(&av->audio_queue, NULL);
+	_packet_queue_write(av, &av->video_queue, NULL);
+	_packet_queue_write(av, &av->audio_queue, NULL);
 	
 	//fprintf(stderr, "_input_thread(): Ending\n");
 	
@@ -597,7 +602,7 @@ static void *_video_decode_thread(void *arg)
 	{
 		if(ppkt == NULL)
 		{
-			r = _packet_queue_read(&av->video_queue, &pkt);
+			r = _packet_queue_read(av, &av->video_queue, &pkt);
 			if(r == -2)
 			{
 				/* Thread is aborting */
@@ -881,7 +886,7 @@ static void *_audio_decode_thread(void *arg)
 	{
 		if(ppkt == NULL)
 		{
-			r = _packet_queue_read(&av->audio_queue, &pkt);
+			r = _packet_queue_read(av, &av->audio_queue, &pkt);
 			if(r == -2)
 			{
 				/* Thread is aborting */
@@ -1061,8 +1066,8 @@ static int _av_ffmpeg_close(void *private)
 	av_ffmpeg_t *av = private;
 	
 	av->thread_abort = 1;
-	_packet_queue_abort(&av->video_queue);
-	_packet_queue_abort(&av->audio_queue);
+	_packet_queue_abort(av, &av->video_queue);
+	_packet_queue_abort(av, &av->audio_queue);
 	
 	pthread_join(av->input_thread, NULL);
 	
@@ -1074,7 +1079,7 @@ static int _av_ffmpeg_close(void *private)
 		pthread_join(av->video_decode_thread, NULL);
 		pthread_join(av->video_scaler_thread, NULL);
 		
-		_packet_queue_free(&av->video_queue);
+		_packet_queue_free(av, &av->video_queue);
 		_frame_dbuffer_free(&av->in_video_buffer);
 		
 		av_freep(&av->out_video_buffer.frame[0]->data[0]);
@@ -1093,7 +1098,7 @@ static int _av_ffmpeg_close(void *private)
 		pthread_join(av->audio_decode_thread, NULL);
 		pthread_join(av->audio_scaler_thread, NULL);
 		
-		_packet_queue_free(&av->audio_queue);
+		_packet_queue_free(av, &av->audio_queue);
 		_frame_dbuffer_free(&av->in_audio_buffer);
 		
 		//av_freep(&av->out_audio_buffer.frame[0]->data[0]);
@@ -1105,6 +1110,9 @@ static int _av_ffmpeg_close(void *private)
 	}
 	
 	avformat_close_input(&av->format_ctx);
+	
+	pthread_cond_destroy(&av->cond);
+	pthread_mutex_destroy(&av->mutex);
 	
 	free(av);
 	
@@ -1661,8 +1669,10 @@ int av_ffmpeg_open(vid_t *s, char *input_url)
 	
 	/* Start the threads */
 	av->thread_abort = 0;
-	_packet_queue_init(&av->video_queue);
-	_packet_queue_init(&av->audio_queue);
+	pthread_mutex_init(&av->mutex, NULL);
+	pthread_cond_init(&av->cond, NULL);
+	_packet_queue_init(av, &av->video_queue);
+	_packet_queue_init(av, &av->audio_queue);
 	
 	if(av->video_stream != NULL)
 	{
