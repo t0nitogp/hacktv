@@ -158,7 +158,7 @@ static inline uint8_t _rnibble(uint8_t a)
 
 void _rand_vc_seed(uint8_t *message)
 {
-	for(int i = 12; i < 27; i++) message[i] = rand() + 0xFF;
+	for(int i = 13; i < 27; i++) message[i] = rand() + 0xFF;
 }
 
 /* Reverse calculated control word */
@@ -185,9 +185,11 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 	uint8_t a, b, xor[4];
 	
 	/* XOR round function */
-	a = message[1] ^ message[2];
+	/* Videocrypt 1 uses message bytes 1 and 2 */
+	/* Videocrypt 2 uses message bytes 5 and 6 */
+	a = byte == 0x81 ? message[5] ^ message[6] : message[1] ^ message[2];
 	a = _rnibble(a);
-	b = message[2];
+	b = byte == 0x81 ? message[6] : message[2];;
 
 	for (i=0; i < 4;i++)
 	{
@@ -497,7 +499,7 @@ void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
 					break;
 				
 				default:
-					fprintf(stderr, "\nUnknown nano %02X!", nanobuffer[i]);
+					fprintf(stderr, "\nUnknown nano %02X at index %d!", nanobuffer[i], i);
 					break;
 			}
 		}
@@ -723,12 +725,12 @@ void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
 			 * 0x0C: switch off Sky Multichannels
 			 * 0x00: Disable card 
 			 */
-			vc_emm_p07(s, (b ? cmd_sky[i] : cmd_sky[i + 1]), cardserial);
+			vc_emm_p07(s, (b ? cmd_sky[i] : cmd_sky[i + 2]), cardserial);
 			break;
 		
 		case(VC_SKY09):
 		case(VC_SKY09_NANO):
-			vc_emm_p09(s, (b ? cmd_sky[i] : cmd_sky[i + 1]), cardserial);
+			vc_emm_p09(s, (b ? cmd_sky[i] : cmd_sky[i + 2]), cardserial);
 			break;
 	}
 }

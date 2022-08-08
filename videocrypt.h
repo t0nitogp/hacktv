@@ -51,13 +51,16 @@
 #define VC2_VBI_FIELD_2_START (VC_VBI_FIELD_2_START - 4)
 
 typedef struct {
-	const char *id;         /* Name of Videocrypt mode */
-	int cwtype;             /* Static or dynamic CW */
-	int mode;               /* Mode */
-	_vc_block_t *blocks;    /* VC1 blocks */
-	_vc2_block_t *blocks2;  /* VC2 blocks */
-	int len;                /* Block length */
-	int emm;                /* EMM mode? */
+	const char *id;          /* Name of Videocrypt mode */
+	const int cwtype;        /* Static or dynamic CW */
+	const int mode;          /* Mode */
+	_vc_block_t  *blocks;    /* VC1 blocks */
+	_vc2_block_t *blocks2;   /* VC2 blocks */
+	const int len;           /* Block length */
+	const int emm;           /* EMM mode? */
+	const char *channelname; /* Channel/display name */
+	const int channelid;     /* Channel ID */
+	const int date;          /* Broadcast date */
 } _vc_mode_t;
 
 typedef struct {

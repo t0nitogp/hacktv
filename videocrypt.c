@@ -46,28 +46,41 @@
 #include "videocrypt-ca.h"
 #include "videocrypt-blocks.h"
 
+/*
+ * Name of Videocrypt mode (used on command line)
+ * Static or dynamic control word
+ * Mode
+ * Pointer to VC1 block
+ * Pointer to VC2 block
+ * Block length
+ * EMM enabled?
+ * Channel/display name
+ * Channel ID
+ * Broadcast month byte 
+*/
+
 const static _vc_mode_t _vc1_modes[] = {
-	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0      },
-	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0      },
-	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _jstv_blocks,      NULL, 2, 0      },
-	{ "sky04",       VC_CW_STATIC,  VC_SKY04,      _sky04_blocks,     NULL, 2, 0      },
-	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _sky05_blocks,     NULL, 2, 0      },
-	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _sky07_blocks,     NULL, 2, VC_EMM },
-	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _sky09_blocks,     NULL, 2, VC_EMM },
-	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _sky09nano_blocks, NULL, 2, VC_EMM },
-	{ "sky10",       VC_CW_STATIC,  VC_SKY10,      _sky10_blocks,     NULL, 2, 0      },
-	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0      },
-	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0      },
-	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0      },
-	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _tac_blocks,       NULL, 2, VC_EMM },
-	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _tac_blocks,       NULL, 2, VC_EMM },
-	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0      },
+	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0,      "",                        0x00, 0x20 },
+	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0,      "",                        0x00, 0x20 },
+	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _vc1_blocks,       NULL, 2, 0,      "   HACKTV    JSTV  MODE", 0x00, 0x20 },
+	{ "sky04",       VC_CW_STATIC,  VC_SKY04,      _sky04_blocks,     NULL, 2, 0,      "   HACKTV    SKY04 MODE", 0x00, 0x20 },
+	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY05 MODE", 0x00, 0x1B },
+	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY07 MODE", 0x0C, 0x40 },
+	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY09 MODE", 0x0C, 0x54 },
+	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _vc1_blocks,       NULL, 2, VC_EMM, "   SKY 09    NANO  MODE", 0x0C, 0x54 },
+	{ "sky10",       VC_CW_STATIC,  VC_SKY10,      _sky10_blocks,     NULL, 2, 0,      "   HACKTV    SKY10 MODE", 0x00, 0x20 },
+	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0,      "HACKTV SKY10  PPV MODE ", 0x00, 0x20 },
+	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0,      "   HACKTV    SKY11 MODE", 0x00, 0x00 },
+	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0,      "   HACKTV    SKY12 MODE", 0x00, 0x00 },
+	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC1  MODE", 0x00, 0x29 },
+	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC2  MODE", 0x00, 0x49 },
+	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0,      "   HACKTV    XTEA  MODE", 0x00, 0x20 },
 	{ NULL }
 };
 
 const static _vc_mode_t _vc2_modes[] = {
-	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0      },
-	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM },
+	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0,      "",            0x00, 0x52 },
+	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52 },
 	{ NULL }
 };
 
@@ -238,6 +251,18 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 		}
 		else if(s->mode->cwtype == VC_CW_DYNAMIC)
 		{
+			/* Set ECM mode */
+			s->blocks[0].messages[5][0] = 0xF9;
+			s->blocks[1].messages[5][0] = 0xF9;
+
+			/* Set channel date */
+			s->blocks[0].messages[5][1] = s->mode->date;
+			s->blocks[1].messages[5][1] = s->mode->date;
+
+			/* Set channel ID */
+			s->blocks[0].messages[5][6] = s->mode->channelid;
+			s->blocks[1].messages[5][6] = s->mode->channelid;
+
 			vc_seed(&s->blocks[0], s->mode->mode);
 			vc_seed(&s->blocks[1], s->mode->mode);
 		}
@@ -251,8 +276,18 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			cardserial = vid->conf.enableemm ? vid->conf.enableemm : vid->conf.disableemm;
 			b = vid->conf.enableemm ? 1 : 0;
 			vc_emm(&s->blocks[0], s->mode->mode, cardserial, b, 0);
-			vc_emm(&s->blocks[1], s->mode->mode, cardserial, b, 2);
+			vc_emm(&s->blocks[1], s->mode->mode, cardserial, b, 1);
 		}
+
+		/* Set channel name */
+		s->blocks[1].messages[0][0] = 0x20;
+		s->blocks[1].messages[0][1] = 0x00;
+		s->blocks[1].messages[0][2] = 0x60 + strlen(s->mode->channelname);
+
+		for(i = 0; i < strlen(s->mode->channelname); i++)
+		{
+			s->blocks[1].messages[0][i + 3] = s->mode->channelname[i];
+		} 
 	}
 	
 	/* Find Videocrypt II mode to use */
@@ -274,6 +309,18 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 
 		if(s->mode->cwtype == VC_CW_DYNAMIC)
 		{
+			/* Set ECM mode */
+			s->blocks2[0].messages[5][0] = 0xF9;
+			s->blocks2[1].messages[5][0] = 0xF9;
+
+			/* Set channel date */
+			s->blocks2[0].messages[5][1] = s->mode->date;
+			s->blocks2[1].messages[5][1] = s->mode->date;
+
+			/* Set channel ID */
+			s->blocks2[0].messages[5][2] = s->mode->channelid;
+			s->blocks2[1].messages[5][2] = s->mode->channelid;
+
 			vc_seed_vc2(&s->blocks2[0], s->mode->mode);
 			vc_seed_vc2(&s->blocks2[1], s->mode->mode);
 		
@@ -286,6 +333,21 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 				}
 			}
 		}
+	
+		/* Set channel name */
+		/* Both blocks require 'OSD' headers in VC2 */
+		for(i = 0; i < 2; i++)
+		{
+			s->blocks2[i].messages[0][0] = 0x21;
+			s->blocks2[i].messages[0][1] = 0x02;
+		}
+
+		s->blocks2[0].messages[0][2] = 0x60 + strlen(s->mode->channelname);
+
+		for(i = 0; i < strlen(s->mode->channelname); i++)
+		{
+			s->blocks2[0].messages[0][i + 3] = s->mode->channelname[i];
+		} 
 		
 		if(vid->conf.enableemm)
 		{
@@ -488,6 +550,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 				{
 					fprintf(stderr, "\nVC1 EMM In:  ");
 					for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[2][i]);
+					fprintf(stderr,"%02X ", _crc(v->blocks[v->block].messages[2]));
 				}
 			}
 
