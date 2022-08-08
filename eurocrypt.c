@@ -30,8 +30,8 @@
 #define EC_S    0x30
 #define EC_3DES 0x31
 
-#define ROTATE_LEFT  1
-#define ROTATE_RIGHT 2
+#define ENCRYPT  1
+#define DECRYPT 2
 
 /* Data for EC controlled-access decoding */
 const static ec_mode_t _ec_modes[] = {
@@ -272,9 +272,26 @@ uint16_t _get_ec_date(const char *dtm, int mode)
 	}
 	else
 	{
-		date  = (year - 1990) << 12; /* Year - first 4 bits */
-		date |= mon << 8;            /* Month - next 4 bits */
-		date |= day << 0;            /* Day - 8 bits */
+		uint8_t y;
+	
+		if(year > 2029)
+		{
+			y  = 3 << 5;
+			y |= (year - 1990 - (10 * 3));
+		}
+		else
+		{
+			uint8_t ydiff;
+
+			ydiff = (year - 1990) / 10;
+			y  = ydiff << 5;
+			y |= (year - 1990 - (10 * ydiff));
+		}
+
+		date  = y << 12;  	/* Year - first 4 bits */
+		date |= mon << 8;   /* Month - next 4 bits */
+		date |= y & 0xE0;	/* Year adjustment - 2 bits */
+		date |= day << 0;   /* Day - 5 bits */
 	}
 	
 	return (date);
@@ -317,7 +334,7 @@ static void _key_rotate_ec(uint64_t *c, uint64_t *d, int dir, int iter)
 	int i;
 	
 	/* Rotate left (decryption) */
-	if(dir == ROTATE_LEFT)
+	if(dir == ENCRYPT)
 	{
 		for(i = 0; i < _lshift[iter]; i++)
 		{
@@ -408,7 +425,7 @@ static void _eurocrypt(uint8_t *data, const uint8_t *key, int desmode, int emode
 				{
 					if(desmode == HASH)
 					{
-						_key_rotate_ec(&c, &d, ROTATE_LEFT, i);
+						_key_rotate_ec(&c, &d, ENCRYPT, i);
 					}
 					
 					/* Key expansion */
@@ -419,7 +436,7 @@ static void _eurocrypt(uint8_t *data, const uint8_t *key, int desmode, int emode
 					
 					if(desmode != HASH)
 					{
-						_key_rotate_ec(&c, &d, ROTATE_RIGHT, i);
+						_key_rotate_ec(&c, &d, DECRYPT, i);
 					}
 					
 					/* Swap first two bytes if it's a hash routine */
@@ -434,7 +451,7 @@ static void _eurocrypt(uint8_t *data, const uint8_t *key, int desmode, int emode
 			case EC_S:
 				{
 					/* Key rotation */
-					_key_rotate_ec(&c, &d, ROTATE_LEFT, i);
+					_key_rotate_ec(&c, &d, ENCRYPT, i);
 					
 					/* Key expansion */
 					_key_exp(&c, &d, k2);
@@ -450,7 +467,7 @@ static void _eurocrypt(uint8_t *data, const uint8_t *key, int desmode, int emode
 					/* Key rotation */
 					if(rnd != 2)
 					{
-						_key_rotate_ec(&c, &d, ROTATE_LEFT, i);
+						_key_rotate_ec(&c, &d, ENCRYPT, i);
 					}
 					
 					/* Key expansion */
@@ -461,7 +478,7 @@ static void _eurocrypt(uint8_t *data, const uint8_t *key, int desmode, int emode
 					
 					if(rnd == 2)
 					{
-						_key_rotate_ec(&c, &d, ROTATE_RIGHT, i);
+						_key_rotate_ec(&c, &d, DECRYPT, i);
 					}
 				}
 				break;
@@ -695,11 +712,14 @@ static void _encrypt_date(uint8_t *outdata, eurocrypt_t *e, uint8_t indata[8])
 {
 	int r;
 
-	/* Three rounds for 3DES mode, one round for others */
-	for(r = 0; r < (e->emmode->emode != EC_3DES ? 1 : 3); r++)
+	if(e->emmode->emode == EC_3DES)
 	{
-		/* Use second key on second round in 3DES */
-		_eurocrypt(indata, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->emode, r + 1);
+		/* Three rounds for 3DES mode, one round for others */
+		for(r = 0; r < (e->emmode->emode != EC_3DES ? 1 : 3); r++)
+		{
+			/* Use second key on second round in 3DES */
+			_eurocrypt(indata, e->emmode->key + (r != 1 ? 0 : 7), ECM, e->emmode->emode, r + 1);
+		}
 	}
 	
 	memcpy(outdata, indata, 8);
