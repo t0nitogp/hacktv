@@ -109,6 +109,8 @@ typedef struct {
 	int ec_mat_rating;
 	char *ec_ppv;
 	int nodate;
+	char *ffmt;
+	char *fopts;
 	
 	/* Video encoder state */
 	vid_t vid;

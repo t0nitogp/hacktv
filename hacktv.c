@@ -144,6 +144,12 @@ static void print_usage(void)
 		"\n"
 		"  If no valid input prefix is provided, ffmpeg: is assumed.\n"
 		"\n"
+		"ffmpeg input options\n"
+		"\n"
+		"      --ffmt <format>            Force input file format.\n"
+		"      --fopts <option=value[:option2=value]>\n"
+		"                                 Pass option(s) to ffmpeg.\n"
+		"\n"
 		"HackRF output options\n"
 		"\n"
 		"  -o, --output hackrf[:<serial>] Open a HackRF for output.\n"
@@ -425,6 +431,8 @@ enum {
 	_OPT_DOWNMIX,
 	_OPT_VOLUME,
 	_OPT_FMAUDIOTEST,
+	_OPT_FFMT,
+	_OPT_FOPTS,
 	_OPT_PIXELRATE,
 };
 
@@ -482,6 +490,8 @@ int main(int argc, char *argv[])
 		{ "chid",           required_argument, 0, _OPT_CHID },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
 		{ "passthru",       required_argument, 0, _OPT_PASSTHRU },
+		{ "ffmt",           required_argument, 0, _OPT_FFMT },
+		{ "fopts",          required_argument, 0, _OPT_FOPTS },
 		{ "frequency",      required_argument, 0, 'f' },
 		{ "amp",            no_argument,       0, 'a' },
 		{ "gain",           required_argument, 0, 'g' },
@@ -669,12 +679,11 @@ int main(int argc, char *argv[])
 			break;
 		
 		case _OPT_TELETEXT: /* --teletext <path> */
-			free(s.teletext);
-			s.teletext = strdup(optarg);
+			s.teletext = optarg;
 			break;
 		
 		case _OPT_WSS: /* --wss <mode> */
-			s.wss = strdup(optarg);
+			s.wss = optarg;
 			break;
 			
 		case _OPT_LETTERBOX: /* --letterbox */
@@ -686,18 +695,15 @@ int main(int argc, char *argv[])
 			break;
 		
 		case _OPT_VIDEOCRYPT: /* --videocrypt */
-			free(s.videocrypt);
-			s.videocrypt = strdup(optarg);
+			s.videocrypt = optarg;
 			break;
 
 		case _OPT_VIDEOCRYPT2: /* --videocrypt2 */
-			free(s.videocrypt2);
-			s.videocrypt2 = strdup(optarg);
+			s.videocrypt2 = optarg;
 			break;
 		
 		case _OPT_VIDEOCRYPTS: /* --videocrypts */
-			free(s.videocrypts);
-			s.videocrypts = strdup(optarg);
+			s.videocrypts = optarg;
 			break;
 		
 		case _OPT_ENABLE_EMM: /* --enable-emm <card_serial> */
@@ -825,8 +831,7 @@ int main(int argc, char *argv[])
 			break;
 		
 		case _OPT_EUROCRYPT: /* --eurocrypt */
-			free(s.eurocrypt);
-			s.eurocrypt = strdup(optarg);
+			s.eurocrypt = optarg;
 			break;
 		
 		case _OPT_EC_MAT_RATING: /* --ec-mat-rating */
@@ -854,8 +859,15 @@ int main(int argc, char *argv[])
 			break;
 		
 		case _OPT_PASSTHRU: /* --passthru <path> */
-			free(s.passthru);
-			s.passthru = strdup(optarg);
+			s.passthru = optarg;
+			break;
+		
+		case _OPT_FFMT: /* --ffmt <format> */
+			s.ffmt = optarg;
+			break;
+		
+		case _OPT_FOPTS: /* --fopts <option=value:[option2=value...]> */
+			s.fopts = optarg;
 			break;
 		
 		case 'f': /* -f, --frequency <value> */
@@ -871,8 +883,7 @@ int main(int argc, char *argv[])
 			break;
 		
 		case 'A': /* -A, --antenna <name> */
-			free(s.antenna);
-			s.antenna = strdup(optarg);
+			s.antenna = optarg;
 			break;
 		
 		case 't': /* -t, --type <type> */
@@ -1380,11 +1391,11 @@ int main(int argc, char *argv[])
 			}
 			else if(strncmp(pre, "ffmpeg", l) == 0)
 			{
-				r = av_ffmpeg_open(&s.vid, sub);
+				r = av_ffmpeg_open(&s.vid, sub, s.ffmt, s.fopts);
 			}
 			else
 			{
-				r = av_ffmpeg_open(&s.vid, pre);
+				r = av_ffmpeg_open(&s.vid, pre, s.ffmt, s.fopts);
 			}
 			
 			if(r != HACKTV_OK)
