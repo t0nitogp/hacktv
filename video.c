@@ -73,7 +73,7 @@ const vid_config_t vid_config_pal_i = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3 ±0.10µs */
 	
 	.white_level    = 0.20,
 	.black_level    = 0.76,
@@ -131,7 +131,7 @@ const vid_config_t vid_config_pal_bg = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3 ±0.10µs */
 	
 	.white_level    = 0.20,
 	.black_level    = 0.76,
@@ -158,6 +158,65 @@ const vid_config_t vid_config_pal_bg = {
 	.fm_mono_deviation = 50000, /* +/- Hz */
 	.fm_mono_preemph   = VID_50US, /* Seconds */
 	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 0.4,
+};
+
+const vid_config_t vid_config_pal_dk = {
+	
+	/* System D/K (PAL) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 6000000, /* Hz */
+	.vsb_lower_bw   =  750000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.70, /* Power level of video */
+	.fm_mono_level  = 0.20, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_625,
+	.frame_rate_num = 25,
+	.frame_rate_den = 1,
+	.lines          = 625,
+	.hline          = 313,
+	
+	.active_lines   = 576,
+	.active_width   = 0.00005195, /* 51.95µs */
+	.active_left    = 0.00001040, /* |-->| 10.40µs */
+	
+	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
+	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
+	.vsync_long_width  = 0.00002730, /* 27.3 ±0.10µs */
+	
+	.white_level    = 0.20,
+	.black_level    = 0.76,
+	.blanking_level = 0.76,
+	.sync_level     = 1.00,
+	
+	.colour_mode    = VID_PAL,
+	.burst_width    = 0.00000225, /* 2.25 ±0.23µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000560, /* |-->| 5.6 ±0.1µs */
+	.burst_level    = 3.0 / 7.0, /* 3 / 7 of white - blanking level */
+	.colour_carrier = 4433618.75,
+	.colour_lookup_lines = 625 * 4, /* The carrier repeats after 4 frames */
+	
+	.rw_co          = 0.299, /* R weight */
+	.gw_co          = 0.587, /* G weight */
+	.bw_co          = 0.114, /* B weight */
+	.iu_co          = 0.000,
+	.iv_co          = 0.877,
+	.qu_co          = 0.493,
+	.qv_co          = 0.000,
+	
+	.fm_mono_carrier   = 6500000, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+
+	/* Chinese standard GY/T 129-1997, similar to French standard. */
 	.nicam_carrier  = 5850000, /* Hz */
 	.nicam_beta     = 0.4,
 };
@@ -190,7 +249,7 @@ const vid_config_t vid_config_pal_fm = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3 ±0.10µs */
 	
 	.white_level    =  0.50,
 	.black_level    = -0.20,
@@ -248,7 +307,7 @@ const vid_config_t vid_config_pal = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3 ±0.10µs */
 	
 	.white_level = 1.00 * 0.85 * 2 - 1,
 	.black_level = 0.30 * 0.85 * 2 - 1,
@@ -399,7 +458,7 @@ const vid_config_t vid_config_secam_l = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3µs */
 	
 	.white_level    = 1.00,
 	.black_level    = 0.30,
@@ -450,7 +509,7 @@ const vid_config_t vid_config_secam_dk = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3µs */
 	
 	.white_level    = 0.20,
 	.black_level    = 0.76,
@@ -501,7 +560,7 @@ const vid_config_t vid_config_secam_i = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3µs */
 	
 	.white_level    = 0.20,
 	.black_level    = 0.76,
@@ -556,7 +615,7 @@ const vid_config_t vid_config_secam_fm = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3µs */
 	
 	.white_level    =  0.50,
 	.black_level    = -0.20,
@@ -610,7 +669,7 @@ const vid_config_t vid_config_secam = {
 	
 	.hsync_width       = 0.00000470, /* 4.70 ±0.20µs */
 	.vsync_short_width = 0.00000235, /* 2.35 ±0.10µs */
-	.vsync_long_width  = 0.00002730, /* 2.73 ±0.20µs */
+	.vsync_long_width  = 0.00002730, /* 27.3µs */
 	
 	.white_level    =  0.70,
 	.black_level    =  0.00,
@@ -682,6 +741,64 @@ const vid_config_t vid_config_ntsc_m = {
 	.fm_mono_carrier   = 4500000, /* Hz */
 	.fm_mono_deviation = 25000, /* +/- Hz */
 	.fm_mono_preemph   = VID_75US,
+};
+
+const vid_config_t vid_config_ntsc_i = {
+	
+	/* System I (NTSC) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate_num = 30000,
+	.frame_rate_den = 1001,
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = 5000000.0 * 63 / 88,
+	.colour_lookup_lines = 2, /* The carrier repeats after 2 lines */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.iu_co          =  0.000,
+	.iv_co          =  0.877,
+	.qu_co          =  0.493,
+	.qv_co          =  0.000,
+	
+	.fm_mono_carrier   = 6000000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 6552000, /* Hz */
+	.nicam_beta     = 1.0,
 };
 
 const vid_config_t vid_config_ntsc_fm = {
@@ -1703,6 +1820,8 @@ const vid_configs_t vid_configs[] = {
 	{ "i",             &vid_config_pal_i            },
 	{ "b",             &vid_config_pal_bg           },
 	{ "g",             &vid_config_pal_bg           },
+	{ "pal-d",         &vid_config_pal_dk           },
+	{ "pal-k",         &vid_config_pal_dk           },
 	{ "pal-fm",        &vid_config_pal_fm           },
 	{ "pal",           &vid_config_pal              },
 	{ "pal-m",         &vid_config_pal_m            },
@@ -1714,6 +1833,7 @@ const vid_configs_t vid_configs[] = {
 	{ "secam-fm",      &vid_config_secam_fm         },
 	{ "secam",         &vid_config_secam            },
 	{ "m",             &vid_config_ntsc_m           },
+	{ "ntsc-i",        &vid_config_ntsc_i           },
 	{ "ntsc-fm",       &vid_config_ntsc_fm          },
 	{ "ntsc-bs",       &vid_config_ntsc_bs_fm       },
 	{ "ntsc",          &vid_config_ntsc             },
@@ -2253,7 +2373,6 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	int x;
 	int vy;
 	int w;
-	uint32_t rgb;
 	int pal = 0;
 	int fsc = 0;
 	int16_t *lut_b = NULL;
@@ -2694,17 +2813,33 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		l->output[x * 2] = s->sync_level;
 	}
 	
-	/* Render left side of active video if required */
-	if(seq[2] == 'a' && vy != -1)
+	/* Render the active video if required */
+	if(seq[2] == 'a' || seq[3] == 'a')
 	{
-		for(; x < s->active_left; x++)
+		uint32_t rgb;
+		uint32_t *prgb;
+		int16_t *o;
+		
+		/* Calculate active video portion of this line */
+		int al = (seq[2] == 'a' ? s->active_left : (seq[3] == 'a' ? s->half_width : -1));
+		int ar = (seq[3] == 'a' ? s->active_left + s->active_width : (seq[2] == 'a' ? s->half_width : -1));
+		
+		/* Blank the line up until the start of active video */
+		for(; x < al; x++)
 		{
 			l->output[x * 2] = s->blanking_level;
 		}
 		
-		for(; x < s->half_width; x++)
+		/* Render the active video */
+		prgb = (s->framebuffer != NULL && vy != -1 ? &s->framebuffer[vy * s->active_width + al - s->active_left] : NULL);
+		rgb = 0x000000;
+		
+		for(o = &l->output[x * 2]; x < ar; x++, o += 2)
 		{
-			rgb = s->framebuffer != NULL ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
+			if(prgb)
+			{
+				rgb = *(prgb++) & 0xFFFFFF;
+			}
 			
 			if(s->conf.colour_mode == VID_APOLLO_FSC ||
 			   s->conf.colour_mode == VID_CBS_FSC)
@@ -2713,51 +2848,30 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 				rgb |= (rgb << 8) | (rgb << 16);
 			}
 			
-			l->output[x * 2] = s->yiq_level_lookup[rgb].y;
+			*o = s->yiq_level_lookup[rgb].y;
 			
 			if(pal)
 			{
-				l->output[x * 2] += (s->yiq_level_lookup[rgb].i * lut_i[x]) >> 15;
-				l->output[x * 2] += (s->yiq_level_lookup[rgb].q * lut_q[x]) >> 15;
+				*o += (s->yiq_level_lookup[rgb].i * lut_i[x] +
+				       s->yiq_level_lookup[rgb].q * lut_q[x]) >> 15;
 			}
-		}
-	}
-	else
-	{
-		for(; x < s->half_width; x++)
-		{
-			l->output[x * 2] = s->blanking_level;
 		}
 	}
 	
-	if(seq[3] == 'a' && vy != -1)
+	/* Render the middle sync pulse if required */
+	if(seq[3] == 'v') w = s->vsync_short_width;
+	else if(seq[3] == 'V') w = s->vsync_long_width;
+	else w = 0;
+	
+	if(w)
 	{
-		for(; x < s->active_left + s->active_width; x++)
+		/* Blank the line up until the start of the pulse */
+		for(; x < s->half_width; x++)
 		{
-			rgb = s->framebuffer != NULL ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
-			
-			if(s->conf.colour_mode == VID_APOLLO_FSC ||
-			   s->conf.colour_mode == VID_CBS_FSC)
-			{
-				rgb  = (rgb >> (8 * fsc)) & 0xFF;
-				rgb |= (rgb << 8) | (rgb << 16);
-			}
-			
-			l->output[x * 2] = s->yiq_level_lookup[rgb].y;
-			
-			if(pal)
-			{
-				l->output[x * 2] += (s->yiq_level_lookup[rgb].i * lut_i[x]) >> 15;
-				l->output[x * 2] += (s->yiq_level_lookup[rgb].q * lut_q[x]) >> 15;
-			}
+			l->output[x * 2] = s->blanking_level;
 		}
-	}
-	else
-	{
-		if(seq[3] == 'v') w = s->vsync_short_width;
-		else if(seq[3] == 'V') w = s->vsync_long_width;
-		else w = 0;
 		
+		/* Render the pulse */
 		for(; x < s->half_width + w && x < s->width; x++)
 		{
 			l->output[x * 2] = s->sync_level;
@@ -2808,57 +2922,93 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	}
 	
 	/* Render the SECAM colour subcarrier */
-	if(s->conf.colour_mode == VID_SECAM &&
-	   (seq[2] == 'a' || seq[3] == 'a'))
+	if(s->conf.colour_mode == VID_SECAM)
 	{
 		const cint16_t *g;
 		int16_t dmin, dmax;
+		int sl = 0, sr = 0;
 		
-		for(x = 0; x < s->width; x++)
+		if(s->conf.secam_field_id &&
+		   ((l->line >= 7 && l->line <= 15) ||
+		    (l->line >= 320 && l->line <= 328)))
 		{
-			rgb = 0x000000;
-			
-			if(x >= s->active_left && x < s->active_left + s->active_width)
-			{
-				rgb = s->framebuffer != NULL ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
-			}
+			int16_t level;
+			int16_t dev;
+			double rw;
 			
 			if(((l->frame * s->conf.lines) + l->line) & 1)
 			{
-				l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].q;
+				level = s->yiq_level_lookup[0x000000].q;
+				dev = -s->secam_fsync_level;
+				rw = 18e-6;
 			}
 			else
 			{
-				l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].i;
+				level = s->yiq_level_lookup[0x000000].i;
+				dev = s->secam_fsync_level;
+				rw = 15e-6;
 			}
+			
+			for(x = 0; x < s->width; x++)
+			{
+				double t = (double) (x - s->active_left) / s->pixel_rate / rw;
+				
+				if(t < 0) t = 0;
+				else if(t > 1) t = 1;
+				
+				l->output[x * 2 + 1] = level + dev * t;
+			}
+			
+			sl = s->active_left;
+			sr = s->active_left + s->active_width;
+			
+			l->vbialloc = 1;
+		}
+		else if(seq[2] == 'a' || seq[3] == 'a')
+		{
+			uint32_t rgb;
+			
+			for(x = 0; x < s->width; x++)
+			{
+				rgb = 0x000000;
+				
+				if(x >= s->active_left && x < s->active_left + s->active_width)
+				{
+					rgb = s->framebuffer != NULL && vy >= 0 ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
+				}
+				
+				if(((l->frame * s->conf.lines) + l->line) & 1)
+				{
+					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].q;
+				}
+				else
+				{
+					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].i;
+				}
+			}
+			
+			sl = seq[2] == 'a' ? s->burst_left : s->half_width;
+			sr = seq[3] == 'a' ? s->active_left + s->active_width : s->half_width;
 		}
 		
-		fir_int16_process_block(&s->secam_l_fir, l->output + s->active_left * 2, l->output + s->active_left * 2, s->active_width);
-		fir_int16_process_block(&s->fm_secam_fir, l->output + 1, l->output + 1, s->width);
-		iir_int16_process(&s->fm_secam_iir, l->output + 1, l->output + 1, s->width, 2);
-		
-		/* Limit the FM deviation */
-		dmin = s->fm_secam_dmin[((l->frame * s->conf.lines) + l->line) & 1];
-		dmax = s->fm_secam_dmax[((l->frame * s->conf.lines) + l->line) & 1];
-		
-		for(x = 0; x < s->width; x++)
+		if(sr > sl)
 		{
-			if(l->output[x * 2 + 1] < dmin) l->output[x * 2 + 1] = dmin;
-			else if(l->output[x * 2 + 1] > dmax) l->output[x * 2 + 1] = dmax;
-		}
-		
-		x = s->active_left;
-		w = x + s->active_width;
-		
-		if(seq[2] != 'a') x = s->half_width;
-		if(seq[3] != 'a') w = s->half_width;
-		
-		x -= s->active_left - s->burst_left;
-		
-		for(; x < w; x++)
-		{
-			g = &s->fm_secam_bell[(uint16_t) l->output[x * 2 + 1]];
-			_fm_modulator_add_cgain(&s->fm_secam, &l->output[x * 2], l->output[x * 2 + 1], g);
+			fir_int16_process_block(&s->secam_l_fir, l->output + s->active_left * 2, l->output + s->active_left * 2, s->active_width, 2);
+			fir_int16_process_block(&s->fm_secam_fir, l->output + 1, l->output + 1, s->width, 2);
+			iir_int16_process(&s->fm_secam_iir, l->output + 1, l->output + 1, s->width, 2);
+			
+			/* Limit the FM deviation */
+			dmin = s->fm_secam_dmin[((l->frame * s->conf.lines) + l->line) & 1];
+			dmax = s->fm_secam_dmax[((l->frame * s->conf.lines) + l->line) & 1];
+			
+			for(x = sl; x < sr; x++)
+			{
+				if(l->output[x * 2 + 1] < dmin) l->output[x * 2 + 1] = dmin;
+				else if(l->output[x * 2 + 1] > dmax) l->output[x * 2 + 1] = dmax;
+				
+				g = &s->fm_secam_bell[(uint16_t) l->output[x * 2 + 1]];
+				_fm_modulator_add_cgain(&s->fm_secam, &l->output[x * 2], l->output[x * 2 + 1], g);
+			}
 		}
 	}
 	
@@ -2877,7 +3027,7 @@ static int _vid_filter_process(vid_t *s, void *arg, int nlines, vid_line_t **lin
 	vid_line_t *dst = lines[0];
 	vid_line_t *src = lines[nlines - 1];
 	
-	dst->width = fir_int16_process(&p->fir, dst->output, src->output, src->width);
+	dst->width = fir_int16_process(&p->fir, dst->output, src->output, src->width, 2);
 	
 	return(1);
 }
@@ -2986,7 +3136,7 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 					
 					if(s->conf.type == VID_MAC)
 					{
-						mac_write_audio(s, s->nicam_buf);
+						mac_write_audio(s, &s->mac.audio, 0, s->nicam_buf, NICAM_AUDIO_LEN * 2);
 					}
 					
 					s->nicam_buf_len = 0;
@@ -3209,20 +3359,12 @@ static int _init_vfilter(vid_t *s)
 	
 	if(s->conf.modulation == VID_VSB)
 	{
-		double *taps;
+		double taps[51 * 2];
 		
 		ntaps = 51;
 		
-		taps = calloc(ntaps, sizeof(double) * 2);
-		if(!taps)
-		{
-			free(p);
-			return(VID_OUT_OF_MEMORY);
-		}
-		
 		fir_complex_band_pass(taps, ntaps, s->sample_rate, -s->conf.vsb_lower_bw, s->conf.vsb_upper_bw, 750000, 1);
 		fir_int16_scomplex_init(&p->fir, taps, ntaps, 1, 1, _calc_filter_delay(width, ntaps));
-		free(taps);
 	}
 	else if(s->conf.modulation == VID_FM)
 	{
@@ -3290,20 +3432,12 @@ static int _init_vfilter(vid_t *s)
 	else if(s->conf.modulation == VID_AM ||
 	        s->conf.modulation == VID_NONE)
 	{
-		double *taps;
+		double taps[51];
 		
 		ntaps = 51;
 		
-		taps = calloc(ntaps, sizeof(double));
-		if(!taps)
-		{
-			free(p);
-			return(VID_OUT_OF_MEMORY);
-		}
-		
 		fir_low_pass(taps, ntaps, s->sample_rate, s->conf.video_bw, 0.75e6, 1);
 		fir_int16_init(&p->fir, taps, ntaps, 1, 1, _calc_filter_delay(width, ntaps));
-		free(taps);
 	}
 	
 	if(p->fir.type == 0)
@@ -3360,6 +3494,21 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	slevel = s->conf.modulation == VID_FM ? 1.0 : s->conf.level;
 	
 	level = s->conf.video_level * slevel;
+	
+	/* Invert the video levels if requested */
+	if(s->conf.invert_video)
+	{
+		double t;
+		
+		/* Swap sync and white levels */
+		t = s->conf.white_level;
+		s->conf.white_level = s->conf.sync_level;
+		s->conf.sync_level = t;
+		
+		/* Adjust black and blanking levels */
+		s->conf.blanking_level = s->conf.sync_level - (s->conf.blanking_level - s->conf.white_level);
+		s->conf.black_level = s->conf.sync_level - (s->conf.black_level - s->conf.white_level);
+	}
 	
 	/* Calculate 16-bit blank and sync levels */
 	s->white_level    = round(s->conf.white_level    * level * INT16_MAX);
@@ -3476,8 +3625,6 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	if(s->conf.colour_mode == VID_SECAM)
 	{
 		double secam_level = (s->conf.white_level - s->conf.blanking_level) * level;
-		const double a[2] = { 1.0, -0.90456054 };
-		const double b[2] = { 2.90456054, -2.80912108 };
 		double taps[51];
 		
 		r = _init_fm_modulator(&s->fm_secam, s->pixel_rate, SECAM_FM_FREQ, SECAM_FM_DEV, secam_level);
@@ -3487,7 +3634,10 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 			return(r);
 		}
 		
-		r = iir_int16_init(&s->fm_secam_iir, a, b);
+		r = iir_int16_init(&s->fm_secam_iir,
+			(const double [2]) { 1.0, -0.90456054 },
+			(const double [2]) { 2.90456054, -2.80912108 }
+		);
 		if(r != VID_OK)
 		{
 			vid_free(s);
@@ -3520,6 +3670,9 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 			s->fm_secam_bell[(uint16_t) r].i = lround(dg[0] * INT16_MAX);
 			s->fm_secam_bell[(uint16_t) r].q = lround(dg[1] * INT16_MAX);
 		}
+		
+		/* Field sync levels (optional) */
+		s->secam_fsync_level = round(350e3 / SECAM_FM_DEV * INT16_MAX);
 	}
 	
 	/* Set the next line/frame counter */
@@ -3630,6 +3783,18 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		}
 		
 		_add_lineprocess(s, "acp", 1, &s->acp, acp_render_line, NULL);
+	}
+	
+	/* Initialise VITC timestamp */
+	if(s->conf.vitc)
+	{
+		if((r = vitc_init(&s->vitc, s)) != VID_OK)
+		{
+			vid_free(s);
+			return(r);
+		}
+		
+		_add_lineprocess(s, "vitc", 1, &s->vitc, vitc_render, NULL);
 	}
 	
 	/* Initalise the teletext system */
@@ -3995,6 +4160,11 @@ void vid_free(vid_t *s)
 	if(s->conf.teletext)
 	{
 		tt_free(&s->tt);
+	}
+	
+	if(s->conf.vitc)
+	{
+		vitc_free(&s->vitc);
 	}
 	
 	if(s->conf.vits)

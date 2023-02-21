@@ -81,6 +81,7 @@ typedef struct {
 	char *eurocrypt;
 	int acp;
 	int vits;
+	int vitc;
 	int filter;
 	int subtitles;
 	int txsubtitles;
@@ -101,6 +102,10 @@ typedef struct {
 	uint32_t disableemm;
 	int showecm;
 	int chid;
+	int mac_audio_stereo;
+	int mac_audio_quality;
+	int mac_audio_protection;
+	int mac_audio_companded;
 	int64_t offset;
 	char *passthru;
 	float volume;
@@ -109,6 +114,8 @@ typedef struct {
 	int ec_mat_rating;
 	char *ec_ppv;
 	int nodate;
+	int invert_video;
+	int secam_field_id;
 	char *ffmt;
 	char *fopts;
 	
