@@ -27,9 +27,9 @@
 
 typedef struct {
 	const char *id;   /* Mode id */
-	int emode;        /* Eurocrypt M or S2 packet */
-	int cmode;        /* Eurocrypt M or S2 algo  */
-	uint8_t key[14];  /* Decryption keys */
+	int des_algo;     /* Eurocrypt M or S2 algo */
+	int packet_type;  /* Eurocrypt M or S2 packet  */
+	uint8_t key[16];  /* Decryption keys */
 	uint8_t ppid[3];  /* Programme provider identifier */
 	char date[10];    /* Broadcast date */
 	uint8_t theme[2]; /* Theme */
@@ -38,9 +38,9 @@ typedef struct {
 
 typedef struct {
 	const char *id;   /* Mode id */
-	int emode;        /* Eurocrypt M or S2 algo */
-	int cmode;        /* Eurocrypt M or S2 packet  */
-	uint8_t key[14];   /* Decryption key */
+	int des_algo;     /* Eurocrypt M or S2 algo */
+	int packet_type;  /* Eurocrypt M or S2 packet  */
+	uint8_t key[16];  /* Decryption key */
 	uint8_t ppid[3];  /* Programme provider identifier */
 	uint8_t sa[3];    /* Shared Address */
 	uint8_t ua[5];    /* Unique Address */

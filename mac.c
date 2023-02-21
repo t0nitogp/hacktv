@@ -24,6 +24,8 @@
 #include "nicam728.h"
 #include "mac.h"
 
+#define EC_S 0x01
+
 /* MAC sync codes */
 #define MAC_CLAMP 0xEAF3927FUL
 #define MAC_LSW   0x0B
@@ -661,7 +663,27 @@ static int _create_si_dg0_packet(mac_t *s, uint8_t pkt[MAC_PAYLOAD_BYTES * 2])
 	b |= s->ec.emm_addr;			/* Packet address of EMM */
 	pkt[x++] = (b & 0x00FF) >> 0;	/* OTA config LSB */
 	pkt[x++] = (b & 0xFF00) >> 8;	/* OTA config MSB */
+
+	/* COMD - pointer to direct commentary (DCOM) */
+	pkt[x++] = 0x61;	/* PI  */
+	pkt[x++] = 0x03;	/* LI Length (3 bytes) */
+	pkt[x++] = 0x09;	/* Language - English */
+	b  = 9 << 12;		/* Network data, detailed description = DG9 */
+	b |= 1 << 10;		/* Subframe identification, TDMCID = 01 */
+	b |= 0;				/* Packet address of EMM */
+	pkt[x++] = (b & 0x00FF) >> 0;	
+	pkt[x++] = (b & 0xFF00) >> 8;	
 	
+	/* TIMD - pointer to time (TIME) */
+	pkt[x++] = 0x62;	/* PI  */
+	pkt[x++] = 0x03;	/* LI Length (3 bytes) */
+	pkt[x++] = 0x09;	/* Language - English */
+	b  = 9 << 12;		/* Network data, detailed description = DG9 */
+	b |= 1 << 10;		/* Subframe identification, TDMCID = 01 */
+	b |= 0;				/* Packet address of EMM */
+	pkt[x++] = (b & 0x00FF) >> 0;	
+	pkt[x++] = (b & 0xFF00) >> 8;	
+
 	/* Update the CI command length */
 	pkt[10] = x - pkt[10];
 	
@@ -705,7 +727,18 @@ static int _create_si_dg3_packet(mac_t *s, uint8_t *pkt)
 	pkt[x++] = 1;			/* Index value 1 */
 	strcpy((char *) &pkt[x], _sname);
 	x += strlen(_sname);
-	
+
+	char pref[32] = "HackTV Broadcast";
+	/* Parameter PREF */
+	pkt[x++] = 0x48;		/* PI Service Reference */
+	pkt[x++] = strlen(pref) + 4;
+	pkt[x++] = 0x0F;
+	pkt[x++] = 0x00;
+	pkt[x++] = 0x00;
+	pkt[x++] = 0x00;
+	strcpy((char *) &pkt[x], pref);
+	x += strlen(pref);
+
 	if(s->eurocrypt)
 	{
 		/* PG */
@@ -714,16 +747,17 @@ static int _create_si_dg3_packet(mac_t *s, uint8_t *pkt)
 		
 		/* Parameter ACCM */
 		pkt[x++] = 0x88;
-		pkt[x++] = 0x04;        /* Packet length = 3 */
+		pkt[x++] = 0x04;        /* Packet length = 4 */
 		b  = 1 << 15;           /* 0: Absence of ECM, 1: Presence of ECM */
 		b |= 0 << 14;           /* 0: CW derived 'by other means', 1: CW derived from CAFCNT */
 		b |= 1 << 10;           /* Subframe related location - TDMCID 01 */
 		b |= s->ec.ecm_addr;    /* Address 346 */
 		pkt[x++] = (b & 0x00FF) >> 0;
 		pkt[x++] = (b & 0xFF00) >> 8;
-		pkt[x++] = 0x40;        /* Eurocrypt */
-		pkt[x++] = (s->ec.mode->cmode & 0x30);
-		                        /* Eurocrypt algo (M or S2) */
+		pkt[x++] = s->ec.mode->packet_type != EC_S ? 0x40 : 0x20; 
+								/* Eurocrypt S or M/S2 */
+		pkt[x++] = s->ec.mode->packet_type != EC_S ? s->ec.mode->packet_type & 0x30 : 0x01 ;
+		                        /* Eurocrypt algo (M, S or S2) */
 	}
 	
 	/* Parameter VCONF */
@@ -828,10 +862,69 @@ static int _create_si_dg4_packet(mac_t *s, uint8_t *pkt, int golay)
 		b |= s->ec.emm_addr;    /* Address 347 */
 		pkt[x++] = (b & 0x00FF) >> 0;
 		pkt[x++] = (b & 0xFF00) >> 8;
-		pkt[x++] = 0x40;        /* Eurocrypt */
-		pkt[x++] = (s->ec.emmode->cmode & 0x30);
-		                        /* Eurocrypt algo (M or S2) */
+		pkt[x++] = s->ec.mode->packet_type != EC_S ? 0x40 : 0x20; 
+								/* Eurocrypt S or M/S2 */
+		pkt[x++] = s->ec.mode->packet_type != EC_S ? s->ec.mode->packet_type & 0x30 : 0x01 ;
+		                        /* Eurocrypt algo (M, S or S2) */
 	}
+	
+	/* Update the CI command length */
+	pkt[10] = x - pkt[10];
+	
+	/* Generate the DGS CRC */
+	b = _crc16(&pkt[9], pkt[10] + 2);
+	pkt[x++] = (b & 0x00FF) >> 0;
+	pkt[x++] = (b & 0xFF00) >> 8;
+	
+	/* Update the DGH length */
+	x -= 1;
+	pkt[6] = _hamming[(x & 0xF0) >> 4];
+	pkt[7] = _hamming[(x & 0x0F) >> 0];
+	
+	return x + 1;
+}
+
+static int _create_si_dg9_packet(mac_t *s, uint8_t *pkt)
+{
+	int x;
+	uint16_t b;
+	
+	memset(pkt, 0, MAC_PAYLOAD_BYTES);
+	
+	/* PT Packet Type */
+	pkt[0] = 0xF8;
+	
+	/* DGH (Data Group Header) */
+	pkt[1] = _hamming[9];           /* TG data group type */
+	pkt[2] = _hamming[0];           /* C  data group continuity */
+	pkt[3] = _hamming[15];          /* R  data group repetition */
+	pkt[4] = _hamming[0];           /* S1 MSB number of packets carrying the data group */
+	pkt[5] = _hamming[1];           /* S2 LSB number of packets carrying the data group */
+	pkt[6] = _hamming[0];           /* F1 MSB number of data group bytes in the last packet */
+	pkt[7] = _hamming[0];           /* F2 LSB number of data group bytes in the last packet */
+	pkt[8] = _hamming[1];           /* N  data group suffix indicator */
+	
+	pkt[9]  = 0x11;                 /* Network Command (Low Priority) */
+	pkt[10] = 11;                   /* LI Length (bytes, everything following up until the DGS) */
+	x = 11;
+
+	/* Parameter TIME */
+	char t[32];
+    time_t now = time(0);
+    strftime (t, 32, "%d/%m/%Y %H:%M:%S", localtime (&now));
+
+	pkt[x++] = 0x20;		/* PI Service Reference */
+	pkt[x++] = strlen(t);
+	strcpy((char *) &pkt[x], t);
+	x += strlen(t);
+	
+	char dcom[32] = "MAC transmission via HackTV";
+	/* Parameter DCOM */
+	pkt[x++] = 0x60;		/* PI Service Reference */
+	pkt[x++] = strlen(dcom) + 1;
+	pkt[x++] = 0x09;
+	strcpy((char *) &pkt[x], dcom);
+	x += strlen(dcom);
 	
 	/* Update the CI command length */
 	pkt[10] = x - pkt[10];
@@ -1067,7 +1160,7 @@ static void _write_dg_packet(vid_t *s, uint8_t *pkt, int x, int m, int golay)
 		memcpy(p + 1, pkt + (i * MAC_DG_BYTES) + 1, MAC_PAYLOAD_BYTES - 1);
 		
 		/* PT Packet Type */
-		p[0] = golay ? i ? 0x3F : 0x00 : i ? 0xC7 : 0xF8;
+		p[0] = golay ? (i ? 0x3F : 0x00) : (i ? 0xC7 : 0xF8);
 		
 		/* Tack CRC on the end of the packet */
 		_crc_packet(p);
@@ -1416,11 +1509,15 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			_write_dg_packet(s, pkt, x, 3, golay);
 			break;
 			
-		case 2: /* Write DG4 to 1st subframe */
+		case 2: /* Write DG4 and DG9 to 1st subframe */
 			
 			x = _create_si_dg4_packet(&s->mac, pkt, golay);
 			
 			_write_dg_packet(s, pkt, x, 4, golay);
+
+			x = _create_si_dg9_packet(&s->mac, pkt);
+			
+			_write_dg_packet(s, pkt, x, 9, golay);
 			break;
 		}
 		
