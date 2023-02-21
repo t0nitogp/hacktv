@@ -112,6 +112,7 @@ static void print_usage(void)
 		"      --systeraudio              Invert the audio spectrum when using Syster, Syster CnR or D11 scrambling.\n"
 		"      --acp                      Enable Analogue Copy Protection signal.\n"
 		"      --vits                     Enable VITS test signals.\n"
+		"      --vitc                     Enable VITC time code.\n"
 		"      --filter                   Enable experimental VSB modulation filter.\n"
 		"      --nocolour                 Disable the colour subcarrier (PAL, SECAM, NTSC only).\n"
 		"      --noaudio                  Suppress all audio subcarriers.\n"
@@ -131,8 +132,22 @@ static void print_usage(void)
 		"      --downmix                  Downmix 5.1 audio to 2.0.\n"
 		"      --volume <value>           Adjust volume. Takes floats as argument.\n"
 		"      --showecm                  Show input and output control wordsfor scrambled modes.\n"
+		"      --mac-audio-stereo         Use stereo audio (D/D2-MAC). (Default)\n"
+		"      --mac-audio-mono           Use mono audio (D/D2-MAC).\n"
+		"      --mac-audio-high-quality   Use high quality 32 kHz audio (D/D2-MAC).\n"
+		"                                 (Default)\n"
+		"      --mac-audio-medium-quality Use medium quality 16 kHz audio (D/D2-MAC).\n"
+		"      --mac-audio-companded      Use companded audio compression (D/D2-MAC).\n"
+		"                                 (Default)\n"
+		"      --mac-audio-linear         Use linear audio. (D/D2-MAC).\n"
+		"      --mac-audio-l1-protection  Use first level protection (D/D2-MAC).\n"
+		"                                 (Default)\n"
+		"      --mac-audio-l2-protection  Use second level protection (D/D2-MAC).\n"
 		"      --offset <value>           Add a frequency offset in Hz (Complex modes only).\n"
 		"      --passthru <file>          Read and add an int16 complex signal.\n"
+		"      --invert-video             Invert the composite video signal sync and\n"
+		"                                 white levels.\n"
+		"      --secam-field-id           Enable SECAM field identification.\n"
 		"\n"
 		"Input options\n"
 		"\n"
@@ -199,6 +214,7 @@ static void print_usage(void)
 		"\n"
 		"  i             = PAL colour, 25 fps, 625 lines, AM (complex), 6.0 MHz FM audio\n"
 		"  b, g          = PAL colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio\n"
+		"  pal-d, pal-k  = PAL colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM audio\n"
 		"  pal-fm        = PAL colour, 25 fps, 625 lines, FM (complex), 6.5 MHz FM audio\n"
 		"  pal           = PAL colour, 25 fps, 625 lines, unmodulated (real)\n"
 		"  pal-m         = PAL colour, 30/1.001 fps, 525 lines, AM (complex), 4.5 MHz FM audio\n"
@@ -399,6 +415,7 @@ enum {
 	_OPT_EUROCRYPT,
 	_OPT_ACP,
 	_OPT_VITS,
+	_OPT_VITC,
 	_OPT_FILTER,
 	_OPT_NOCOLOUR,
 	_OPT_NOAUDIO,
@@ -431,6 +448,18 @@ enum {
 	_OPT_DOWNMIX,
 	_OPT_VOLUME,
 	_OPT_FMAUDIOTEST,
+	_OPT_MAC_AUDIO_STEREO,
+	_OPT_MAC_AUDIO_MONO,
+	_OPT_MAC_AUDIO_HIGH_QUALITY,
+	_OPT_MAC_AUDIO_MEDIUM_QUALITY,
+	_OPT_MAC_AUDIO_COMPANDED,
+	_OPT_MAC_AUDIO_LINEAR,
+	_OPT_MAC_AUDIO_L1_PROTECTION,
+	_OPT_MAC_AUDIO_L2_PROTECTION,
+	_OPT_OFFSET,
+	_OPT_PASSTHRU,
+	_OPT_INVERT_VIDEO,
+	_OPT_SECAM_FIELD_ID,
 	_OPT_FFMT,
 	_OPT_FOPTS,
 	_OPT_PIXELRATE,
@@ -472,6 +501,7 @@ int main(int argc, char *argv[])
 		{ "systeraudio",    no_argument,       0, _OPT_SYSTERAUDIO },
 		{ "acp",            no_argument,       0, _OPT_ACP },
 		{ "vits",           no_argument,       0, _OPT_VITS },
+		{ "vitc",           no_argument,       0, _OPT_VITC },
 		{ "filter",         no_argument,       0, _OPT_FILTER },
 		{ "subtitles",      optional_argument, 0, _OPT_SUBTITLES },
 		{ "tx-subtitles",   optional_argument, 0, _OPT_TX_SUBTITLES },
@@ -488,8 +518,18 @@ int main(int argc, char *argv[])
 		{ "ec-ppv",         optional_argument, 0, _OPT_EC_PPV },
 		{ "scramble-audio", no_argument,       0, _OPT_SCRAMBLE_AUDIO },
 		{ "chid",           required_argument, 0, _OPT_CHID },
+		{ "mac-audio-stereo", no_argument,     0, _OPT_MAC_AUDIO_STEREO },
+		{ "mac-audio-mono", no_argument,       0, _OPT_MAC_AUDIO_MONO },
+		{ "mac-audio-high-quality", no_argument, 0, _OPT_MAC_AUDIO_HIGH_QUALITY },
+		{ "mac-audio-medium-quality", no_argument, 0, _OPT_MAC_AUDIO_MEDIUM_QUALITY },
+		{ "mac-audio-companded", no_argument,  0, _OPT_MAC_AUDIO_COMPANDED },
+		{ "mac-audio-linear", no_argument,     0, _OPT_MAC_AUDIO_LINEAR },
+		{ "mac-audio-l1-protection", no_argument, 0, _OPT_MAC_AUDIO_L1_PROTECTION },
+		{ "mac-audio-l2-protection", no_argument, 0, _OPT_MAC_AUDIO_L2_PROTECTION },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
 		{ "passthru",       required_argument, 0, _OPT_PASSTHRU },
+		{ "invert-video",   no_argument,       0, _OPT_INVERT_VIDEO },
+		{ "secam-field-id", no_argument,       0, _OPT_SECAM_FIELD_ID },
 		{ "ffmt",           required_argument, 0, _OPT_FFMT },
 		{ "fopts",          required_argument, 0, _OPT_FOPTS },
 		{ "frequency",      required_argument, 0, 'f' },
@@ -552,6 +592,7 @@ int main(int argc, char *argv[])
 	s.systeraudio = 0;
 	s.acp = 0;
 	s.vits = 0;
+	s.vitc = 0;
 	s.filter = 0;
 	s.nocolour = 0;
 	s.noaudio = 0;
@@ -560,6 +601,10 @@ int main(int argc, char *argv[])
 	s.scramble_video = 0;
 	s.scramble_audio = 0;
 	s.chid = -1;
+	s.mac_audio_stereo = MAC_STEREO;
+	s.mac_audio_quality = MAC_HIGH_QUALITY;
+	s.mac_audio_companded = MAC_COMPANDED;
+	s.mac_audio_protection = MAC_FIRST_LEVEL_PROTECTION;
 	s.frequency = 0;
 	s.amp = 0;
 	s.gain = 0;
@@ -768,7 +813,11 @@ int main(int argc, char *argv[])
 		case _OPT_VITS: /* --vits */
 			s.vits = 1;
 			break;
-			
+		
+		case _OPT_VITC: /* --vitc */
+			s.vitc = 1;
+			break;
+		
 		case _OPT_FILTER: /* --filter */
 			s.filter = 1;
 			break;
@@ -854,12 +903,52 @@ int main(int argc, char *argv[])
 			s.chid = strtol(optarg, NULL, 0);
 			break;
 		
+		case _OPT_MAC_AUDIO_STEREO: /* --mac-audio-stereo */
+			s.mac_audio_stereo = MAC_STEREO;
+			break;
+		
+		case _OPT_MAC_AUDIO_MONO: /* --mac-audio-mono */
+			s.mac_audio_stereo = MAC_MONO;
+			break;
+		
+		case _OPT_MAC_AUDIO_HIGH_QUALITY: /* --mac-audio-high-quality */
+			s.mac_audio_quality = MAC_HIGH_QUALITY;
+			break;
+		
+		case _OPT_MAC_AUDIO_MEDIUM_QUALITY: /* --mac-audio-medium-quality */
+			s.mac_audio_quality = MAC_MEDIUM_QUALITY;
+			break;
+		
+		case _OPT_MAC_AUDIO_COMPANDED: /* --mac-audio-companded */
+			s.mac_audio_companded = MAC_COMPANDED;
+			break;
+		
+		case _OPT_MAC_AUDIO_LINEAR: /* --mac-audio-linear */
+			s.mac_audio_companded = MAC_LINEAR;
+			break;
+		
+		case _OPT_MAC_AUDIO_L1_PROTECTION: /* --mac-audio-l1-protection */
+			s.mac_audio_protection = MAC_FIRST_LEVEL_PROTECTION;
+			break;
+		
+		case _OPT_MAC_AUDIO_L2_PROTECTION: /* --mac-audio-l2-protection */
+			s.mac_audio_protection = MAC_SECOND_LEVEL_PROTECTION;
+			break;
+
 		case _OPT_OFFSET: /* --offset <value Hz> */
 			s.offset = (int64_t) strtod(optarg, NULL);
 			break;
 		
 		case _OPT_PASSTHRU: /* --passthru <path> */
 			s.passthru = optarg;
+			break;
+		
+		case _OPT_INVERT_VIDEO: /* --invert-video */
+			s.invert_video = 1;
+			break;
+		
+		case _OPT_SECAM_FIELD_ID: /* --secam-field-id */
+			s.secam_field_id = 1;
 			break;
 		
 		case _OPT_FFMT: /* --ffmt <format> */
@@ -1304,9 +1393,29 @@ int main(int argc, char *argv[])
 		vid_conf.vits = 1;
 	}
 	
-	if(vid_conf.type == VID_MAC && s.chid >= 0)
+	if(s.vitc)
 	{
-		vid_conf.chid = (uint16_t) s.chid;
+		if(vid_conf.type != VID_RASTER_625 &&
+		   vid_conf.type != VID_RASTER_525)
+		{
+			fprintf(stderr, "VITC is only currently supported for 625 and 525 line raster modes.\n");
+			return(-1);
+		}
+		
+		vid_conf.vitc = 1;
+	}
+	
+	if(vid_conf.type == VID_MAC)
+	{
+		if(s.chid >= 0)
+		{
+			vid_conf.chid = (uint16_t) s.chid;
+		}
+		
+		vid_conf.mac_audio_stereo = s.mac_audio_stereo;
+		vid_conf.mac_audio_quality = s.mac_audio_quality;
+		vid_conf.mac_audio_protection = s.mac_audio_protection;
+		vid_conf.mac_audio_companded = s.mac_audio_companded;
 	}
 	
 	if(s.filter)
@@ -1317,6 +1426,8 @@ int main(int argc, char *argv[])
 	vid_conf.offset = s.offset;
 	vid_conf.passthru = s.passthru;
 	vid_conf.volume = s.volume;
+	vid_conf.invert_video = s.invert_video;
+	vid_conf.secam_field_id = s.secam_field_id;
 	
 	/* Setup video encoder */
 	r = vid_init(&s.vid, s.samplerate, s.pixelrate, &vid_conf);

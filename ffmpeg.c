@@ -699,7 +699,7 @@ static void *_video_scaler_thread(void *arg)
 				pts--;
 			}
 		}
-		
+
 		oframe = _frame_dbuffer_back_buffer(&av->out_video_buffer);
 		
 		sws_scale(
@@ -1152,6 +1152,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 	av_ffmpeg_t *av;
 	const AVInputFormat *fmt = NULL;
 	AVDictionary *opts = NULL;
+	const AVCodec *codec;
 	AVRational time_base;
 	int64_t start_time = 0;
 	int r;

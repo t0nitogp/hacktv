@@ -45,6 +45,7 @@ typedef struct vid_t vid_t;
 #include "subtitles.h"
 #include "vits.h"
 #include "graphics.h"
+#include "vitc.h"
 
 /* Return codes */
 #define VID_OK             0
@@ -172,6 +173,7 @@ typedef struct {
 	double vsync_short_width;
 	double vsync_long_width;
 	
+	int invert_video;
 	double white_level;
 	double black_level;
 	double blanking_level;
@@ -210,6 +212,7 @@ typedef struct {
 	int subtitles;
 	int txsubtitles;
 	int vits;
+	int vitc;
 	char *eurocrypt;
 	int ec_mat_rating;
 	char *ec_ppv;
@@ -237,6 +240,8 @@ typedef struct {
 	double iv_co;
 	double qu_co;
 	double qv_co;
+	
+	int secam_field_id;
 	
 	/* FM audio (Mono) */
 	double fm_mono_carrier;
@@ -271,6 +276,10 @@ typedef struct {
 	/* D/D2-MAC options */
 	int mac_mode;
 	uint16_t chid;
+	int mac_audio_stereo;
+	int mac_audio_quality;
+	int mac_audio_protection;
+	int mac_audio_companded;
 	int scramble_video;
 	int scramble_audio;
 	
@@ -384,6 +393,7 @@ struct vid_t {
 	int16_t fm_secam_dmax[2];
 	fir_int16_t secam_l_fir;
 	cint16_t *fm_secam_bell;
+	int16_t secam_fsync_level;
 	
 	int fsc_flag_left;
 	int fsc_flag_width;
@@ -421,6 +431,9 @@ struct vid_t {
 	
 	/* VITS state */
 	vits_t vits;
+	
+	/* VITC state */
+	vitc_t vitc;
 	
 	/* Audio state */
 	int audio;
