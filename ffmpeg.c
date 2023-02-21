@@ -54,13 +54,14 @@
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
 #include "hacktv.h"
+#include "keyboard.h"
 
 /* Maximum length of the packet queue */
 /* Taken from ffplay.c */
 #define MAX_QUEUE_SIZE (15 * 1024 * 1024)
-
-/* Temp hack */
-char current_text[256];
+#define AVSEEK_FWD 60
+#define AVSEEK_RWD -60
+#define AVSEEK_SEEKING 1
 
 typedef struct __packet_queue_item_t {
 	
@@ -105,9 +106,8 @@ typedef struct {
 	int sample_rate;
 	uint32_t *video;
 	vid_t *s;
-	int seekflag;
-	uint8_t background;
-	int bstat;
+	uint8_t paused;
+	time_t last_paused;
 	
 	av_font_t *font[10];
 	
@@ -468,7 +468,7 @@ static void *_input_thread(void *arg)
 	while(av->thread_abort == 0)
 	{
 		r = av_read_frame(av->format_ctx, &pkt);
-		
+
 		if(r == AVERROR(EAGAIN))
 		{
 			av_usleep(10000);
@@ -509,7 +509,7 @@ static void *_input_thread(void *arg)
 					uint32_t *bitmap;
 					int max_bitmap_width = 0;
 					int max_bitmap_height = 0;
-					int bitmap_scale;
+					float bitmap_scale;
 					int x, y, pos, last_pos;
 					last_pos = pos = 0;
 					
@@ -517,6 +517,7 @@ static void *_input_thread(void *arg)
 					{
 						/* Scale bitmap to video width */
 						bitmap_scale = sub.rects[s]->w / av->s->active_width < 1 ? 1 : round(sub.rects[s]->w / av->s->active_width);
+						fprintf(stderr,"Bitmap scale %f\n", bitmap_scale);
 						
 						/* Get maximum width */
 						max_bitmap_width = MAX(max_bitmap_width, sub.rects[s]->w / bitmap_scale);
@@ -670,6 +671,9 @@ static void *_video_scaler_thread(void *arg)
 	AVRational ratio;
 	int64_t pts;
 	
+	/* Temp hack */
+	char current_text[256];
+	
 	/* Fetch video frames and pass them through the scaler */
 	while((frame = _frame_dbuffer_flip(&av->in_video_buffer)) != NULL)
 	{
@@ -678,7 +682,6 @@ static void *_video_scaler_thread(void *arg)
 		if(pts != AV_NOPTS_VALUE)
 		{
 			pts  = av_rescale_q(pts, av->video_stream->time_base, av->video_time_base);
-			// fprintf(stderr, "Time base %i\n", pts);
 			pts -= av->video_start_time;
 			
 			if(pts < 0)
@@ -696,8 +699,6 @@ static void *_video_scaler_thread(void *arg)
 				pts--;
 			}
 		}
-		
-		if(av->seekflag < 2) av->seekflag++;
 		
 		oframe = _frame_dbuffer_back_buffer(&av->out_video_buffer);
 		
@@ -734,26 +735,18 @@ static void *_video_scaler_thread(void *arg)
 			overlay_image((uint32_t *) oframe->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, av->s->vid_logo.position);
 		}
 		
+		/* Overlay timestamp, if enabled */
 		if(av->s->conf.timestamp)
 		{
-			char timestr[20];
-			int toffset;
-			toffset = 0;
+			char timestr[200];
+			int sec, h, m, s;
 			
-			/* Hack to resolve time calculation differences between Windows and *nix */
-			#ifndef WIN32
-				toffset = 3600;
-			#endif
-			
-			time_t diff = time(0) - av->s->conf.timestamp  + (av->s->conf.position * 60) - toffset;
-			struct tm *d = localtime(&diff);
-			sprintf(timestr, "%02d:%02d:%02d", d->tm_hour, d->tm_min, d->tm_sec);
-			print_generic_text(	av->font[1],
-								(uint32_t *) oframe->data[0],
-								timestr,
-								10, 90, 1, 0, 0, 0);
-			
-			fprintf(stderr,"\r%s", timestr);
+			sec = (frame->best_effort_timestamp / (av->video_stream->time_base.den / av->video_stream->time_base.num));
+			h = (sec / 3600); 
+			m = (sec - (3600 * h)) / 60;
+			s = (sec - (3600 * h) - (m * 60));
+			sprintf(timestr, "%02d:%02d:%02d", h, m, s);
+			print_generic_text(	av->font[1], (uint32_t *) oframe->data[0], timestr, 10, 90, 1, 0, 0, 0);
 		}
 		
 		/* Print subtitles, if enabled */
@@ -799,13 +792,71 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 {
 	av_ffmpeg_t *av = private;
 	AVFrame *frame;
+	int nav = 0;
 	
 	if(av->video_stream == NULL)
 	{
 		return(NULL);
 	}
+
+	kb_enable();
+	if(kbhit())
+	{
+		char c = getchar();
+		switch(c)
+		{
+			case ' ':
+				av->paused ^= 1;
+				fprintf(stderr,"\nVideo state: %s", av->paused ? "PAUSE" : "PLAY");	
+				break;
+			case '\033':
+				getchar();
+				c = getchar();
+				switch(c)
+				{
+					case 'C':
+						fprintf(stderr,"\nVideo state: FF");
+						nav = AVSEEK_FWD;
+						break;
+					case 'D':
+						fprintf(stderr,"\nVideo state: RW");
+						nav = AVSEEK_RWD;
+						break;
+					default:
+						break;
+				}
+				break;
+			default: 
+				break;
+		}
+	}
+	kb_disable();
+
+	if(nav == AVSEEK_FWD || nav == AVSEEK_RWD)
+	{
+		av->video_start_time += nav;
+		av->audio_start_time += nav;
+		nav = 0;
+	}
 	
-	frame = _frame_dbuffer_flip(&av->out_video_buffer);
+	if(av->paused) 
+	{
+		frame = av->out_video_buffer.frame[0];
+		
+		overlay_image((uint32_t *) frame->data[0], &av->s->media_icons[1], av->s->active_width, av->s->conf.active_lines, IMG_POS_MIDDLE);
+		av->last_paused = time(0);
+	}
+	else
+	{
+		frame = _frame_dbuffer_flip(&av->out_video_buffer);
+
+		/* Show 'play' icon for 5 seconds after resuming play */
+		if(time(0) - av->last_paused < 5)
+		{
+			overlay_image((uint32_t *) frame->data[0], &av->s->media_icons[0], av->s->active_width, av->s->conf.active_lines, IMG_POS_MIDDLE);
+		}
+	}
+
 	if(!frame)
 	{
 		/* EOF or abort */
@@ -836,33 +887,10 @@ static uint32_t *_av_ffmpeg_read_video(void *private, float *ratio)
 		
 	}
 	
-	if(!av->seekflag)
+	/* Print logo, if enabled */
+	if(av->s->conf.logo)
 	{
-		if(av->bstat)
-		{
-			if(av->background == 0x50) av->bstat = 0;
-			av->background++;
-		}
-		else
-		{
-			if(av->background == 0x25) av->bstat = 1;
-			av->background--;
-		}
-
-		memset(frame->data[0], av->background, vid_get_framebuffer_length(av->s));
-		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
-							"SEEKING VIDEO",
-							50, 47, 1, 0, 0, 0);
-		
-		print_generic_text(	av->font[2], (uint32_t *) frame->data[0],
-							"PLEASE WAIT",
-							50, 53, 1, 0, 0, 0);
-
-		/* Print logo, if enabled */
-		if(av->s->conf.logo)
-		{
-			overlay_image((uint32_t *) frame->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, av->s->vid_logo.position);
-		}
+		overlay_image((uint32_t *) frame->data[0], &av->s->vid_logo, av->s->active_width, av->s->conf.active_lines, av->s->vid_logo.position);
 	}
 	
 	return ((uint32_t *) frame->data[0]);
@@ -917,7 +945,7 @@ static void *_audio_decode_thread(void *arg)
 			/* Pull filtered frame from the filtergraph */ 
 			if(av_buffersink_get_frame(av->abuffersink_ctx, frame) < 0) 
 			{
-				fprintf(stderr, "Error while sourcing the video filtergraph\n");
+				fprintf(stderr, "Error while sourcing the audio filtergraph\n");
 			}
 			
 			/* We have received a frame! */
@@ -1030,7 +1058,7 @@ static int16_t *_av_ffmpeg_read_audio(void *private, size_t *samples)
 	av_ffmpeg_t *av = private;
 	AVFrame *frame;
 	
-	if(av->audio_stream == NULL)
+	if(av->audio_stream == NULL || av->paused)
 	{
 		return(NULL);
 	}
@@ -1122,9 +1150,8 @@ static int _av_ffmpeg_close(void *private)
 int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 {
 	av_ffmpeg_t *av;
-	AVInputFormat *fmt = NULL;
+	const AVInputFormat *fmt = NULL;
 	AVDictionary *opts = NULL;
-	AVCodec *codec;
 	AVRational time_base;
 	int64_t start_time = 0;
 	int r;
@@ -1138,7 +1165,8 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 	{
 		return(HACKTV_OUT_OF_MEMORY);
 	}
-	
+
+	av->paused = 0;
 	av->width = s->active_width;
 	av->height = s->conf.active_lines;
 	
@@ -1584,8 +1612,6 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			return(HACKTV_ERROR);
 		};
 		
-		av->bstat = 0;
-
 		av->font[0] = s->av_font;
 	}
 	else
@@ -1629,7 +1655,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		if (s->conf.position > 0) 
 		{
 			av->video_start_time = av_rescale_q(request_timestamp, time_base, av->video_time_base);
-			av_seek_frame(av->format_ctx, av->video_stream->index, request_timestamp, 0);
+			avformat_seek_file(av->format_ctx, av->video_stream->index, INT64_MIN, request_timestamp, INT64_MAX, 0);
 		}
 		else
 		{
@@ -1654,18 +1680,29 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		av->font[1] = s->av_font;
 	}
 	
+	/* Calculate ratio */
+	float ratio = source_ratio >= (14.0 / 9.0) ? 16.0/9.0 : 4.0/3.0;
+	ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0/3.0 : ratio;
 	if(s->conf.logo)
 	{
-		/* Normalise ratio */
-		float ratio = source_ratio >= (14.0 / 9.0) ? 16.0/9.0 : 4.0/3.0;
-		ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0/3.0 : ratio;
-		
 		if(load_png(&s->vid_logo, s->active_width, s->conf.active_lines, s->conf.logo, 0.75, ratio, IMG_LOGO) == HACKTV_ERROR)
 		{
 			s->conf.logo = NULL;
 		}
 	}
 	
+	if(load_png(&s->media_icons[0], s->active_width, s->conf.active_lines, "play", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	{
+		fprintf(stderr, "Error loading media icons.\n");
+		return(HACKTV_ERROR);
+	}
+	
+	if(load_png(&s->media_icons[1], s->active_width, s->conf.active_lines, "pause", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	{
+		fprintf(stderr, "Error loading media icons.\n");
+		return(HACKTV_ERROR);
+	}
+		
 	/* Generic font */
 	if(font_init(s, 56, source_ratio) == VID_OK)
 	{
