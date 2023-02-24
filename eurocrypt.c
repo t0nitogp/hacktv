@@ -1677,13 +1677,6 @@ void eurocrypt_next_frame(vid_t *vid, int frame)
 						
 						pkt[0] = EMMU;
 
-						fprintf(stderr,"\n");
-						for(int j = 0; j < 50; j++)
-						{
-							fprintf(stderr,"%02X ", pkt[j]);
-						}
-						fprintf(stderr,"\n");
-
 						/* Golay encode the payload */
 						mac_golay_encode(pkt + 1, 30);
 						
