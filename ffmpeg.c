@@ -1018,7 +1018,7 @@ static void *_audio_scaler_thread(void *arg)
 			data,
 			(const uint8_t **) frame->data,
 			drop,
-			av->audio_codec_ctx->channels,
+			av->audio_codec_ctx->ch_layout.nb_channels,
 			av->audio_codec_ctx->sample_fmt
 		);
 		
@@ -1152,8 +1152,8 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 	av_ffmpeg_t *av;
 	const AVInputFormat *fmt = NULL;
 	AVDictionary *opts = NULL;
-	const AVCodec *codec;
 	AVRational time_base;
+	AVChannelLayout default_ch_layout;
 	int64_t start_time = 0;
 	int r;
 	int i;
@@ -1221,7 +1221,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		
 		if(s->audio && av->audio_stream == NULL && av->format_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
-			if(av->format_ctx->streams[i]->codecpar->channels <= 0) continue;
+			if(av->format_ctx->streams[i]->codecpar->ch_layout.nb_channels <= 0) continue;
 			av->audio_stream = av->format_ctx->streams[i];
 		}
 		
@@ -1287,7 +1287,6 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		/* Video filter declarations */
 		char *_vfi;
 		char *_filter_args;
-		enum AVPixelFormat pix_fmts[] = { AV_PIX_FMT_RGB32 };
 			
 		AVFilterGraph *vfilter_graph;
 
@@ -1467,7 +1466,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		asprintf(&_afilter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
 			av->audio_codec_ctx->time_base.num, av->audio_codec_ctx->time_base.den, av->audio_codec_ctx->sample_rate,
 			av_get_sample_fmt_name(av->audio_codec_ctx->sample_fmt),
-			av->audio_codec_ctx->channel_layout);
+			av->audio_codec_ctx->ch_layout.u.mask);
 	
 		if(avfilter_graph_create_filter(&av->abuffersrc_ctx, abuffersrc, "in", _afilter_args, NULL, afilter_graph) < 0) 
 		{
@@ -1536,14 +1535,15 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			return(HACKTV_OUT_OF_MEMORY);
 		}
 		
-		if(!av->audio_codec_ctx->channel_layout)
+		if(!av->audio_codec_ctx->ch_layout.nb_channels)
 		{
 			/* Set the default layout for codecs that don't specify any */
-			av->audio_codec_ctx->channel_layout = av_get_default_channel_layout(av->audio_codec_ctx->channels);
+			av_channel_layout_default(&default_ch_layout, av->audio_codec_ctx->ch_layout.nb_channels);
+			av->audio_codec_ctx->ch_layout = default_ch_layout;
 		}
 		
 		/* Channel layout changes to stereo if using downmix option */
-		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->channel_layout, 0);
+		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->ch_layout.u.mask, 0);
 		av_opt_set_int(av->swr_ctx, "in_sample_rate",       av->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(av->swr_ctx, "in_sample_fmt", av->audio_codec_ctx->sample_fmt, 0);
 		
@@ -1776,7 +1776,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		for(i = 0; i < 2; i++)
 		{
 			av->out_audio_buffer.frame[i]->format = AV_SAMPLE_FMT_S16;
-			av->out_audio_buffer.frame[i]->channel_layout = AV_CH_LAYOUT_STEREO;
+			av->out_audio_buffer.frame[i]->ch_layout.nb_channels = AV_CH_LAYOUT_STEREO;
 			av->out_audio_buffer.frame[i]->sample_rate = HACKTV_AUDIO_SAMPLE_RATE;
 			av->out_audio_buffer.frame[i]->nb_samples = av->out_frame_size;
 			
