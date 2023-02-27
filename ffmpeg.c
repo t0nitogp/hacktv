@@ -1296,7 +1296,6 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		avfilter_register_all();
 		#endif
 		
-		AVBufferSinkParams *buffersink_params;
 		const AVFilter *vbuffersrc  = avfilter_get_by_name("buffer");
 		const AVFilter *vbuffersink = avfilter_get_by_name("buffersink");
 		AVFilterInOut *vinputs  = avfilter_inout_alloc();
@@ -1314,11 +1313,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			return(HACKTV_ERROR);
 		}
 		
-		/* Buffer video sink to terminate the filter chain */
-		buffersink_params = av_malloc(sizeof(AVBufferSinkParams));
-		buffersink_params->pixel_fmts = pix_fmts;
-		
-		if(avfilter_graph_create_filter(&av->vbuffersink_ctx, vbuffersink, "out", NULL, buffersink_params, vfilter_graph) < 0) 
+		if(avfilter_graph_create_filter(&av->vbuffersink_ctx, vbuffersink, "out", NULL, NULL, vfilter_graph) < 0) 
 		{
 			fprintf(stderr,"Cannot create video buffer sink\n");
 			return(HACKTV_ERROR);
@@ -1389,7 +1384,6 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			return(HACKTV_ERROR);
 		}
 		
-		av_free(buffersink_params);
 		avfilter_inout_free(&vinputs);
 		avfilter_inout_free(&voutputs);
 		
