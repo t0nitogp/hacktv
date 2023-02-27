@@ -19,16 +19,16 @@
 
 void kb_enable()
 {
-    tcgetattr(0, &term);
-    term.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(0, TCSANOW, &term);
+    tcgetattr(0, &trm);
+    trm.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(0, TCSANOW, &trm);
 }
 
 void kb_disable()
 {
-    tcgetattr(0, &term);
-    term.c_lflag |= ICANON | ECHO;
-    tcsetattr(0, TCSANOW, &term);
+    tcgetattr(0, &trm);
+    trm.c_lflag |= ICANON | ECHO;
+    tcsetattr(0, TCSANOW, &trm);
 }
 
 int kbhit()
