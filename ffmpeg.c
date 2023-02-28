@@ -1027,7 +1027,7 @@ static void *_audio_scaler_thread(void *arg)
 			data,
 			(const uint8_t **) frame->data,
 			drop,
-			av->audio_codec_ctx->ch_layout.nb_channels,
+			av->audio_codec_ctx->channels,
 			av->audio_codec_ctx->sample_fmt
 		);
 #endif
@@ -1559,19 +1559,17 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			av->audio_codec_ctx->ch_layout = default_ch_layout;
 		}
 		
-		av_opt_set_int(av->swr_ctx, "in_channel_layout",    av->audio_codec_ctx->ch_layout.u.mask, 0);
+		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->ch_layout.u.mask, 0);
 		av_opt_set_int(av->swr_ctx, "in_sample_rate",       av->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(av->swr_ctx, "in_sample_fmt", av->audio_codec_ctx->sample_fmt, 0);
 #else
 		if(!av->audio_codec_ctx->channel_layout)
 		{
 			/* Set the default layout for codecs that don't specify any */
-			av_channel_layout_default(&default_ch_layout, av->audio_codec_ctx->ch_layout.nb_channels);
-			av->audio_codec_ctx->ch_layout = default_ch_layout;
+			av->audio_codec_ctx->channel_layout = av_get_default_channel_layout(av->audio_codec_ctx->channels);
 		}
 		
-		/* Channel layout changes to stereo if using downmix option */
-		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->ch_layout.u.mask, 0);
+		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->channel_layout, 0);
 		av_opt_set_int(av->swr_ctx, "in_sample_rate",       av->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(av->swr_ctx, "in_sample_fmt", av->audio_codec_ctx->sample_fmt, 0);
 #endif
