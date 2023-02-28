@@ -1014,6 +1014,7 @@ static void *_audio_scaler_thread(void *arg)
 		count = frame->nb_samples;
 		
 		count -= drop;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 		_audio_offset(
 			data,
 			(const uint8_t **) frame->data,
@@ -1021,6 +1022,15 @@ static void *_audio_scaler_thread(void *arg)
 			av->audio_codec_ctx->ch_layout.nb_channels,
 			av->audio_codec_ctx->sample_fmt
 		);
+#else
+		_audio_offset(
+			data,
+			(const uint8_t **) frame->data,
+			drop,
+			av->audio_codec_ctx->ch_layout.nb_channels,
+			av->audio_codec_ctx->sample_fmt
+		);
+#endif
 		
 		do
 		{
@@ -1153,7 +1163,9 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 	const AVInputFormat *fmt = NULL;
 	AVDictionary *opts = NULL;
 	AVRational time_base;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 	AVChannelLayout default_ch_layout;
+#endif
 	int64_t start_time = 0;
 	int r;
 	int i;
@@ -1221,7 +1233,11 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		
 		if(s->audio && av->audio_stream == NULL && av->format_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 			if(av->format_ctx->streams[i]->codecpar->ch_layout.nb_channels <= 0) continue;
+#else
+			if(av->format_ctx->streams[i]->codecpar->channels <= 0) continue;
+#endif
 			av->audio_stream = av->format_ctx->streams[i];
 		}
 		
@@ -1535,7 +1551,19 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 			return(HACKTV_OUT_OF_MEMORY);
 		}
 		
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 		if(!av->audio_codec_ctx->ch_layout.nb_channels)
+		{
+			/* Set the default layout for codecs that don't specify any */
+			av_channel_layout_default(&default_ch_layout, av->audio_codec_ctx->ch_layout.nb_channels);
+			av->audio_codec_ctx->ch_layout = default_ch_layout;
+		}
+		
+		av_opt_set_int(av->swr_ctx, "in_channel_layout",    av->audio_codec_ctx->ch_layout.u.mask, 0);
+		av_opt_set_int(av->swr_ctx, "in_sample_rate",       av->audio_codec_ctx->sample_rate, 0);
+		av_opt_set_sample_fmt(av->swr_ctx, "in_sample_fmt", av->audio_codec_ctx->sample_fmt, 0);
+#else
+		if(!av->audio_codec_ctx->channel_layout)
 		{
 			/* Set the default layout for codecs that don't specify any */
 			av_channel_layout_default(&default_ch_layout, av->audio_codec_ctx->ch_layout.nb_channels);
@@ -1546,6 +1574,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		av_opt_set_int(av->swr_ctx, "in_channel_layout",    s->conf.downmix ? AV_CH_LAYOUT_STEREO : av->audio_codec_ctx->ch_layout.u.mask, 0);
 		av_opt_set_int(av->swr_ctx, "in_sample_rate",       av->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(av->swr_ctx, "in_sample_fmt", av->audio_codec_ctx->sample_fmt, 0);
+#endif
 		
 		av_opt_set_int(av->swr_ctx, "out_channel_layout",    AV_CH_LAYOUT_STEREO, 0);
 		av_opt_set_int(av->swr_ctx, "out_sample_rate",       HACKTV_AUDIO_SAMPLE_RATE, 0);
@@ -1776,7 +1805,11 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		for(i = 0; i < 2; i++)
 		{
 			av->out_audio_buffer.frame[i]->format = AV_SAMPLE_FMT_S16;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 			av->out_audio_buffer.frame[i]->ch_layout.nb_channels = AV_CH_LAYOUT_STEREO;
+#else
+			av->out_audio_buffer.frame[i]->channel_layout = AV_CH_LAYOUT_STEREO;
+#endif
 			av->out_audio_buffer.frame[i]->sample_rate = HACKTV_AUDIO_SAMPLE_RATE;
 			av->out_audio_buffer.frame[i]->nb_samples = av->out_frame_size;
 			
