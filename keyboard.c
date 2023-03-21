@@ -17,6 +17,8 @@
 
 #include "keyboard.h"
 
+struct termios trm;
+
 void kb_enable()
 {
     tcgetattr(0, &trm);

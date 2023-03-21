@@ -21,7 +21,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
-struct termios trm;
+extern struct termios trm;
 
 extern void kb_enable();
 extern void kb_disable();
