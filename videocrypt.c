@@ -544,7 +544,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 				for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5][i]);
 				fprintf(stderr,"%02X ", _crc(v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5]));
 				fprintf(stderr,"\nVC1 ECM Out: ");
-				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIX64 " ", v->cw >> (8 * i) & 0xFF);
+				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIX64 " ", v->blocks[v->block].codeword >> (8 * i) & 0xFF);
 				
 				if(s->conf.enableemm || s->conf.disableemm)
 				{
