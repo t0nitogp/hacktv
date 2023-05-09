@@ -19,9 +19,12 @@
 #define KEYB_H
 
 #include <termios.h>
-#include <sys/ioctl.h>
 
-struct termios trm;
+#ifndef WIN32
+#include <sys/ioctl.h>
+#endif
+
+extern struct termios trm;
 
 extern void kb_enable();
 extern void kb_disable();
