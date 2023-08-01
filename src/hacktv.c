@@ -22,10 +22,10 @@
 #include <getopt.h>
 #include <signal.h>
 #include "hacktv.h"
-#include "test.h"
-#include "ffmpeg.h"
-#include "file.h"
-#include "hackrf.h"
+#include "av_test.h"
+#include "av_ffmpeg.h"
+#include "rf_file.h"
+#include "rf_hackrf.h"
 
 #ifdef WIN32
 #define OS_SEP '\\'
@@ -34,11 +34,11 @@
 #endif
 
 #ifdef HAVE_SOAPYSDR
-#include "soapysdr.h"
+#include "rf_soapysdr.h"
 #endif
 
 #ifdef HAVE_FL2K
-#include "fl2k.h"
+#include "rf_fl2k.h"
 #endif
 
 volatile int _abort = 0;
@@ -213,16 +213,22 @@ static void print_usage(void)
 		"  pal-fm        = PAL colour, 25 fps, 625 lines, FM (complex), 6.5 MHz FM audio\n"
 		"  pal           = PAL colour, 25 fps, 625 lines, unmodulated (real)\n"
 		"  pal-m         = PAL colour, 30/1.001 fps, 525 lines, AM (complex), 4.5 MHz FM audio\n"
+		"  pal-n         = PAL colour, 25 fps, 625 lines, AM (complex), 4.5 MHz FM audio\n"
 		"  525pal        = PAL colour, 30/1.001 fps, 525 lines, unmodulated (real)\n"
 		"  m             = NTSC colour, 30/1.001 fps, 525 lines, AM (complex), 4.5 MHz FM audio\n"
+		"  ntsc-i        = NTSC colour, 30/1.001 fps, 525 lines, AM (complex), 6.0 MHz FM audio\n"
 		"  ntsc-fm       = NTSC colour, 30/1.001 fps, 525 lines, FM (complex), 6.5 MHz FM audio\n"
 		"  ntsc-bs       = NTSC colour, 30/1.001 fps, 525 lines, FM (complex), BS digital audio\n"
 		"  ntsc          = NTSC colour, 30/1.001 fps, 525 lines, unmodulated (real)\n"
+		"  pal60-i       = PAL colour, 30/1.001 fps, 525 lines, AM (complex), 6.0 MHz FM audio\n"
+		"  pal60         = PAL colour, 30/1.001 fps, 525 lines, unmodulated (real)\n"
 		"  l             = SECAM colour, 25 fps, 625 lines, AM (complex), 6.5 MHz AM\n"
 		"                  audio\n"
 		"  d, k          = SECAM colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM\n"
 		"                  audio\n"
 		"  secam-i       = SECAM colour, 25 fps, 625 lines, AM (complex), 6.0 MHz FM audio\n"
+		"  secam-b       = SECAM colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio\n"
+		"  secam-g       = SECAM colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio\n"
 		"  secam-fm      = SECAM colour, 25 fps, 625 lines, FM (complex), 6.5 MHz FM audio\n"
 		"  secam         = SECAM colour, 25 fps, 625 lines, unmodulated (real)\n"
 		"  d2mac-fm      = D2-MAC, 25 fps, 625 lines, FM (complex)\n"

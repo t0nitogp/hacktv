@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include "video.h"
+#include "vbidata.h"
 
 #define NG_SAMPLE_RATE 4437500
 
@@ -96,7 +97,7 @@ typedef struct {
 	const uint8_t *table;
 
 	/* VBI */
-	int16_t *lut;
+	vbidata_lut_t *lut;
 	uint8_t vbi[10][NG_VBI_BYTES];
 	int vbi_seq;
 	int block_seq;

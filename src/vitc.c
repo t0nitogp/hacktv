@@ -73,14 +73,14 @@ int vitc_init(vitc_t *s, vid_t *vid)
 		return(VID_ERROR);
 	}
 	
-	if(vid->conf.frame_rate_num <= 30 &&
-	   vid->conf.frame_rate_den == 1)
+	if(vid->conf.frame_rate.num <= 30 &&
+	   vid->conf.frame_rate.den == 1)
 	{
-		s->fps = vid->conf.frame_rate_num;
+		s->fps = vid->conf.frame_rate.num;
 		s->frame_drop = 0;
 	}
-	else if(vid->conf.frame_rate_num == 30000 &&
-	        vid->conf.frame_rate_den == 1001)
+	else if(vid->conf.frame_rate.num == 30000 &&
+	        vid->conf.frame_rate.den == 1001)
 	{
 		s->fps = 30;
 		s->frame_drop = 1;
@@ -88,8 +88,8 @@ int vitc_init(vitc_t *s, vid_t *vid)
 	else
 	{
 		fprintf(stderr, "vitc: Unsupported frame rate %d/%d\n",
-			vid->conf.frame_rate_num,
-			vid->conf.frame_rate_den
+			vid->conf.frame_rate.num,
+			vid->conf.frame_rate.den
 		);
 		
 		return(VID_ERROR);
@@ -97,7 +97,7 @@ int vitc_init(vitc_t *s, vid_t *vid)
 	
 	/* Calculate the high level for the VBI data, 78.5% of the white level */
 	i = round((vid->white_level - vid->black_level) * 0.785);
-	s->lut = vbidata_init_step(hr, vid->width, i, vid->pixel_rate * 200e-9);
+	s->lut = vbidata_init_step(hr, vid->width, i, (double) vid->width / hr, vid->pixel_rate * 200e-9, 0);
 	
 	if(!s->lut)
 	{
@@ -190,7 +190,7 @@ int vitc_render(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 	x = _bits(data, x, crc, 8);
 	
 	/* Render the line */
-	vbidata_render_nrz(v->lut, data, -21, x, VBIDATA_LSB_FIRST, l->output, 2);
+	vbidata_render(v->lut, data, 21, x, VBIDATA_LSB_FIRST, l);
 	
 	l->vbialloc = 1;
 	

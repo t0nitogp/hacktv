@@ -1185,9 +1185,10 @@ int tt_init(tt_t *s, vid_t *vid, char *path)
 	
 	s->vid = vid;
 	s->lut = vbidata_init(
-		444, s->vid->width,
+		360, s->vid->width,
 		level,
-		VBIDATA_FILTER_RC, 0.7
+		VBIDATA_FILTER_RC, (double) s->vid->width / 444, 0.7,
+		vid->pixel_rate * (12e-6 - (64e-6 / 444 * 12))
 	);
 	
 	if(!s->lut)
@@ -1349,7 +1350,7 @@ int tt_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		
 		if(r == TT_OK)
 		{
-			vbidata_render_nrz(tt->lut, vbi, -70, 360, VBIDATA_LSB_FIRST, l->output, 2);
+			vbidata_render(tt->lut, vbi, 0, 360, VBIDATA_LSB_FIRST, l);
 		}
 		
 		l->vbialloc = 1;

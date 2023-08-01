@@ -43,6 +43,7 @@
 #include <string.h>
 #include <math.h>
 #include "video.h"
+#include "vbidata.h"
 #include "videocrypt-ca.h"
 #include "videocrypt-data.h"
 
@@ -90,6 +91,7 @@ static _vc_mode_t _vc2_modes[] = {
 /* PPV card data */
 /*                                   |--------CARD SERIAL-------|    Ka    Kb */
 static uint8_t _ppv_card_data[7] = { 0x6D, 0xC1, 0x08, 0x44, 0x02, 0x28, 0x3D };
+
 
 /* Packet header sequences */
 static const uint8_t _sequence[8] = {
@@ -217,6 +219,24 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	memset(s, 0, sizeof(vc_t));
 	
 	for(i = 0; i < 7; i++) s->ppv_card_data[i] = _ppv_card_data[i];
+	
+	/* Generate the VBI data symbols */
+	s->lut = vbidata_init_step(
+		40,
+		vid->width,
+		round((vid->white_level - vid->black_level) * 1.00),
+		(double) vid->pixel_rate / VC_SAMPLE_RATE * VC_VBI_SAMPLES_PER_BIT,
+		vid->pixel_rate * 375e-9,
+		vid->pixel_rate * 10.86e-6
+	);
+	
+	if(!s->lut)
+	{
+		return(VID_OUT_OF_MEMORY);
+	}
+	
+	s->counter  = 0;
+	s->cw       = VC_PRBS_CW_FA;
 	
 	s->counter  = 0;
 	s->cw       = 0;
@@ -396,7 +416,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 
 void vc_free(vc_t *s)
 {
-	/* Nothing */
+	free(s->lut);
 }
 
 int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
@@ -637,21 +657,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 	/* Render the VBI line if necessary */
 	if(bline)
 	{
-		int b, c;
-		
-		x = v->video_scale[VC_VBI_LEFT];
-		
-		for(b = 0; b < VC_VBI_BITS_PER_LINE; b++)
-		{
-			c = (bline[b / 8] >> (b % 8)) & 1;
-			c = c ? s->white_level : s->black_level;
-			
-			for(; x < v->video_scale[VC_VBI_LEFT + VC_VBI_SAMPLES_PER_BIT * (b + 1)]; x++)
-			{
-				l->output[x * 2] = c;
-			}
-		}
-		
+		vbidata_render(v->lut, bline, 0, 40, VBIDATA_LSB_FIRST, l);
 		l->vbialloc = 1;
 	}
 	

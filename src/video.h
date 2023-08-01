@@ -46,6 +46,7 @@ typedef struct vid_t vid_t;
 #include "vits.h"
 #include "graphics.h"
 #include "vitc.h"
+#include "vbidata.h"
 
 /* Return codes */
 #define VID_OK             0
@@ -103,6 +104,11 @@ typedef struct {
 	limiter_t limiter;
 	int16_t sample;
 	
+	/* FM energy dispersal */
+	div_t ed_delta;
+	div_t ed_counter;
+	div_t ed_overflow;
+	
 } _mod_fm_t;
 
 typedef struct {
@@ -141,6 +147,7 @@ typedef struct {
 	/* FM modulation options */
 	double fm_level;
 	double fm_deviation;
+	double fm_energy_dispersal;
 	
 	/* Overall signal level (pre-modulation) */
 	double level;
@@ -161,8 +168,7 @@ typedef struct {
 	/* Video */
 	int type;
 	
-	int frame_rate_num;
-	int frame_rate_den;
+	rational_t frame_rate;
 	
 	int lines;
 	int hline;
@@ -225,8 +231,7 @@ typedef struct {
 	double bw_co;
 	
 	int colour_mode;
-	double colour_carrier;
-	int colour_lookup_lines;
+	rational_t colour_carrier;
 	
 	double burst_width;
 	double burst_left;
@@ -311,14 +316,15 @@ struct vid_line_t {
 	int line;
 	
 	/* Colour subcarrier pointers */
-	int16_t *lut_b;	/* Burst */
-	int16_t *lut_i;	/* I/V phase */
-	int16_t *lut_q;	/* Q/U phase */
+	const int16_t *lut_b;	/* Burst */
+	const int16_t *lut_i;	/* I/V phase */
+	const int16_t *lut_q;	/* Q/U phase */
 	
 	/* Status */
 	int vbialloc;
 	
-	/* Pointer the next line */
+	/* Pointer the previous and next line */
+	vid_line_t *previous;
 	vid_line_t *next;
 };
 
@@ -374,9 +380,7 @@ struct vid_t {
 	int active_width;
 	int active_left;
 	
-	int hsync_width;
-	int vsync_short_width;
-	int vsync_long_width;
+	vbidata_lut_t *syncs;
 	
 	int16_t white_level;
 	int16_t black_level;
@@ -385,7 +389,8 @@ struct vid_t {
 	
 	_yiq16_t *yiq_level_lookup;
 	
-	int colour_lookup_width;
+	unsigned int colour_lookup_width;
+	unsigned int colour_lookup_offset;
 	int16_t *colour_lookup;
 	
 	int burst_left;
@@ -401,9 +406,7 @@ struct vid_t {
 	cint16_t *fm_secam_bell;
 	int16_t secam_fsync_level;
 	
-	int fsc_flag_left;
-	int fsc_flag_width;
-	int16_t fsc_flag_level;
+	vbidata_lut_t *fsc_syncs;
 	
 	/* Video state */
 	uint32_t *framebuffer;

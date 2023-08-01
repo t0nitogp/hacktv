@@ -89,9 +89,10 @@ int wss_init(wss_t *s, vid_t *vid, char *mode)
 	
 	s->vid = vid;
 	s->lut = vbidata_init(
-		320, s->vid->width,
+		137, s->vid->width,
 		level,
-		VBIDATA_FILTER_RC, 0.7
+		VBIDATA_FILTER_RC, (double) s->vid->width / 320, 0.7,
+		s->vid->pixel_rate * 11e-6
 	);
 	
 	if(!s->lut)
@@ -161,7 +162,7 @@ int wss_render(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		l->output[x * 2] = s->black_level;
 	}
 	
-	vbidata_render_nrz(w->lut, w->vbi, -55, 137, VBIDATA_MSB_FIRST, l->output, 2);
+	vbidata_render(w->lut, w->vbi, 0, 137, VBIDATA_MSB_FIRST, l);
 	
 	l->vbialloc = 1;
 	
