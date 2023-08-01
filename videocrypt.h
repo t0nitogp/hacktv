@@ -51,19 +51,6 @@
 #define VC2_VBI_FIELD_2_START (VC_VBI_FIELD_2_START - 4)
 
 typedef struct {
-	const char *id;          /* Name of Videocrypt mode */
-	const int cwtype;        /* Static or dynamic CW */
-	const int mode;          /* Mode */
-	_vc_block_t  *blocks;    /* VC1 blocks */
-	_vc2_block_t *blocks2;   /* VC2 blocks */
-	const int len;           /* Block length */
-	const int emm;           /* EMM mode? */
-	const char *channelname; /* Channel/display name */
-	const int channelid;     /* Channel ID */
-	const int date;          /* Broadcast date */
-} _vc_mode_t;
-
-typedef struct {
 	
 	uint8_t counter;
 	
@@ -91,8 +78,7 @@ typedef struct {
 	
 	const char *vcmode1;
 	const char *vcmode2;
-	const _vc_mode_t *mode;
-	
+	_vc_mode_t *mode;
 	
 	uint8_t ppv_card_data[7];
 } vc_t;
@@ -102,4 +88,3 @@ extern void vc_free(vc_t *s);
 extern int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines);
 
 #endif
-

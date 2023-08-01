@@ -2909,7 +2909,7 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		{
 			/* Nasty hack for Videocrypt-S */
 			int y = s->conf.videocrypts ? x + 2 : x;
-			l->output[x * 2] += (l->lut_b[x] * s->burst_win[x - s->burst_left]) >> 15;
+			l->output[x * 2] += (l->lut_b[y] * s->burst_win[y - s->burst_left]) >> 15;
 		}
 	}
 	

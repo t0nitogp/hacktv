@@ -44,7 +44,7 @@
 #include <math.h>
 #include "video.h"
 #include "videocrypt-ca.h"
-#include "videocrypt-blocks.h"
+#include "videocrypt-data.h"
 
 /*
  * Name of Videocrypt mode (used on command line)
@@ -59,28 +59,31 @@
  * Broadcast month byte 
 */
 
-const static _vc_mode_t _vc1_modes[] = {
-	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0,      "",                        0x00, 0x20 },
-	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0,      "",                        0x00, 0x20 },
-	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _vc1_blocks,       NULL, 2, 0,      "   HACKTV    JSTV  MODE", 0x00, 0x20 },
-	{ "sky04",       VC_CW_STATIC,  VC_SKY04,      _sky04_blocks,     NULL, 2, 0,      "   HACKTV    SKY04 MODE", 0x00, 0x12 },
-	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY05 MODE", 0x00, 0x1B },
-	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY07 MODE", 0x0C, 0x40 },
-	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY09 MODE", 0x0C, 0x43 },
-	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _vc1_blocks,       NULL, 2, VC_EMM, "   SKY 09    NANO  MODE", 0x0C, 0x43 },
-	{ "sky10",       VC_CW_STATIC,  VC_SKY10,      _sky10_blocks,     NULL, 2, 0,      "   HACKTV    SKY10 MODE", 0x00, 0x20 },
-	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0,      "HACKTV SKY10  PPV MODE ", 0x00, 0x20 },
-	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0,      "   HACKTV    SKY11 MODE", 0x00, 0x00 },
-	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0,      "   HACKTV    SKY12 MODE", 0x00, 0x00 },
-	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC1  MODE", 0x00, 0x29 },
-	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC2  MODE", 0x00, 0x49 },
-	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0,      "   HACKTV    XTEA  MODE", 0x00, 0x20 },
+static _vc_mode_t _vc1_modes[] = {
+	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0,      "                       ", 0x00, 0x20, 0x00,       0x00, 0x00 },
+	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0,      "                       ", 0x00, 0x20, 0x00,       0x00, 0x00 },
+	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _vc1_blocks,       NULL, 2, 0,      "   HACKTV    JSTV  MODE", 0x00, 0x20, 0x00,  _jstv_key, 0x00 },
+	{ "sky02",       VC_CW_DYNAMIC, VC_SKY02,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY02 MODE", 0x01, 0x0E, 0xA3,   _sky_key, 0x00 },
+	{ "sky03",       VC_CW_DYNAMIC, VC_SKY03,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY03 MODE", 0x01, 0x12, 0xA3,   _sky_key, 0x00 },
+	{ "sky04",       VC_CW_DYNAMIC, VC_SKY04,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY04 MODE", 0x01, 0x14, 0xA4,   _sky_key, 0x20 },
+	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY05 MODE", 0x0C, 0x1C, 0xA5,   _sky_key, 0x40 },
+	{ "sky06",       VC_CW_DYNAMIC, VC_SKY06,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY06 MODE", 0x05, 0x20, 0xA6,   _sky_key, 0x50 },
+	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY07 MODE", 0x0C, 0x40, 0xA7,   _sky_key, 0x68 },
+	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY09 MODE", 0x0C, 0x43, 0xA9, _sky09_key, 0x00 },
+	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _vc1_blocks,       NULL, 2, VC_EMM, "   SKY 09    NANO  MODE", 0x0C, 0x43, 0xA9, _sky09_key, 0x00 },
+	{ "sky10",       VC_CW_STATIC,  VC_SKY10,      _sky10_blocks,     NULL, 2, 0,      "   HACKTV    SKY10 MODE", 0x00, 0x20, 0x00,       0x00, 0x00 },
+	{ "sky10ppv",    VC_CW_STATIC,  VC_SKY10_PPV,  _sky10ppv_blocks,  NULL, 2, 0,      "HACKTV SKY10  PPV MODE ", 0x00, 0x20, 0x00,       0x00, 0x00 },
+	{ "sky11",       VC_CW_STATIC,  VC_SKY11,      _sky11_blocks,     NULL, 2, 0,      "   HACKTV    SKY11 MODE", 0x00, 0x00, 0x00,       0x00, 0x00 },
+	{ "sky12",       VC_CW_STATIC,  VC_SKY12,      _sky12_blocks,     NULL, 2, 0,      "   HACKTV    SKY12 MODE", 0x00, 0x00, 0x00,       0x00, 0x00 },
+	{ "tac1",        VC_CW_DYNAMIC, VC_TAC1,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC1  MODE", 0x00, 0x29, 0x00,   _tac_key, 0x00 },
+	{ "tac2",        VC_CW_DYNAMIC, VC_TAC2,       _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    TAC2  MODE", 0x00, 0x49, 0x00,   _tac_key, 0x00 },
+	{ "xtea",        VC_CW_DYNAMIC, VC_XTEA,       _xtea_blocks,      NULL, 2, 0,      "   HACKTV    XTEA  MODE", 0x00, 0x20, 0x00,       0x00, 0x00 },
 	{ NULL }
 };
 
-const static _vc_mode_t _vc2_modes[] = {
-	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0,      "",            0x00, 0x52 },
-	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52 },
+static _vc_mode_t _vc2_modes[] = {
+	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0,      "           ", 0x00, 0x52, 0x00,     0x00, 0x00 },
+	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52, 0x00, _vc2_key, 0x81 },
 	{ NULL }
 };
 
@@ -218,7 +221,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	s->counter  = 0;
 	s->cw       = 0;
 	s->vcmode1  = mode;
-	s->vcmode2 = mode2;
+	s->vcmode2  = mode2;
 	
 	/* Find Videocrypt mode to use */
 	if(mode != NULL)
@@ -252,8 +255,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 		else if(s->mode->cwtype == VC_CW_DYNAMIC)
 		{
 			/* Set ECM mode */
-			s->blocks[0].messages[5][0] = 0xF9;
-			s->blocks[1].messages[5][0] = 0xF9;
+			s->blocks[0].messages[5][0] = 0xF8;
+			s->blocks[1].messages[5][0] = 0xF8;
 
 			/* Set channel date */
 			s->blocks[0].messages[5][1] = s->mode->date;
@@ -263,20 +266,27 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			s->blocks[0].messages[5][6] = s->mode->channelid;
 			s->blocks[1].messages[5][6] = s->mode->channelid;
 
-			vc_seed(&s->blocks[0], s->mode->mode);
-			vc_seed(&s->blocks[1], s->mode->mode);
+			vc_seed(&s->blocks[0], s->mode);
+			vc_seed(&s->blocks[1], s->mode);
 		}
 		
 		/* Process EMM if enabled for the mode */
-		if(s->mode->emm && (vid->conf.enableemm || vid->conf.disableemm))
+		if(vid->conf.enableemm || vid->conf.disableemm)
 		{
-			uint32_t cardserial;
-			int b;
-			
-			cardserial = vid->conf.enableemm ? vid->conf.enableemm : vid->conf.disableemm;
-			b = vid->conf.enableemm ? 1 : 0;
-			vc_emm(&s->blocks[0], s->mode->mode, cardserial, b, 0);
-			vc_emm(&s->blocks[1], s->mode->mode, cardserial, b, 1);
+			if(s->mode->emm)
+			{
+				uint32_t cardserial;
+				int b;
+				cardserial = vid->conf.enableemm ? vid->conf.enableemm : vid->conf.disableemm;
+				b = vid->conf.enableemm ? 1 : 0;
+				vc_emm(&s->blocks[0], s->mode, cardserial, b, 0);
+				vc_emm(&s->blocks[1], s->mode, cardserial, b, 1);
+			}
+			else
+			{
+				fprintf(stderr,"EMMs are not supported in this Videocrypt mode.");
+				return(VID_ERROR);
+			}
 		}
 
 		/* Set channel name */
@@ -321,8 +331,8 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			s->blocks2[0].messages[5][2] = s->mode->channelid;
 			s->blocks2[1].messages[5][2] = s->mode->channelid;
 
-			vc_seed_vc2(&s->blocks2[0], s->mode->mode);
-			vc_seed_vc2(&s->blocks2[1], s->mode->mode);
+			vc_seed_vc2(&s->blocks2[0], s->mode);
+			vc_seed_vc2(&s->blocks2[1], s->mode);
 		
 			/* If in simulcrypt mode, do the initial CW sync here */
 			if(mode)
@@ -354,7 +364,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			/*
 			 * 0x1B: Enable card
 			 */
-			vc2_emm(&s->blocks2[0], 0x1B, vid->conf.enableemm, s->mode->mode);
+			vc2_emm(&s->blocks2[0], s->mode, 0x1B, vid->conf.enableemm);
 		}
 		
 		if(vid->conf.disableemm)
@@ -362,7 +372,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			/*  
 			 * 0x1A: Disable card
 			 */
-			vc2_emm(&s->blocks2[0], 0x1A, vid->conf.disableemm, s->mode->mode);
+			vc2_emm(&s->blocks2[0], s->mode, 0x1A, vid->conf.disableemm);
 		}
 	}
 	
@@ -387,20 +397,6 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 void vc_free(vc_t *s)
 {
 	/* Nothing */
-}
-
-/* Calculate Videocrypt message CRC */
-static uint8_t _crc(uint8_t *data)
-{
-	int x;
-	uint8_t crc;
-
-	for(crc = x = 0; x < 31; x++)
-	{
-		crc += data[x];
-	}
-		
-	return (~crc + 1);
 }
 
 int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
@@ -509,7 +505,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			{
 				if(v->mode->cwtype == VC_CW_DYNAMIC)
 				{
-					vc_seed(&v->blocks[v->block], v->mode->mode);
+					vc_seed(&v->blocks[v->block], v->mode);
 				}
 				
 				if(strcmp(mode,"ppv") == 0)
@@ -541,16 +537,14 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			if(s->conf.showecm && mode)
 			{
 				fprintf(stderr, "\n\nVC1 ECM In:  ");
-				for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5][i]);
-				fprintf(stderr,"%02X ", _crc(v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5]));
+				for(i = 0; i < 32; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[strcmp(mode,"ppv") == 0 ? 0 : 5][i]);
 				fprintf(stderr,"\nVC1 ECM Out: ");
 				for(i = 0; i < 8; i++) fprintf(stderr, "%02" PRIX64 " ", v->blocks[v->block].codeword >> (8 * i) & 0xFF);
 				
 				if(s->conf.enableemm || s->conf.disableemm)
 				{
 					fprintf(stderr, "\nVC1 EMM In:  ");
-					for(i = 0; i < 31; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[2][i]);
-					fprintf(stderr,"%02X ", _crc(v->blocks[v->block].messages[2]));
+					for(i = 0; i < 32; i++) fprintf(stderr, "%02X ", v->blocks[v->block].messages[2][i]);
 				}
 			}
 
@@ -572,7 +566,7 @@ int vc_render_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 
 			if(mode2)
 			{
-				if(strcmp(mode2,"conditional") == 0 && (v->counter & 0x3F) == 0x20 ) vc_seed_vc2(&v->blocks2[v->block2], v->mode->mode);
+				if(strcmp(mode2,"conditional") == 0 && (v->counter & 0x3F) == 0x20 ) vc_seed_vc2(&v->blocks2[v->block2], v->mode);
 				
 				/* OSD bytes 17 - 24 in OSD message 0x21 are used in seed generation in Videocrypt II. */
 				/* XOR with VC1 seed for simulcrypt. */

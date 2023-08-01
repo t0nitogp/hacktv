@@ -32,93 +32,8 @@
 #include <string.h>
 #include "videocrypt-ca.h"
 
-/* Calculate Videocrypt message CRC */
-static uint8_t _crc(uint8_t *data)
-{
-	int x;
-	uint8_t crc;
-
-	for(crc = x = 0; x < 31; x++)
-	{
-		crc += data[x];
-	}
-		
-	return (~crc + 1);
-}
-
-static uint8_t _rotate_left(uint8_t x)
-{
-	return (((x) << 1) | ((x) >> 7)) & 0xFF;
-}
-
-const uint8_t jstv_key[] = {
-	0x83, 0xD5, 0xFD, 0x19, 0x3D, 0xD6, 0xAC, 0x35,
-	0x80, 0x06, 0x63, 0xB3, 0xFF, 0x17, 0xCB, 0xE6,
-	0x60, 0x43, 0x95, 0xE3, 0x9C, 0x37, 0xE5, 0xD2,
-	0x1F, 0xEC, 0x96, 0xD4, 0x25, 0xEA, 0xFB, 0x99
-};
-
-const uint8_t tac_key[] = {
-	0xD9, 0x45, 0x08, 0xDB, 0x7C, 0xF9, 0x56, 0xF7,
-	0x58, 0x18, 0x22, 0x54, 0x38, 0xCD, 0x3D, 0x94,
-	0x09, 0xE6, 0x8E, 0x0D, 0x9A, 0x86, 0xFC, 0x1C,
-	0xA0, 0x19, 0x8F, 0xBC, 0xFD, 0x8D, 0xD1, 0x57,
-	0x56, 0xF2, 0xB6, 0x4F, 0xC9, 0xBD, 0x2A, 0xB3,
-	0x9D, 0x81, 0x5D, 0xE0, 0x05, 0xB5, 0xB9, 0x26,
-	0x67, 0x3C, 0x65, 0xA0, 0xBA, 0x39, 0xC7, 0xAF,
-	0x33, 0x24, 0x47, 0xA6, 0x20, 0x1E, 0x14, 0x6F,
-	0x48, 0x9B, 0x4D, 0xA6, 0xF9, 0xD9, 0xDF, 0x6E,
-	0xAC, 0x84, 0xFA, 0x8B, 0x2E, 0xB6, 0x76, 0x19,
-	0xC1, 0xB0, 0xA3, 0xBB, 0x0C, 0xFD, 0x70, 0x72,
-	0xCA, 0x55, 0xEF, 0xA0, 0x7F, 0xBF, 0x59, 0xAD
-};
-
-/* Videocrypt key used for Sky 07 series cards */
-const uint8_t sky07_key[] = {
-	0xD9, 0xAF, 0x3C, 0xD5, 0xFB, 0xAD, 0x5A, 0x75,
-	0x6D, 0x9B, 0x06, 0x53, 0x0F, 0x89, 0x66, 0xA2,
-	0x65, 0xE7, 0x71, 0x1A, 0xB4, 0x88, 0xD7, 0x76,
-	0x28, 0xD0, 0x4C, 0x6E, 0x86, 0x8C, 0xC8, 0x43,
-	0xA9, 0xEC, 0x60, 0x42, 0x05, 0xF2, 0x3D, 0x1C,
-	0x6C, 0xBC, 0xAF, 0xC3, 0x2B, 0xB5, 0xDC, 0x90,
-	0xF9, 0x05, 0xEA, 0x51, 0x46, 0x9D, 0xE2, 0x60,
-	0x70, 0x52, 0x67, 0x26, 0x61, 0x49, 0x42, 0x09,
-	0x50, 0x99, 0x90, 0xA2, 0x36, 0x0E, 0xFD, 0x39 
-};
-
-/* Videocrypt key used for Sky 09 series cards */
-const uint8_t sky09_key[] = {
-	0x91, 0x61, 0x9D, 0x53, 0xB3, 0x27, 0xD5, 0xD9,
-	0x0F, 0x59, 0xA6, 0x6F, 0x73, 0xFB, 0x99, 0x4C,
-	0xFB, 0x45, 0x54, 0x8E, 0x20, 0x5F, 0xB3, 0xB1,
-	0x38, 0xD0, 0x6B, 0xA7, 0x40, 0x39, 0xED, 0x2A,
-	0xDA, 0x43, 0x8D, 0x51, 0x92, 0xD6, 0xE3, 0x61,
-	0x65, 0x8C, 0x71, 0xE6, 0x84, 0x65, 0x87, 0x03,
-	0x55, 0xBC, 0x64, 0x07, 0xBB, 0x79, 0x9E, 0x40,
-	0x97, 0x89, 0xC4, 0x14, 0x8F, 0x8B, 0x41, 0x4D,
-	0x2A, 0xAA, 0xE8, 0xE1, 0x08, 0xCD, 0x82, 0x43,
-	0x8F, 0x6F, 0x36, 0x9B, 0x72, 0x47, 0xF2, 0xA4,
-	0x49, 0xDD, 0x8B, 0x6E, 0x26, 0xC6, 0xBF, 0xB7,
-	0xD8, 0x44, 0xC3, 0x70, 0xA3, 0x4C, 0xB6, 0xB2,
-	0x37, 0x9B, 0x09, 0xDF, 0x32, 0x28, 0x24, 0x86,
-	0x8D, 0x5F, 0xE6, 0x4B, 0x5D, 0xD0, 0x2F, 0xDB,
-	0xAC, 0x2E, 0x78, 0x1E, 0xCC, 0x52, 0xC1, 0x61,
-	0xEA, 0x82, 0xCA, 0xB3, 0xF4, 0x8F, 0x63, 0x8E,
-	0x6C, 0xBC, 0xAF, 0xC3, 0x2B, 0xB5, 0xDC, 0x90,
-	0xF9, 0x05, 0xEA, 0x51, 0x46, 0x9D, 0xE2, 0x60,
-	0x01, 0x35, 0x59, 0x79, 0x00, 0x00, 0x55, 0x0F,
-	0x00, 0x00, 0x00, 0x00, 0x10, 0x6E, 0x1C, 0xBD,
-	0xFE, 0x44, 0xEB, 0x79, 0xF3, 0xAB, 0x5D, 0x23,
-	0xB3, 0x20, 0xD2, 0xE7, 0xFC, 0x00, 0x03, 0x6F,
-	0xD8, 0xB7, 0xF7, 0xF3, 0x55, 0x72, 0x47, 0x13,
-	0x7B, 0x0C, 0x08, 0x01, 0x8A, 0x2C, 0x70, 0x56,
-	0x0A, 0x85, 0x18, 0x14, 0x43, 0xC9, 0x46, 0x64,
-	0x6C, 0x9A, 0x99, 0x59, 0x0A, 0x6C, 0x40, 0xD5,
-	0x17, 0xB3, 0x2C, 0x69, 0x41, 0xE8, 0xE7, 0x0E
-};
-
 /* Small section of EEPROM data used in Sky 09 cards. Required for nanocommand processing */
-unsigned char ext_ee[] =
+static const uint8_t ext_ee[] =
 {
 /* 1100 */ 0x3F, 0x87, 0x4B, 0x10, 0xFE, 0x93, 0x05, 0x13,
 /* 1108 */ 0x99, 0x49, 0x17, 0xAF, 0x3B, 0x87, 0x04, 0x1B,
@@ -138,17 +53,28 @@ unsigned char ext_ee[] =
 /* 1178 */ 0x10, 0xDE, 0x15, 0x04, 0x93, 0x4A, 0x13, 0x05
 };
 
-/* Key used by Multichoice Central Europe in Videocrypt 2 */
-const uint8_t vc2_key[] = {
-    0x58, 0x6B, 0x4D, 0x05, 0xB0, 0x69, 0x83, 0x16,
-    0xA6, 0x48, 0xDE, 0x5E, 0x0B, 0xAA, 0x49, 0xA9,
-    0xC6, 0xE5, 0x93, 0x1A, 0xBE, 0x56, 0x73, 0x20,
-    0xFB, 0xF8, 0xCA, 0x08, 0x34, 0x29, 0x8A, 0x9B
-};
-
 static const uint32_t xtea_key[4] = {
 	0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF
 };
+
+/* Calculate Videocrypt message CRC */
+static uint8_t _crc(uint8_t *data)
+{
+	int x;
+	uint8_t crc;
+
+	for(crc = x = 0; x < 31; x++)
+	{
+		crc += data[x];
+	}
+
+	return (~crc + 1);
+}
+
+static uint8_t _rotate_left(uint8_t x)
+{
+	return (((x) << 1) | ((x) >> 7)) & 0xFF;
+}
 
 /* Reverse nibbles in a byte */
 static inline uint8_t _rnibble(uint8_t a)
@@ -197,7 +123,7 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 		b += a;
 		xor[i] = b;
 	}
-	
+
 	message[3] =  cmd  ^ xor[0];
 	message[7] =  byte ^ xor[0];
 	message[8] =  ((cardserial >> 24) & 0xFF) ^ xor[1];
@@ -207,31 +133,13 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 	for(i = 12; i < 27; i++) message[i] = message[11];
 }
 
-void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, int offset, int ca)
+void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, _vc_mode_t *m)
 {
 	uint8_t b, c;
 	
 	uint8_t key[32];
 
-	switch(ca)
-	{
-		case(VC_SKY05):
-			memcpy(key, sky07_key, 32);
-			break;
-		case(VC_SKY07):
-			memcpy(key, sky07_key + offset, 32);
-			break;
-		case(VC_JSTV):
-			memcpy(key, jstv_key, 32);
-			break;
-		case(VC_MC):
-			memcpy(key, vc2_key, 32);
-			break;
-		case(VC_TAC1):
-		case(VC_TAC2):
-			memcpy(key, tac_key + offset, 32);
-			break;
-	}
+	memcpy(key, m->key->key + m->key_offset, 0x20);
 	
 	out[*oi] ^= in;
 	b = key[(out[*oi] >> 4)];
@@ -244,42 +152,26 @@ void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, int offset, int ca)
 	out[*oi] ^= c;
 }
 
-void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
+void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, _vc_mode_t *m)
 {
-	int offset = 0;
 	int i;
 	int oi = 0;	
 	uint8_t b;
-	
-	if(ca == VC_TAC1 || ca == VC_TAC2)
-	/* TAC key offsets */
-	{
-		if (ca == VC_TAC2) message[1] = 0x49;
-		if (message[1] > 0x3A) offset = 0x20;
-		if (message[1] > 0x48) offset = 0x40;
-	}
-	else if (ca == VC_SKY07)
-	/* Sky 07 key offsets */
-	{
-		if (message[1] <= 0x32) offset = 0x10;
-		if (message[1] > 0x32) offset = 0x18;
-		if (message[1] > 0x3A) offset = 0x28;
-	}
 	
 	/* Reset answers */
 	for (i = 0; i < 8; i++) cw[i] = 0;
 	
 	/* Run through kernel */
-	for (i = 0; i < 27; i++) _vc_kernel07(cw, &oi, message[i], offset, ca);
+	for (i = 0; i < 27; i++) _vc_kernel07(cw, &oi, message[i], m);
 	
 	/* Calculate signature */
-	if(ca == VC_SKY05)
+	if(m->mode < VC_SKY06)
 	{
 		for (i = 27, b = 0; i < 31; i++)
 		{
-			_vc_kernel07(cw, &oi, b, offset, ca);
-			_vc_kernel07(cw, &oi, b, offset, ca);
-			_vc_kernel07(cw, &oi, b, offset, ca);
+			_vc_kernel07(cw, &oi, b, m);
+			_vc_kernel07(cw, &oi, b, m);
+			_vc_kernel07(cw, &oi, b, m);
 			message[i] = cw[oi];
 		}
 	}
@@ -287,8 +179,8 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	{	
 		for (i = 27, b = 0; i < 31; i++)
 		{
-			_vc_kernel07(cw, &oi, b, offset, ca);
-			_vc_kernel07(cw, &oi, b, offset, ca);
+			_vc_kernel07(cw, &oi, b, m);
+			_vc_kernel07(cw, &oi, b, m);
 			b = message[i] = cw[oi];
 			oi = (oi + 1) & 7;
 		}
@@ -298,10 +190,10 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, int ca)
 	message[31] = _crc(message);
 	
 	/* Iterate through _vc_kernel07 64 more times (99 in total) */
-	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, message[31], offset, ca);
+	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, message[31], m);
 }
 
-void vc_seed_p07(_vc_block_t *s, int ca)
+void vc_seed_p07(_vc_block_t *s, _vc_mode_t *m)
 {
 	uint64_t cw[8];
 
@@ -309,13 +201,13 @@ void vc_seed_p07(_vc_block_t *s, int ca)
 	_rand_vc_seed(s->messages[5]);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[5], cw, ca);
+	_vc_process_p07_msg(s->messages[5], cw, m);
 	
 	/* Reverse calculated control word */
 	s->codeword = _rev_cw(cw);
 }
 
-void vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial)
+void vc_emm_p07(_vc_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 {
 	int i;
 	uint64_t cw[8];
@@ -329,11 +221,10 @@ void vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial)
 	_xor_serial(s->messages[2], cmd, cardserial, 0xA7);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, VC_SKY07);
+	_vc_process_p07_msg(s->messages[2], cw, m);
 }
 
-
-void vc_seed_vc2(_vc2_block_t *s, int ca)
+void vc_seed_vc2(_vc2_block_t *s, _vc_mode_t *m)
 {
 	uint64_t cw[8];
 	
@@ -341,13 +232,13 @@ void vc_seed_vc2(_vc2_block_t *s, int ca)
 	_rand_vc_seed(s->messages[5]);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[5], cw, ca);
+	_vc_process_p07_msg(s->messages[5], cw, m);
 	
 	/* Reverse calculated control word */
 	s->codeword = _rev_cw(cw);
 }
 
-void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca)
+void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 {
 	int i;
 	uint64_t cw[8];
@@ -361,10 +252,10 @@ void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca)
 	_xor_serial(s->messages[2], cmd, cardserial, 0x81);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, VC_MC);
+	_vc_process_p07_msg(s->messages[2], cw, m);
 }
 
-void _vc_kernel09(const uint8_t in, uint64_t *out)
+void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint64_t *out)
 {
 	uint8_t a, b, c, d, temp[8];
 	uint16_t m;
@@ -376,7 +267,7 @@ void _vc_kernel09(const uint8_t in, uint64_t *out)
 	for (i = 0; i <= 4; i += 2)
 	{
 		b = temp[i] & 0x3F;
-		b =  sky09_key[b] ^ sky09_key[b + 0x98];
+		b =  k->key[b] ^ k->key[b + 0x98];
 		c = a + b - temp[i + 1];
 		d = ((uint8_t) (temp[i] - temp[i + 1])) ^ a;
 		m = d * c;
@@ -396,17 +287,19 @@ void _vc_kernel09(const uint8_t in, uint64_t *out)
 	for(i = 0; i < 8; i++) out[i] = temp[i];
 }
 
-void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
+uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 {
 	int i;
 	uint8_t a, b, bb, xor[4];
 	
 	uint8_t nanobuffer[0x0F];
+
+	uint64_t *cw = 0;
 	
 	bb = 0;
 	i = 0;
 	
-	if(nanos)
+	if(m->mode == VC_SKY09_NANO)
 	{
 		int x;
 		
@@ -448,18 +341,18 @@ void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
 	/* Reset CW */
 	for (i = 0; i < 8; i++) cw[i] = 0;
 	
-	for (i = 0; i < 27; i++) _vc_kernel09(message[i], cw);
+	for (i = 0; i < 27; i++) _vc_kernel09(m->key, message[i], cw);
 	
 	/* Calculate signature */
 	for (i = 27, b = 0; i < 31; i++)
 	{
-		_vc_kernel09(b, cw);
-		_vc_kernel09(b, cw);
+		_vc_kernel09(m->key, b, cw);
+		_vc_kernel09(m->key, b, cw);
 		b = message[i] = cw[7];
 	}
 	
 	/* Nanos */
-	if(nanos && (message[3] ^ xor[0]) == 0x80)
+	if(m->mode == VC_SKY09_NANO && (message[3] ^ xor[0]) == 0x80)
 	{
 		int x, ee_address, ee_data, ee_offset;
 		
@@ -477,8 +370,8 @@ void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
 					
 				case 0x09:
 					ee_address = (nanobuffer[i + 1]) * 0x100 + nanobuffer[i+ 2];
-					_vc_kernel09(0x63, cw);
-					_vc_kernel09(0x00, cw);
+					_vc_kernel09(m->key, 0x63, cw);
+					_vc_kernel09(m->key, 0x00, cw);
 					i += 2;
 					break;
 				
@@ -487,10 +380,10 @@ void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
 					for(x = ee_offset; x >= 0; x--)
 					{
 						ee_data = ext_ee[ee_address + x - 0x1100];
-						_vc_kernel09(ee_data, cw);
+						_vc_kernel09(m->key, ee_data, cw);
 					}
-					_vc_kernel09(ee_data, cw);
-					_vc_kernel09(0xFF, cw);
+					_vc_kernel09(m->key, ee_data, cw);
+					_vc_kernel09(m->key, 0xFF, cw);
 					i++;
 					break;
 				
@@ -509,30 +402,31 @@ void _vc_process_p09_msg(uint8_t *message, uint64_t *cw, int nanos)
 	message[31] = _crc(message);
 	
 	/* Iterate through _vc_kernel09 64 more times (99 in total)*/
-	for (i = 0; i < 64; i++) _vc_kernel09((bb ? bb : message[31]), cw);
+	for (i = 0; i < 64; i++) _vc_kernel09(m->key, (bb ? bb : message[31]), cw);
 	
 	/* Mask high nibble of last byte as it's not used */
 	cw[7] &= 0x0F;
+
+	return *cw;
 }
 
-void vc_seed_p09(_vc_block_t *s, int nanos)
+void vc_seed_p09(_vc_block_t *s, _vc_mode_t *m)
 {
-	uint64_t cw[8];
+	uint64_t cw;
 	
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
 	
 	/* Process Videocrypt message */
-	_vc_process_p09_msg(s->messages[5], cw, nanos);
+	cw = _vc_process_p09_msg(s->messages[5], m);
 	
 	/* Reverse calculated control word */
-	s->codeword = _rev_cw(cw);
+	s->codeword = _rev_cw(&cw);
 }
 
-void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial)
+void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial, _vc_mode_t *m)
 {
 	int i;
-	uint64_t cw[8];
 	
 	int emmdata[7] = { 0xE1, 0x52, 0x01, 0x25, 0x80, 0xFF, 0x20 };
 	
@@ -543,7 +437,7 @@ void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial)
 	_xor_serial(s->messages[2], cmd, cardserial, 0xA9);
 	
 	/* Process Videocrypt message */
-	_vc_process_p09_msg(s->messages[2], cw, 0);
+	_vc_process_p09_msg(s->messages[2], m);
 }
 
 void vc_seed_xtea(_vc_block_t *s)
@@ -670,24 +564,24 @@ void vc_seed_ppv(_vc_block_t *s, uint8_t ppv_card_data[7])
 	for(i = 0, s->codeword = 0; i < 8; i++)	s->codeword = msg[i + 1] << (i * 8) | s->codeword;
 }
 
-void vc_seed(_vc_block_t *s, int mode)
+void vc_seed(_vc_block_t *s, _vc_mode_t *m)
 {
-	switch(mode)
+	switch(m->mode)
 	{
 		case(VC_TAC1):
 		case(VC_TAC2):
+		case(VC_SKY03):
+		case(VC_SKY04):
 		case(VC_SKY05):
+		case(VC_SKY06):
 		case(VC_SKY07):
 		case(VC_JSTV):
-			vc_seed_p07(s, mode);
+			vc_seed_p07(s, m);
 			break;
 			
 		case(VC_SKY09):
-			vc_seed_p09(s, 0);
-			break;
-			
 		case(VC_SKY09_NANO):
-			vc_seed_p09(s, 1);
+			vc_seed_p09(s, m);
 			break;
 			
 		case(VC_XTEA):
@@ -699,12 +593,13 @@ void vc_seed(_vc_block_t *s, int mode)
 	}
 }
 
-void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
+void vc_emm(_vc_block_t *s, _vc_mode_t *m, uint32_t cardserial, int b, int i)
 {
-	uint8_t cmd_tac[] = { 0x08, 0x09, 0x28, 0x29 };
-	uint8_t cmd_sky[] = { 0x2C, 0x20, 0x0C, 0x00 };
-	
-	switch(mode)
+	uint8_t cmd_tac[]   = { 0x08, 0x09, 0x28, 0x29 };
+	uint8_t cmd_sky06[] = { 0x20, 0x21, 0x03, 0x01 };
+	uint8_t cmd_sky07[] = { 0x2C, 0x20, 0x0C, 0x00 };
+
+	switch(m->mode)
 	{
 		case(VC_TAC1):
 		case(VC_TAC2):
@@ -715,7 +610,17 @@ void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
 			 * 0x28: Block channel
 			 * 0x29: Disable card
 			 */
-			vc_emm_p07(s, (b ? cmd_tac[i] : cmd_tac[i + 1]), cardserial);
+			vc_emm_p07(s, m, (b ? cmd_tac[i] : cmd_tac[i + 1]), cardserial);
+			break;
+
+		case(VC_SKY06):
+			/*
+			 * 0x02: allow Sky Movies
+			 * 0x21: Enable card
+			 * 0x22: switch off Sky Movies
+			 * 0x01: Disable card
+			 */
+			vc_emm_p07(s, m, (b ? cmd_sky06[i] : cmd_sky06[i + 2]), cardserial);
 			break;
 		
 		case(VC_SKY07):
@@ -725,12 +630,12 @@ void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i)
 			 * 0x0C: switch off Sky Multichannels
 			 * 0x00: Disable card 
 			 */
-			vc_emm_p07(s, (b ? cmd_sky[i] : cmd_sky[i + 2]), cardserial);
+			vc_emm_p07(s, m, (b ? cmd_sky07[i] : cmd_sky07[i + 2]), cardserial);
 			break;
 		
 		case(VC_SKY09):
 		case(VC_SKY09_NANO):
-			vc_emm_p09(s, (b ? cmd_sky[i] : cmd_sky[i + 2]), cardserial);
+			vc_emm_p09(s, (b ? cmd_sky07[i] : cmd_sky07[i + 2]), cardserial, m);
 			break;
 	}
 }

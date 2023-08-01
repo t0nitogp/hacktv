@@ -21,6 +21,10 @@
 #include <stdint.h>
 
 typedef struct {
+	const uint8_t key[256];
+} _vc_key_t;
+
+typedef struct {
 	uint8_t mode;
 	uint64_t codeword;
 	uint8_t messages[7][32];
@@ -34,14 +38,34 @@ typedef struct {
 	uint8_t b1, b2, b3;
 } _vc2_block_t;
 
+
+typedef struct {
+	const char          *id;   /* Name of Videocrypt mode */
+	const int        cwtype;   /* Static or dynamic CW */
+	const int          mode;   /* Mode */
+	_vc_block_t     *blocks;   /* VC1 blocks */
+	_vc2_block_t   *blocks2;   /* VC2 blocks */
+	const int           len;   /* Block length */
+	const int           emm;   /* EMM mode? */
+	const char *channelname;   /* Channel/display name */
+	const int     channelid;   /* Channel ID */
+	const int          date;   /* Broadcast date byte */
+	const int      emm_byte;   /* Card issue byte used in EMMs */
+	const _vc_key_t    *key;   /* Key used by the card */
+	const int    key_offset;   /* Key offset for P03-P07 era of VC cards */
+} _vc_mode_t;
+
 enum {
 	VC_CW_STATIC = 100,
 	VC_CW_DYNAMIC,
 	VC_EMM,
 	VC_FREE,
 	VC_JSTV,
+	VC_SKY02,
+	VC_SKY03,
 	VC_SKY04,
 	VC_SKY05,
+	VC_SKY06,
 	VC_SKY07,
 	VC_SKY09,
 	VC_SKY09_NANO,
@@ -57,21 +81,11 @@ enum {
 };
 
 /* Videocrypt 1 */
-extern void vc_seed_p03(_vc_block_t *s);
-extern void vc_seed_p07(_vc_block_t *s, int ca);
-extern void vc_seed_p09(_vc_block_t *s, int nanos);
-
-extern void vc_emm_p07(_vc_block_t *s, int cmd, uint32_t cardserial);
-extern void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial);
-
-extern void vc_seed_xtea(_vc_block_t *s);
+extern void vc_seed(_vc_block_t *s, _vc_mode_t *m);
+extern void vc_emm(_vc_block_t *s, _vc_mode_t *m, uint32_t cardserial, int b, int i);
 extern void vc_seed_ppv(_vc_block_t *s, uint8_t _ppv_card_data[7]);
 
 /* Videocrypt 2 */
-extern void vc_seed_vc2(_vc2_block_t *s, int ca);
-extern void vc2_emm(_vc2_block_t *s, int cmd, uint32_t cardserial, int ca);
-
-extern void vc_emm(_vc_block_t *s, int mode, uint32_t cardserial, int b, int i);
-extern void vc_seed(_vc_block_t *s, int mode);
-
+extern void vc_seed_vc2(_vc2_block_t *s, _vc_mode_t *m);
+extern void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial);
 #endif
