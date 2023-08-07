@@ -3039,7 +3039,7 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	{
 		vbidata_render(s->syncs, &sc, 0, 5, VBIDATA_LSB_FIRST, l);
 	}
-	
+
 	/* Render the active video if required */
 	if(seq[2] == 'a' || seq[3] == 'a')
 	{

@@ -77,7 +77,7 @@ static uint8_t _rotate_left(uint8_t x)
 }
 
 /* Reverse nibbles in a byte */
-static inline uint8_t _rnibble(uint8_t a)
+static inline uint8_t _swap_nibbles(uint8_t a)
 {
 	return((a >> 4) | (a << 4));
 }
@@ -88,7 +88,7 @@ void _rand_vc_seed(uint8_t *message)
 }
 
 /* Reverse calculated control word */
-uint64_t _rev_cw(uint64_t in[8])
+uint64_t _rev_cw(uint8_t in[8])
 {
 	int i;
 	uint64_t cw;
@@ -98,7 +98,7 @@ uint64_t _rev_cw(uint64_t in[8])
 	
 	for(i = 0, cw = 0; i < 8; i++)
 	{
-		cw = in[i] << (i * 8) | cw;
+		cw |= (uint64_t) in[i] << (i * 8);
 	}
 	
 	return(cw);
@@ -114,7 +114,7 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 	/* Videocrypt 1 uses message bytes 1 and 2 */
 	/* Videocrypt 2 uses message bytes 5 and 6 */
 	a = byte == 0x81 ? message[5] ^ message[6] : message[1] ^ message[2];
-	a = _rnibble(a);
+	a = _swap_nibbles(a);
 	b = byte == 0x81 ? message[6] : message[2];;
 
 	for (i=0; i < 4;i++)
@@ -133,11 +133,9 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 	for(i = 12; i < 27; i++) message[i] = message[11];
 }
 
-void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, _vc_mode_t *m)
+void _vc_kernel07(uint8_t *out, int *oi, const uint8_t in, _vc_mode_t *m)
 {
-	uint8_t b, c;
-	
-	uint8_t key[32];
+	uint8_t b, c, key[32];
 
 	memcpy(key, m->key->key + m->key_offset, 0x20);
 	
@@ -147,19 +145,19 @@ void _vc_kernel07(uint64_t *out, int *oi, const uint8_t in, _vc_mode_t *m)
 	c = ~(c + b);
 	c = _rotate_left(c) + in;
 	c = _rotate_left(c);
-	c = _rnibble(c);
+	c = _swap_nibbles(c);
 	*oi = (*oi + 1) & 7;
 	out[*oi] ^= c;
 }
 
-void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, _vc_mode_t *m)
+uint64_t _vc_process_p07_msg(uint8_t *message, _vc_mode_t *m)
 {
 	int i;
 	int oi = 0;	
-	uint8_t b;
+	uint8_t b, cw[8];
 	
 	/* Reset answers */
-	for (i = 0; i < 8; i++) cw[i] = 0;
+	memset(cw, 0, 8);
 	
 	/* Run through kernel */
 	for (i = 0; i < 27; i++) _vc_kernel07(cw, &oi, message[i], m);
@@ -191,26 +189,22 @@ void _vc_process_p07_msg(uint8_t *message, uint64_t *cw, _vc_mode_t *m)
 	
 	/* Iterate through _vc_kernel07 64 more times (99 in total) */
 	for (i = 0; i < 64; i++) _vc_kernel07(cw, &oi, message[31], m);
+
+	return _rev_cw(cw);
 }
 
 void vc_seed_p07(_vc_block_t *s, _vc_mode_t *m)
 {
-	uint64_t cw[8];
-
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[5], cw, m);
-	
-	/* Reverse calculated control word */
-	s->codeword = _rev_cw(cw);
+	s->codeword = _vc_process_p07_msg(s->messages[5], m);
 }
 
 void vc_emm_p07(_vc_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 {
 	int i;
-	uint64_t cw[8];
 	
 	int emmdata[7] = { 0xE0, 0x3F, 0x3E, 0xEC, 0x1C, 0x60, 0x0F };
 	
@@ -221,27 +215,21 @@ void vc_emm_p07(_vc_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 	_xor_serial(s->messages[2], cmd, cardserial, 0xA7);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, m);
+	_vc_process_p07_msg(s->messages[2], m);
 }
 
 void vc_seed_vc2(_vc2_block_t *s, _vc_mode_t *m)
 {
-	uint64_t cw[8];
-	
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[5], cw, m);
-	
-	/* Reverse calculated control word */
-	s->codeword = _rev_cw(cw);
+	s->codeword = _vc_process_p07_msg(s->messages[5], m);
 }
 
 void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 {
 	int i;
-	uint64_t cw[8];
 	
 	int emmdata[7] = { 0xE1,0x81,0x36,0x00,0xFF,0xFF,0xB4 };
 	
@@ -252,16 +240,17 @@ void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 	_xor_serial(s->messages[2], cmd, cardserial, 0x81);
 	
 	/* Process Videocrypt message */
-	_vc_process_p07_msg(s->messages[2], cw, m);
+	_vc_process_p07_msg(s->messages[2], m);
 }
 
-void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint64_t *out)
+void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint8_t *out)
 {
-	uint8_t a, b, c, d, temp[8];
+	uint8_t a, b, c, d;
+	uint8_t temp[8];
 	uint16_t m;
 	int i;
 	
-	for(i = 0; i < 8; i++) temp[i] = out[i];
+	memcpy(temp, out, 8);
 	
 	a = in;
 	for (i = 0; i <= 4; i += 2)
@@ -269,7 +258,7 @@ void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint64_t *out)
 		b = temp[i] & 0x3F;
 		b =  k->key[b] ^ k->key[b + 0x98];
 		c = a + b - temp[i + 1];
-		d = ((uint8_t) (temp[i] - temp[i + 1])) ^ a;
+		d = ((temp[i] - temp[i + 1])) ^ a;
 		m = d * c;
 		temp[i + 2] ^= (m & 0xFF);
 		temp[i + 3] += m >> 8;
@@ -284,17 +273,13 @@ void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint64_t *out)
 	if (a < temp[1]) a++;
 	temp[1] = a + 0x8F;
 	
-	for(i = 0; i < 8; i++) out[i] = temp[i];
+	memcpy(out, temp, 8);
 }
 
 uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 {
 	int i;
-	uint8_t a, b, bb, xor[4];
-	
-	uint8_t nanobuffer[0x0F];
-
-	uint64_t *cw = 0;
+	uint8_t a, b, bb, xor[4], nanobuffer[0x0F], cw[8];
 	
 	bb = 0;
 	i = 0;
@@ -305,7 +290,7 @@ uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 		
 		/* XOR round function */
 		a = message[1] ^ message[2];
-		a = _rnibble(a);
+		a = _swap_nibbles(a);
 		b = message[2];
 		
 		for (i = 0; i < 4; i++)
@@ -339,7 +324,7 @@ uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 	}
 	
 	/* Reset CW */
-	for (i = 0; i < 8; i++) cw[i] = 0;
+	memset(cw, 0, 8);
 	
 	for (i = 0; i < 27; i++) _vc_kernel09(m->key, message[i], cw);
 	
@@ -404,24 +389,16 @@ uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 	/* Iterate through _vc_kernel09 64 more times (99 in total)*/
 	for (i = 0; i < 64; i++) _vc_kernel09(m->key, (bb ? bb : message[31]), cw);
 	
-	/* Mask high nibble of last byte as it's not used */
-	cw[7] &= 0x0F;
-
-	return *cw;
+	return _rev_cw(cw);
 }
 
 void vc_seed_p09(_vc_block_t *s, _vc_mode_t *m)
 {
-	uint64_t cw;
-	
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
-	
+
 	/* Process Videocrypt message */
-	cw = _vc_process_p09_msg(s->messages[5], m);
-	
-	/* Reverse calculated control word */
-	s->codeword = _rev_cw(&cw);
+	s->codeword =  _vc_process_p09_msg(s->messages[5], m);
 }
 
 void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial, _vc_mode_t *m)
@@ -435,7 +412,7 @@ void vc_emm_p09(_vc_block_t *s, int cmd, uint32_t cardserial, _vc_mode_t *m)
 	
 	/* Obfuscate card serial */
 	_xor_serial(s->messages[2], cmd, cardserial, 0xA9);
-	
+
 	/* Process Videocrypt message */
 	_vc_process_p09_msg(s->messages[2], m);
 }
@@ -610,7 +587,7 @@ void vc_emm(_vc_block_t *s, _vc_mode_t *m, uint32_t cardserial, int b, int i)
 			 * 0x28: Block channel
 			 * 0x29: Disable card
 			 */
-			vc_emm_p07(s, m, (b ? cmd_tac[i] : cmd_tac[i + 1]), cardserial);
+			vc_emm_p07(s, m, (b ? cmd_tac[i] : cmd_tac[i + 2]), cardserial);
 			break;
 
 		case(VC_SKY06):
