@@ -1490,7 +1490,7 @@ int av_ffmpeg_open(vid_t *s, char *input_url, char *format, char *options)
 		AVFilterInOut *ainputs  = avfilter_inout_alloc();
 		afilter_graph = avfilter_graph_alloc();
 
-		#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
+		#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
 		asprintf(&_afilter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
 			av->audio_codec_ctx->time_base.num, av->audio_codec_ctx->time_base.den, av->audio_codec_ctx->sample_rate,
 			av_get_sample_fmt_name(av->audio_codec_ctx->sample_fmt),
