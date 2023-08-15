@@ -547,7 +547,6 @@ void vc_seed(_vc_block_t *s, _vc_mode_t *m)
 	{
 		case(VC_TAC1):
 		case(VC_TAC2):
-		case(VC_SKY02):
 		case(VC_SKY03):
 		case(VC_SKY04):
 		case(VC_SKY05):

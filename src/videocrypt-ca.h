@@ -34,8 +34,6 @@ typedef struct {
 	uint8_t mode;
 	uint64_t codeword;
 	uint8_t messages[8][32];
-	/* Random bytes */
-	uint8_t b1, b2, b3;
 } _vc2_block_t;
 
 

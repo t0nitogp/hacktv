@@ -64,7 +64,7 @@ static _vc_mode_t _vc1_modes[] = {
 	{ "free",        VC_CW_STATIC,  VC_FREE,       _fa_blocks,        NULL, 1, 0,      "                       ", 0x00, 0x20, 0x00,       0x00, 0x00 },
 	{ "ppv",         VC_CW_DYNAMIC, VC_PPV,        _ppv_blocks,       NULL, 1, 0,      "                       ", 0x00, 0x20, 0x00,       0x00, 0x00 },
 	{ "jstv",        VC_CW_DYNAMIC, VC_JSTV,       _vc1_blocks,       NULL, 2, 0,      "   HACKTV    JSTV  MODE", 0x00, 0x20, 0x00,  _jstv_key, 0x00 },
-	{ "sky02",       VC_CW_STATIC,  VC_SKY02,      _sky02_blocks,     NULL, 2, 0,      "   HACKTV    SKY02 MODE", 0x01, 0x0E, 0xA3,   _sky_key, 0x00 },
+	{ "sky02",       VC_CW_STATIC, VC_SKY02,     _sky02_blocks,       NULL, 2, 0,      "   HACKTV    SKY02 MODE", 0x01, 0x0E, 0xA3,       0x00, 0x00 },
 	{ "sky03",       VC_CW_DYNAMIC, VC_SKY03,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY03 MODE", 0x01, 0x12, 0xA3,   _sky_key, 0x00 },
 	{ "sky04",       VC_CW_DYNAMIC, VC_SKY04,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY04 MODE", 0x01, 0x14, 0xA4,   _sky_key, 0x20 },
 	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY05 MODE", 0x0C, 0x1C, 0xA5,   _sky_key, 0x40 },
@@ -239,7 +239,7 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	s->cw       = VC_PRBS_CW_FA;
 	
 	s->counter  = 0;
-	s->cw       = 0;
+	s->cw       = rand();
 	s->vcmode1  = mode;
 	s->vcmode2  = mode2;
 	
