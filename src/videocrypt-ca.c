@@ -84,7 +84,7 @@ static inline uint8_t _swap_nibbles(uint8_t a)
 
 void _rand_vc_seed(uint8_t *message)
 {
-	for(int i = 13; i < 27; i++) message[i] = rand() + 0xFF;
+	for(int i = 8; i < 27; i++) message[i] = rand() + 0xFF;
 }
 
 /* Reverse calculated control word */
@@ -142,8 +142,8 @@ void _vc_kernel07(uint8_t *out, int *oi, const uint8_t in, _vc_mode_t *m)
 	out[*oi] ^= in;
 	b = key[(out[*oi] >> 4)];
 	c = key[(out[*oi] & 0x0F) + 16];
-	c = ~(c + b);
-	c = _rotate_left(c) + in;
+	c = m->mode == VC_SKY02 ? c + b : ~(c + b);
+	c = m->mode == VC_SKY02 ? c + in : _rotate_left(c) + in;
 	c = _rotate_left(c);
 	c = _swap_nibbles(c);
 	*oi = (*oi + 1) & 7;
@@ -163,7 +163,7 @@ uint64_t _vc_process_p07_msg(uint8_t *message, _vc_mode_t *m)
 	for (i = 0; i < 27; i++) _vc_kernel07(cw, &oi, message[i], m);
 	
 	/* Calculate signature */
-	if(m->mode < VC_SKY06)
+	if(m->mode < VC_SKY07)
 	{
 		for (i = 27, b = 0; i < 31; i++)
 		{
@@ -193,7 +193,7 @@ uint64_t _vc_process_p07_msg(uint8_t *message, _vc_mode_t *m)
 	return _rev_cw(cw);
 }
 
-void vc_seed_p07(_vc_block_t *s, _vc_mode_t *m)
+void vc_seed_sky(_vc_block_t *s, _vc_mode_t *m)
 {
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
@@ -392,7 +392,7 @@ uint64_t _vc_process_p09_msg(uint8_t *message, _vc_mode_t *m)
 	return _rev_cw(cw);
 }
 
-void vc_seed_p09(_vc_block_t *s, _vc_mode_t *m)
+void vc_seed_sky_p09(_vc_block_t *s, _vc_mode_t *m)
 {
 	/* Random seed for bytes 12 to 26 */
 	_rand_vc_seed(s->messages[5]);
@@ -547,18 +547,19 @@ void vc_seed(_vc_block_t *s, _vc_mode_t *m)
 	{
 		case(VC_TAC1):
 		case(VC_TAC2):
+		case(VC_SKY02):
 		case(VC_SKY03):
 		case(VC_SKY04):
 		case(VC_SKY05):
 		case(VC_SKY06):
 		case(VC_SKY07):
 		case(VC_JSTV):
-			vc_seed_p07(s, m);
+			vc_seed_sky(s, m);
 			break;
 			
 		case(VC_SKY09):
 		case(VC_SKY09_NANO):
-			vc_seed_p09(s, m);
+			vc_seed_sky_p09(s, m);
 			break;
 			
 		case(VC_XTEA):
