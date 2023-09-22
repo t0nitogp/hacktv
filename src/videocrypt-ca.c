@@ -245,7 +245,7 @@ void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 
 void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint8_t *out)
 {
-	uint8_t a, b, c, d;
+	uint8_t a, b, c;
 	uint8_t temp[8];
 	uint16_t m;
 	int i;
@@ -255,11 +255,9 @@ void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint8_t *out)
 	a = in;
 	for (i = 0; i <= 4; i += 2)
 	{
-		b = temp[i] & 0x3F;
-		b =  k->key[b] ^ k->key[b + 0x98];
-		c = a + b - temp[i + 1];
-		d = ((temp[i] - temp[i + 1])) ^ a;
-		m = d * c;
+		b = (a + k->key[temp[i] & 0x3F] - temp[i + 1]);
+		c = ((temp[i] - temp[i + 1])) ^ a;
+		m = b * c;
 		temp[i + 2] ^= (m & 0xFF);
 		temp[i + 3] += m >> 8;
 		a = _rotate_left(a) + 0x49;
@@ -267,10 +265,10 @@ void _vc_kernel09(const _vc_key_t *k, const uint8_t in, uint8_t *out)
 	
 	m = temp[6] * temp[7];
 	a = (m & 0xFF) + temp[0];
-	if (a < temp[0]) a++;
+	a = a < temp[0] ? a + 1 : a;
 	temp[0] = a + 0x39;
 	a = (m >> 8) + temp[1];
-	if (a < temp[1]) a++;
+	a = a < temp[1] ? a + 1 : a;
 	temp[1] = a + 0x8F;
 	
 	memcpy(out, temp, 8);
