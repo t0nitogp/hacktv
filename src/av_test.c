@@ -112,8 +112,8 @@ int av_test_open(vid_t *vid, char *test_screen)
 	int16_t l;
 	int y_start, y_end, x_start, x_end, start_pos, ycentre_start, ycentre_end;
 	
-	s = calloc(1, sizeof(av_test_t));
-	if(!s)
+	av = calloc(1, sizeof(av_test_t));
+	if(!av)
 	{
 		return(HACKTV_OUT_OF_MEMORY);
 	}
@@ -124,7 +124,7 @@ int av_test_open(vid_t *vid, char *test_screen)
 	av->video = malloc(av->vid_width * av->vid_height * sizeof(uint32_t));
 	if(!av->video)
 	{
-		free(s);
+		free(av);
 		return(HACKTV_OUT_OF_MEMORY);
 	}
 	
@@ -321,33 +321,33 @@ int av_test_open(vid_t *vid, char *test_screen)
 		return(HACKTV_OUT_OF_MEMORY);
 	}
 	
-	for(x = 0; x < s->audio_samples; x++)
+	for(x = 0; x < av->audio_samples; x++)
 	{
 		l = sin(x * d) * INT16_MAX * 0.1;
 		
 		if(x < y)
 		{
 			/* 0 - 640ms, interrupt left channel */
-			s->audio[x * 2 + 0] = 0;
-			s->audio[x * 2 + 1] = l;
+			av->audio[x * 2 + 0] = 0;
+			av->audio[x * 2 + 1] = l;
 		}
 		else if(x >= y * 2 && x < y * 3)
 		{
 			/* 1280ms - 1920ms, interrupt right channel */
-			s->audio[x * 2 + 0] = l;
-			s->audio[x * 2 + 1] = 0;
+			av->audio[x * 2 + 0] = l;
+			av->audio[x * 2 + 1] = 0;
 		}
 		else if(x >= y * 4 && x < y * 5)
 		{
 			/* 2560ms - 3200ms, interrupt right channel again */
-			s->audio[x * 2 + 0] = l;
-			s->audio[x * 2 + 1] = 0;
+			av->audio[x * 2 + 0] = l;
+			av->audio[x * 2 + 1] = 0;
 		}
 		else
 		{
 			/* Use both channels for all other times */
-			s->audio[x * 2 + 0] = l; /* Left */
-			s->audio[x * 2 + 1] = l; /* Right */
+			av->audio[x * 2 + 0] = l; /* Left */
+			av->audio[x * 2 + 1] = l; /* Right */
 		}
 	}
 	
