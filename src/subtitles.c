@@ -165,7 +165,7 @@ void load_bitmap_subtitle(av_subs_t *subs, vid_t *s, int w, int h, uint32_t star
 	subs[sindex].bitmap_height = h;
 	
 	/* Set correct ratio based on supplied parameters */
-	float ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0/3.0 : (s->ratio ? s->ratio : 16.0/9.0);
+	float ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0/3.0 : 16.0/9.0;
 	int new_width = (float) (s->active_width / (float) s->conf.active_lines) / ratio * w;
 	subs[sindex].bitmap_width = new_width;
 		

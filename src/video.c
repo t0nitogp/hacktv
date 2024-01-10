@@ -23,6 +23,7 @@
 #include "dance.h"
 #include "hacktv.h"
 #include <sys/time.h>
+#include "av.h"
 
 /* 
  * Video generation
@@ -49,7 +50,7 @@
 const vid_config_t vid_config_pal_i = {
 	
 	/* System I (PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -104,7 +105,7 @@ const vid_config_t vid_config_pal_i = {
 const vid_config_t vid_config_pal_bg = {
 	
 	/* System B/G (PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5000000, /* Hz */
@@ -159,7 +160,7 @@ const vid_config_t vid_config_pal_bg = {
 const vid_config_t vid_config_pal_dk = {
 	
 	/* System D/K (PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -215,7 +216,7 @@ const vid_config_t vid_config_pal_dk = {
 const vid_config_t vid_config_pal_fm = {
 	
 	/* PAL FM (satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -277,7 +278,7 @@ const vid_config_t vid_config_pal_fm = {
 const vid_config_t vid_config_pal = {
 	
 	/* Composite PAL */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -320,7 +321,7 @@ const vid_config_t vid_config_pal = {
 const vid_config_t vid_config_pal_m = {
 	
 	/* System M (525 PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -371,7 +372,7 @@ const vid_config_t vid_config_pal_m = {
 const vid_config_t vid_config_pal_n = {
 	
 	/* System N (625 PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -421,7 +422,7 @@ const vid_config_t vid_config_pal_n = {
 const vid_config_t vid_config_525pal = {
 	
 	/* Composite 525PAL */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -464,7 +465,7 @@ const vid_config_t vid_config_525pal = {
 const vid_config_t vid_config_secam_l = {
 	
 	/* System L (SECAM) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 6000000, /* Hz */
@@ -515,7 +516,7 @@ const vid_config_t vid_config_secam_l = {
 const vid_config_t vid_config_secam_dk = {
 	
 	/* System D/K (SECAM) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -568,7 +569,7 @@ const vid_config_t vid_config_secam_dk = {
 const vid_config_t vid_config_secam_i = {
 	
 	/* System I (SECAM) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -621,7 +622,7 @@ const vid_config_t vid_config_secam_i = {
 const vid_config_t vid_config_secam_bg = {
 	
 	/* System B/G (SECAM) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5000000, /* Hz */
@@ -670,7 +671,7 @@ const vid_config_t vid_config_secam_bg = {
 const vid_config_t vid_config_secam_fm = {
 	
 	/* SECAM FM (satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -729,7 +730,7 @@ const vid_config_t vid_config_secam_fm = {
 const vid_config_t vid_config_secam = {
 	
 	/* Composite SECAM */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -770,7 +771,7 @@ const vid_config_t vid_config_secam = {
 const vid_config_t vid_config_ntsc_m = {
 	
 	/* System M (NTSC) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -821,7 +822,7 @@ const vid_config_t vid_config_ntsc_m = {
 const vid_config_t vid_config_ntsc_i = {
 	
 	/* System I (NTSC) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -876,7 +877,7 @@ const vid_config_t vid_config_ntsc_i = {
 const vid_config_t vid_config_ntsc_fm = {
 	
 	/* NTSC FM (satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -937,7 +938,7 @@ const vid_config_t vid_config_ntsc_fm = {
 const vid_config_t vid_config_ntsc_bs_fm = {
 	
 	/* Digital Subcarrier/NTSC FM (satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -987,7 +988,7 @@ const vid_config_t vid_config_ntsc_bs_fm = {
 const vid_config_t vid_config_ntsc = {
 	
 	/* Composite NTSC */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1030,7 +1031,7 @@ const vid_config_t vid_config_ntsc = {
 const vid_config_t vid_config_pal60_i = {
 	
 	/* System I (525-line PAL) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -1085,7 +1086,7 @@ const vid_config_t vid_config_pal60_i = {
 const vid_config_t vid_config_pal60 = {
 	
 	/* Composite 525-line PAL */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1127,7 +1128,7 @@ const vid_config_t vid_config_pal60 = {
 const vid_config_t vid_config_d2mac_am = {
 	
 	/* D2-MAC AM */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 8400000, /* Hz */
@@ -1163,7 +1164,7 @@ const vid_config_t vid_config_d2mac_am = {
 const vid_config_t vid_config_d2mac_fm = {
 	
 	/* D2-MAC FM (Satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -1199,7 +1200,7 @@ const vid_config_t vid_config_d2mac_fm = {
 const vid_config_t vid_config_d2mac = {
 	
 	/* D2-MAC */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.video_bw       = 6.0e6,
 	
@@ -1233,7 +1234,7 @@ const vid_config_t vid_config_d2mac = {
 const vid_config_t vid_config_dmac_am = {
 	
 	/* D-MAC AM */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1267,7 +1268,7 @@ const vid_config_t vid_config_dmac_am = {
 const vid_config_t vid_config_dmac_fm = {
 	
 	/* D2-MAC FM (Satellite) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -1303,7 +1304,7 @@ const vid_config_t vid_config_dmac_fm = {
 const vid_config_t vid_config_dmac = {
 	
 	/* D-MAC */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.video_bw       = 8.4e6,
 	
@@ -1337,7 +1338,7 @@ const vid_config_t vid_config_dmac = {
 const vid_config_t vid_config_819_e = {
 	
 	/* System E (819 line monochrome, French variant) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   =  2000000, /* Hz */
@@ -1376,7 +1377,7 @@ const vid_config_t vid_config_819_e = {
 const vid_config_t vid_config_819 = {
 	
 	/* 819 line video, French variant */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.video_bw       = 10.4e6,
 	
@@ -1408,7 +1409,7 @@ const vid_config_t vid_config_819 = {
 const vid_config_t vid_config_405_a = {
 	
 	/* System A (405 line monochrome) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   =  750000, /* Hz */
@@ -1448,7 +1449,7 @@ const vid_config_t vid_config_405_a = {
 const vid_config_t vid_config_405_i = {
 	
 	/* System A (405 line monochrome) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -1489,7 +1490,7 @@ const vid_config_t vid_config_405_i = {
 const vid_config_t vid_config_405 = {
 	
 	/* 405 line video */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1522,7 +1523,7 @@ const vid_config_t vid_config_405 = {
 const vid_config_t vid_config_baird_240_am = {
 	
 	/* Baird 240 line, AM modulation */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1553,7 +1554,7 @@ const vid_config_t vid_config_baird_240_am = {
 const vid_config_t vid_config_baird_240 = {
 	
 	/* Baird 240 line */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1582,7 +1583,7 @@ const vid_config_t vid_config_baird_240 = {
 const vid_config_t vid_config_baird_30_am = {
 	
 	/* Baird 30 line, AM modulation */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1610,7 +1611,7 @@ const vid_config_t vid_config_baird_30_am = {
 const vid_config_t vid_config_baird_30 = {
 	
 	/* Baird 30 line */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1636,7 +1637,7 @@ const vid_config_t vid_config_baird_30 = {
 const vid_config_t vid_config_nbtv_32_am = {
 	
 	/* NBTV Club standard, AM modulation (negative) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1666,7 +1667,7 @@ const vid_config_t vid_config_nbtv_32_am = {
 const vid_config_t vid_config_nbtv_32 = {
 	
 	/* NBTV Club standard */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1694,7 +1695,7 @@ const vid_config_t vid_config_nbtv_32 = {
 const vid_config_t vid_config_apollo_colour_fm = {
 	
 	/* Unified S-Band, Apollo Colour Lunar Television */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.level          = 1.000, /* Overall signal level */
 	.video_level    = 1.000, /* Power level of video */
@@ -1745,7 +1746,7 @@ const vid_config_t vid_config_apollo_colour_fm = {
 const vid_config_t vid_config_apollo_colour = {
 	
 	/* Apollo Colour Lunar Television */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1782,7 +1783,7 @@ const vid_config_t vid_config_apollo_colour = {
 const vid_config_t vid_config_apollo_mono_fm = {
 	
 	/* Unified S-Band, Apollo Lunar Television 10 fps video (Mode 1) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.level          = 1.000, /* Overall signal level */
 	.video_level    = 1.000, /* Power level of video */
@@ -1830,7 +1831,7 @@ const vid_config_t vid_config_apollo_mono_fm = {
 const vid_config_t vid_config_apollo_mono = {
 	
 	/* Apollo Lunar Television 10 fps video (Mode 1) */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1869,7 +1870,7 @@ const vid_config_t vid_config_apollo_mono = {
 const vid_config_t vid_config_cbs405_m = {
 	
 	/* System M (CBS 405-line Colour) */
-	.output_type    = HACKTV_INT16_COMPLEX,
+	.output_type    = RF_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -1916,7 +1917,7 @@ const vid_config_t vid_config_cbs405_m = {
 const vid_config_t vid_config_cbs405 = {
 	
 	/* CBS 405-line Colour */
-	.output_type    = HACKTV_INT16_REAL,
+	.output_type    = RF_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -2165,7 +2166,7 @@ const static double fm_audio_j17_taps[65] = {
  * sub-carrier at f Hz (bell curve) */
 static void _secam_g(double *g, double f)
 {
-	const double f0 = SECAM_FM_FREQ;
+	const double f0 = 4.286e6;
 	double lq, rq, d;
 	
 	f = f / f0 - f0 / f;
@@ -2374,52 +2375,6 @@ static void inline _am_modulator_add(_mod_am_t *am, int16_t *dst, int16_t sample
 static void _free_am_modulator(_mod_am_t *am)
 {
 	/* Nothing */
-}
-
-/* AV source callback handlers */
-static uint32_t *_av_read_video(vid_t *s, float *ratio)
-{
-	if(s->av_read_video)
-	{
-		return(s->av_read_video(s->av_private, ratio));
-	}
-	
-	return(NULL);
-}
-
-static int16_t *_av_read_audio(vid_t *s, size_t *samples)
-{
-	if(s->av_read_audio)
-	{
-		return(s->av_read_audio(s->av_private, samples));
-	}
-	
-	return(NULL);
-}
-
-static int _av_eof(vid_t *s)
-{
-	if(s->av_eof)
-	{
-		return(s->av_eof(s->av_private));
-	}
-	
-	return(0);
-}
-
-int vid_av_close(vid_t *s)
-{
-	int r;
-	
-	r = s->av_close ? s->av_close(s->av_private) : VID_ERROR;
-	
-	s->av_private = NULL;
-	s->av_read_video = NULL;
-	s->av_read_audio = NULL;
-	s->av_eof = NULL;
-	s->av_close = NULL;
-	
-	return(r);
 }
 
 void _test_sample_rate(const vid_config_t *conf, unsigned int sample_rate)
@@ -2850,6 +2805,10 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		vy = l->line - 1;
 	}
 	
+	/* Shift the lines by one if the source
+	 * video has the bottom field first */
+	if(s->vframe.interlaced == 2) vy += 1;
+	
 	if(vy < 0 || vy >= s->conf.active_lines) vy = -1;
 	
 	if(s->conf.colour_mode == VID_PAL ||
@@ -2914,24 +2873,24 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	/* Render the active video if required */
 	if(seq[2] == 'a' || seq[3] == 'a')
 	{
-		uint32_t rgb;
-		uint32_t *prgb;
+		uint32_t rgb = 0x000000;
+		uint32_t *prgb = &rgb;
+		int stride = 0;
 		int16_t *o;
 		
 		/* Calculate active video portion of this line */
 		int al = (seq[2] == 'a' ? s->active_left : (seq[3] == 'a' ? s->half_width : -1));
 		int ar = (seq[3] == 'a' ? s->active_left + s->active_width : (seq[2] == 'a' ? s->half_width : -1));
 		
-		/* Render the active video */
-		prgb = (s->framebuffer != NULL && vy != -1 ? &s->framebuffer[vy * s->active_width + al - s->active_left] : NULL);
-		rgb = 0x000000;
-		
-		for(x = al, o = &l->output[al * 2]; x < ar; x++, o += 2)
+		if(s->vframe.framebuffer && vy >= 0)
 		{
-			if(prgb)
-			{
-				rgb = *(prgb++) & 0xFFFFFF;
-			}
+			prgb = &s->vframe.framebuffer[vy * s->vframe.line_stride + (al - s->active_left) * s->vframe.pixel_stride];
+			stride = s->vframe.pixel_stride;
+		}
+		
+		for(x = al, o = &l->output[al * 2]; x < ar; x++, o += 2, prgb += stride)
+		{
+			rgb = *prgb & 0xFFFFFF;
 			
 			if(s->conf.colour_mode == VID_APOLLO_FSC ||
 			   s->conf.colour_mode == VID_CBS_FSC)
@@ -3027,24 +2986,52 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		}
 		else if(seq[2] == 'a' || seq[3] == 'a')
 		{
-			uint32_t rgb;
+			uint32_t rgb = 0x000000;
+			uint32_t *prgb = &rgb;
+			int stride = 0;
 			
-			for(x = 0; x < s->width; x++)
+			if(s->vframe.framebuffer && vy >= 0)
 			{
-				rgb = 0x000000;
+				prgb = &s->vframe.framebuffer[vy * s->vframe.line_stride];
+				stride = s->vframe.pixel_stride;
+			}
+			
+			if(((l->frame * s->conf.lines) + l->line) & 1)
+			{
+				/* D'r */
 				
-				if(x >= s->active_left && x < s->active_left + s->active_width)
+				for(x = 0; x < s->active_left; x++)
 				{
-					rgb = s->framebuffer != NULL && vy >= 0 ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
+					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].q;
 				}
 				
-				if(((l->frame * s->conf.lines) + l->line) & 1)
+				for(; x < s->active_left + s->active_width; x++, prgb += stride)
 				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].q; // D'r
+					l->output[x * 2 + 1] = s->yiq_level_lookup[*prgb & 0xFFFFFF].q;
 				}
-				else
+				
+				for(; x < s->width; x++)
 				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].i; // D'b
+					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].q;
+				}
+			}
+			else
+			{
+				/* D'b */
+				
+				for(x = 0; x < s->active_left; x++)
+				{
+					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].i;
+				}
+				
+				for(; x < s->active_left + s->active_width; x++, prgb += stride)
+				{
+					l->output[x * 2 + 1] = s->yiq_level_lookup[*prgb & 0xFFFFFF].i;
+				}
+				
+				for(; x < s->width; x++)
+				{
+					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].i;
 				}
 			}
 			
@@ -3126,7 +3113,7 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 			
 			if(s->audiobuffer_samples == 0)
 			{
-				s->audiobuffer = _av_read_audio(s, &s->audiobuffer_samples);
+				s->audiobuffer = av_read_audio(&s->av, &s->audiobuffer_samples);
 				
 				if(s->conf.systeraudio == 1)
 				{
@@ -3282,6 +3269,22 @@ static int _vid_fmmod_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 	for(x = 0; x < l->width; x++)
 	{
 		_fm_modulator(&s->fm_video, &l->output[x * 2], l->output[x * 2]);
+	}
+	
+	return(1);
+}
+
+static int _vid_swap_iq_process(vid_t *s, void *arg, int nlines, vid_line_t **lines)
+{
+	vid_line_t *l = lines[0];
+	int x;
+	int16_t t;
+	
+	for(x = 0; x < l->width; x++)
+	{
+		t = l->output[x * 2 + 0];
+		l->output[x * 2 + 0] = l->output[x * 2 + 1];
+		l->output[x * 2 + 1] = t;
 	}
 	
 	return(1);
@@ -3864,7 +3867,15 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	s->bline  = 1;
 	s->bframe = 1;
 	
-	s->framebuffer = NULL;
+	s->vframe = (av_frame_t) {
+		.width = s->active_width,
+		.height = s->conf.active_lines,
+		.framebuffer = NULL,
+		.pixel_stride = 0,
+		.line_stride = 0,
+		.pixel_aspect_ratio = { 1, 1 },
+		.interlaced = 0,
+	};
 	s->olines = 1;
 	s->audio = 0;
 	
@@ -4167,7 +4178,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	/* NICAM audio */
 	if(s->conf.nicam_level > 0 && s->conf.nicam_carrier != 0)
 	{
-		r = nicam_mod_init(&s->nicam, NICAM_MODE_STEREO, 0, s->sample_rate, s->conf.nicam_carrier, s->conf.nicam_beta, s->conf.nicam_level * slevel);
+		r = nicam_mod_init(&s->nicam, NICAM_MODE_STEREO, 1, s->sample_rate, s->conf.nicam_carrier, s->conf.nicam_beta, s->conf.nicam_level * slevel);
 		
 		if(r != 0)
 		{
@@ -4235,6 +4246,11 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		}
 		
 		_add_lineprocess(s, "fmmod", 1, NULL, _vid_fmmod_process, NULL);
+	}
+	
+	if(s->conf.swap_iq != 0)
+	{
+		_add_lineprocess(s, "swap_iq", 1, NULL, _vid_swap_iq_process, NULL);
 	}
 	
 	if(s->conf.offset != 0)
@@ -4340,7 +4356,7 @@ void vid_free(vid_t *s)
 	int i;
 	
 	/* Close the AV source */
-	vid_av_close(s);
+	av_close(&s->av);
 	
 	for(i = 0; i < s->nprocesses; i++)
 	{
@@ -4470,11 +4486,12 @@ static vid_line_t *_vid_next_line(vid_t *s, size_t *samples)
 	if(s->bline == 1 || (s->conf.interlace && s->bline == s->conf.hline))
 	{
 		/* Have we reached the end of the video? */
-		if(_av_eof(s))
+		if(av_eof(&s->av))
 		{
 			return(NULL);
 		}
-		s->framebuffer = _av_read_video(s, &s->ratio);
+		
+		av_read_video(&s->av, &s->vframe);
 	}
 	
 	for(i = 0; i < s->nprocesses; i++)

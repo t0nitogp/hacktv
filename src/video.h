@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "av.h"
 #include "nicam728.h"
 #include "dance.h"
 #include "fir.h"
@@ -47,6 +48,9 @@ typedef struct vid_t vid_t;
 #include "graphics.h"
 #include "vitc.h"
 #include "vbidata.h"
+
+#include "av_test.h"
+#include "av_ffmpeg.h"
 
 /* Return codes */
 #define VID_OK             0
@@ -84,14 +88,6 @@ typedef struct vid_t vid_t;
 #define VID_50US 1
 #define VID_75US 2
 #define VID_J17  3
-
-/* AV source function prototypes */
-typedef uint32_t *(*vid_read_video_t)(void *private, float *ratio);
-typedef int16_t *(*vid_read_audio_t)(void *private, size_t *samples);
-typedef int (*vid_eof_t)(void *private);
-typedef int (*vid_close_t)(void *private);
-
-
 
 /* RF modulation */
 
@@ -151,6 +147,9 @@ typedef struct {
 	
 	/* Overall signal level (pre-modulation) */
 	double level;
+	
+	/* Swap the IQ in complex signals */
+	int swap_iq;
 	
 	/* Signal offset and passthru */
 	int64_t offset;
@@ -350,14 +349,13 @@ struct _lineprocess_t {
 
 struct vid_t {
 	
-	/* Source interface */
+	/* Source interface - old */
 	void *av_private;
 	void *av_font;
 	void *av_sub;
-	vid_read_video_t av_read_video;
-	vid_read_audio_t av_read_audio;
-	vid_eof_t av_eof;
-	vid_close_t av_close;
+
+	/* AV source */
+	av_t av;
 	
 	/* Signal configuration */
 	vid_config_t conf;
@@ -407,7 +405,7 @@ struct vid_t {
 	vbidata_lut_t *fsc_syncs;
 	
 	/* Video state */
-	uint32_t *framebuffer;
+	av_frame_t vframe;
 	
 	/* The frame and line number being rendered next */
 	int bframe;
@@ -416,9 +414,6 @@ struct vid_t {
 	/* The frame and line number returned by vid_next_line() */
 	uint32_t frame;
 	int line;
-	
-	/* Current frame's aspect ratio */
-	float ratio;
 	
 	/* Teletext state */
 	tt_t tt;

@@ -21,4 +21,3 @@
 extern int av_test_open(vid_t *s, char *test_screen);
 
 #endif
-

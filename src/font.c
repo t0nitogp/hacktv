@@ -41,8 +41,8 @@ int font_init(vid_t *s, int size, float ratio)
 	ratio = ratio >= 14.0/9.0 ? 16.0/9.0 : 4.0/3.0;
 	
 	font->font_size = size;
-	font->video_width = s->active_width;
-	font->video_height = s->conf.active_lines;
+	font->video_width = s->av.width;
+	font->video_height = s->av.height;
 	font->video_ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0 / 3.0 : ratio;
 	
 	/* Hack to deal with different sampling rates */
@@ -142,6 +142,7 @@ static int _printchar(av_font_t *font, FT_Bitmap *bitmap, FT_Int x, FT_Int y, ui
 	FT_Int i, j, p, q;
 	FT_Int x_max = x + bitmap->width;
 	FT_Int y_max = y + bitmap->rows;
+
 	
 	for(i = x, p = 0; i < x_max; i++, p++)
 	{
@@ -154,7 +155,7 @@ static int _printchar(av_font_t *font, FT_Bitmap *bitmap, FT_Int x, FT_Int y, ui
 			if(i < 0 || j < 0) continue;
 			if(i >= font->video_width || j >= font->video_height) continue;
 			
-			dp = &font->video[j * font->video_width + i];
+			dp = &font->video[j * font->video_width +i];
 			c = bitmap->buffer[q * bitmap->width + p];
 			
 			r = (((*dp >> 16) & 0xFF) * (255 - c) + ((colour >> 16) & 0xFF) * c) / 256;

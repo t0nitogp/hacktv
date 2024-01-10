@@ -22,10 +22,8 @@
 #include <getopt.h>
 #include <signal.h>
 #include "hacktv.h"
-#include "av_test.h"
-#include "av_ffmpeg.h"
-#include "rf_file.h"
-#include "rf_hackrf.h"
+#include "av.h"
+#include "rf.h"
 
 #ifdef WIN32
 #define OS_SEP '\\'
@@ -50,27 +48,6 @@ static void _sigint_callback_handler(int signum)
 	_signal = signum;
 }
 
-/* RF sink callback handlers */
-static int _hacktv_rf_write(hacktv_t *s, int16_t *iq_data, size_t samples)
-{
-	if(s->rf_write)
-	{
-		return(s->rf_write(s->rf_private, iq_data, samples));
-	}
-	
-	return(HACKTV_ERROR);
-}
-
-static int _hacktv_rf_close(hacktv_t *s)
-{
-	if(s->rf_close)
-	{
-		return(s->rf_close(s->rf_private));
-	}
-	
-	return(HACKTV_OK);
-}
-
 static void print_usage(void)
 {
 	printf(
@@ -79,8 +56,8 @@ static void print_usage(void)
 		"\n"
 		"  -o, --output <target>          Set the output device or file, Default: hackrf\n"
 		"  -m, --mode <name>              Set the television mode. Default: i\n"
-		"  -s, --samplerate <value>       Set the sample rate in Hz. Default: 20.25MHz\n"
 		"      --list-modes               List available modes and exit.\n"
+		"  -s, --samplerate <value>       Set the sample rate in Hz. Default: 16MHz\n"
 		"      --pixelrate <value>        Set the video pixel rate in Hz. Default: Sample rate\n"
 		"  -l, --level <value>            Set the output level. Default: 1.0\n"
 		"  -D, --deviation <value>        Override the mode's FM peak deviation. (Hz)\n"
@@ -139,6 +116,8 @@ static void print_usage(void)
 		"      --mac-audio-l1-protection  Use first level protection (D/D2-MAC).\n"
 		"                                 (Default)\n"
 		"      --mac-audio-l2-protection  Use second level protection (D/D2-MAC).\n"
+		"      --swap-iq                  Swap the I and Q channels to invert the spectrum.\n"
+		"                                 Applied before offset and passthru. (Complex modes only).\n"
 		"      --offset <value>           Add a frequency offset in Hz (Complex modes only).\n"
 		"      --passthru <file>          Read and add an int16 complex signal.\n"
 		"      --invert-video             Invert the composite video signal sync and\n"
@@ -468,6 +447,7 @@ enum {
 	_OPT_MAC_AUDIO_LINEAR,
 	_OPT_MAC_AUDIO_L1_PROTECTION,
 	_OPT_MAC_AUDIO_L2_PROTECTION,
+	_OPT_SWAP_IQ,
 	_OPT_OFFSET,
 	_OPT_PASSTHRU,
 	_OPT_INVERT_VIDEO,
@@ -541,6 +521,7 @@ int main(int argc, char *argv[])
 		{ "mac-audio-linear", no_argument,     0, _OPT_MAC_AUDIO_LINEAR },
 		{ "mac-audio-l1-protection", no_argument, 0, _OPT_MAC_AUDIO_L1_PROTECTION },
 		{ "mac-audio-l2-protection", no_argument, 0, _OPT_MAC_AUDIO_L2_PROTECTION },
+		{ "swap-iq",        no_argument,       0, _OPT_SWAP_IQ },
 		{ "offset",         required_argument, 0, _OPT_OFFSET },
 		{ "passthru",       required_argument, 0, _OPT_PASSTHRU },
 		{ "invert-video",   no_argument,       0, _OPT_INVERT_VIDEO },
@@ -625,7 +606,6 @@ int main(int argc, char *argv[])
 	s.amp = 0;
 	s.gain = 0;
 	s.antenna = NULL;
-	s.file_type = HACKTV_INT16;
 	s.logo = NULL;
 	s.timestamp = 0;
 	s.enableemm = 0;
@@ -637,6 +617,7 @@ int main(int argc, char *argv[])
 	s.downmix = 0;
 	s.ec_ppv = NULL;
 	s.nodate = 0;
+	s.file_type = RF_INT16;
 	
 	opterr = 0;
 	while((c = getopt_long(argc, argv, "o:m:s:D:G:irvf:al:g:A:t:p:", long_options, &option_index)) != -1)
@@ -954,7 +935,11 @@ int main(int argc, char *argv[])
 		case _OPT_MAC_AUDIO_L2_PROTECTION: /* --mac-audio-l2-protection */
 			s.mac_audio_protection = MAC_SECOND_LEVEL_PROTECTION;
 			break;
-
+		
+		case _OPT_SWAP_IQ: /* --swap-iq */
+			s.swap_iq = 1;
+			break;
+		
 		case _OPT_OFFSET: /* --offset <value Hz> */
 			s.offset = (int64_t) strtod(optarg, NULL);
 			break;
@@ -1003,27 +988,27 @@ int main(int argc, char *argv[])
 			
 			if(strcmp(optarg, "uint8") == 0)
 			{
-				s.file_type = HACKTV_UINT8;
+				s.file_type = RF_UINT8;
 			}
 			else if(strcmp(optarg, "int8") == 0)
 			{
-				s.file_type = HACKTV_INT8;
+				s.file_type = RF_INT8;
 			}
 			else if(strcmp(optarg, "uint16") == 0)
 			{
-				s.file_type = HACKTV_UINT16;
+				s.file_type = RF_UINT16;
 			}
 			else if(strcmp(optarg, "int16") == 0)
 			{
-				s.file_type = HACKTV_INT16;
+				s.file_type = RF_INT16;
 			}
 			else if(strcmp(optarg, "int32") == 0)
 			{
-				s.file_type = HACKTV_INT32;
+				s.file_type = RF_INT32;
 			}
 			else if(strcmp(optarg, "float") == 0)
 			{
-				s.file_type = HACKTV_FLOAT;
+				s.file_type = RF_FLOAT;
 			}
 			else
 			{
@@ -1443,6 +1428,7 @@ int main(int argc, char *argv[])
 		vid_conf.vfilter = 1;
 	}
 	
+	vid_conf.swap_iq = s.swap_iq;
 	vid_conf.offset = s.offset;
 	vid_conf.passthru = s.passthru;
 	vid_conf.volume = s.volume;
@@ -1461,7 +1447,7 @@ int main(int argc, char *argv[])
 	
 	if(strcmp(s.output_type, "hackrf") == 0)
 	{
-		if(rf_hackrf_open(&s, s.output, s.frequency, s.gain, s.amp) != HACKTV_OK)
+		if(rf_hackrf_open(&s.rf, s.output, s.vid.sample_rate, s.frequency, s.gain, s.amp) != RF_OK)
 		{
 			vid_free(&s.vid);
 			return(-1);
@@ -1470,7 +1456,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_SOAPYSDR
 	else if(strcmp(s.output_type, "soapysdr") == 0)
 	{
-		if(rf_soapysdr_open(&s, s.output, s.frequency, s.gain, s.antenna) != HACKTV_OK)
+		if(rf_soapysdr_open(&s.rf, s.output, s.vid.sample_rate, s.frequency, s.gain, s.antenna) != RF_OK)
 		{
 			vid_free(&s.vid);
 			return(-1);
@@ -1480,7 +1466,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_FL2K
 	else if(strcmp(s.output_type, "fl2k") == 0)
 	{
-		if(rf_fl2k_open(&s, s.output) != HACKTV_OK)
+		if(rf_fl2k_open(&s.rf, s.output, s.vid.sample_rate) != RF_OK)
 		{
 			vid_free(&s.vid);
 			return(-1);
@@ -1489,7 +1475,7 @@ int main(int argc, char *argv[])
 #endif
 	else if(strcmp(s.output_type, "file") == 0)
 	{
-		if(rf_file_open(&s, s.output, s.file_type) != HACKTV_OK)
+		if(rf_file_open(&s.rf, s.output, s.file_type, s.vid.conf.output_type == RF_INT16_COMPLEX) != RF_OK)
 		{
 			vid_free(&s.vid);
 			return(-1);
@@ -1497,6 +1483,20 @@ int main(int argc, char *argv[])
 	}
 	
 	av_ffmpeg_init();
+	
+	/* Configure AV source settings */
+	s.vid.av = (av_t) {
+		.frame_rate = (rational_t) {
+			.num = s.vid.conf.frame_rate.num * (s.vid.conf.interlace ? 2 : 1),
+			.den = s.vid.conf.frame_rate.den,
+		},
+		.width = s.vid.active_width,
+		.height = s.vid.conf.active_lines,
+		.sample_rate = (rational_t) {
+			.num = (s.vid.audio ? HACKTV_AUDIO_SAMPLE_RATE : 0),
+			1,
+		},
+	};
 	
 	do
 	{
@@ -1542,7 +1542,7 @@ int main(int argc, char *argv[])
 				
 				if(data == NULL) break;
 				
-				if(_hacktv_rf_write(&s, data, samples) != HACKTV_OK) break;
+				if(rf_write(&s.rf, data, samples) != RF_OK) break;
 			}
 			
 			if(_signal)
@@ -1551,12 +1551,12 @@ int main(int argc, char *argv[])
 				_signal = 0;
 			}
 			
-			vid_av_close(&s.vid);
+			av_close(&s.vid.av);
 		}
 	}
 	while(s.repeat && !_abort);
 	
-	_hacktv_rf_close(&s);
+	rf_close(&s.rf);
 	vid_free(&s.vid);
 	
 	av_ffmpeg_deinit();

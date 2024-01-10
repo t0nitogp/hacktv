@@ -36,42 +36,43 @@ typedef struct {
 	av_font_t *font[10];
 } av_test_t;
 
-static uint32_t *_av_test_read_video(void *private, float *ratio)
+static int _test_read_video(void *ctx, av_frame_t *frame)
 {
+	av_test_t *s = ctx;
+	av_frame_init(frame, s->vid_width, s->vid_height, s->video, 1, s->vid_width);
+	av_set_display_aspect_ratio(frame, (rational_t) { 4, 3 });
+
 	/* Get current time */
 	char timestr[9];
 	time_t secs = time(0);
 	struct tm *local = localtime(&secs);
 	sprintf(timestr, "%02d:%02d:%02d", local->tm_hour, local->tm_min, local->tm_sec);
-	
-	av_test_t *av = private;
-	
+		
 	/* Print clock */
-	if(av->font[0])
+	if(s->font[0])
 	{
-		print_generic_text(	av->font[0],
-							av->video,
+		print_generic_text(	s->font[0],
+							s->video,
 							timestr,
-							av->font[0]->x_loc, av->font[0]->y_loc, 0, 1, 0, 1);
+							s->font[0]->x_loc, s->font[0]->y_loc, 0, 1, 0, 1);
 	}
 						
-	if(ratio) *ratio = 4.0 / 3.0;
-	return(av->video);
+	return(AV_OK);
 }
 
-static int16_t *_av_test_read_audio(void *private, size_t *samples)
+static int16_t *_test_read_audio(void *ctx, size_t *samples)
 {
-	av_test_t *av = private;
-	*samples = av->audio_samples;
-	return(av->audio);
+	av_test_t *s = ctx;
+	*samples = s->audio_samples;
+	return(s->audio);
 }
 
-static int _av_test_close(void *private)
+static int _test_close(void *ctx)
 {
-	av_test_t *av = private;
-	if(av->video) free(av->video);
-	if(av->audio) free(av->audio);
-	free(av);
+	av_test_t *s = ctx;
+	if(s->video) free(s->video);
+	if(s->audio) free(s->audio);
+	free(s);
 	return(HACKTV_OK);
 }
 
@@ -83,10 +84,10 @@ static uint8_t _hamming_bars(int x, int sr, int frequency)
 	y = (frequency / y) * x;
 	sample = sin(y * 2 * M_PI) + 1;
 
-	return ((sample * 0xFF) / 2.0);
+	return ((sample * 0x7F));
 }
 
-int av_test_open(vid_t *s, char *test_screen)
+int av_test_open(vid_t *vid, char *test_screen)
 {
 	uint32_t const bars[8] = {
 		0x000000,
@@ -104,6 +105,8 @@ int av_test_open(vid_t *s, char *test_screen)
 	int sine_bars_pos[5] = { 3, 0, 0, 0, 0 };
 
 	av_test_t *av;
+
+	vid_config_t *conf = &vid->conf;
 	int c, x, y, z;
 	double d;
 	int16_t l;
@@ -116,47 +119,46 @@ int av_test_open(vid_t *s, char *test_screen)
 	}
 	
 	/* Generate a basic test pattern */
-	av->vid_width = s->active_width;
-	av->vid_height = s->conf.active_lines;
-	av->video = malloc(vid_get_framebuffer_length(s));
+	av->vid_width = vid->av.width;
+	av->vid_height = vid->av.height;
+	av->video = malloc(av->vid_width * av->vid_height * sizeof(uint32_t));
 	if(!av->video)
 	{
 		free(av);
 		return(HACKTV_OUT_OF_MEMORY);
 	}
 	
-	/* Colour bars - for non-625 line modes */
-	for(y = 0; y < s->conf.active_lines; y++)
+	for(y = 0; y < av->vid_height; y++)
 	{
-		for(x = 0; x < s->active_width; x++)
+		for(x = 0; x < av->vid_width; x++)
 		{
-			if(y < s->conf.active_lines - 140)
+			if(y < av->vid_height - 140)
 			{
 				/* 75% colour bars */
-				c = 7 - x * 8 / s->active_width;
+				c = 7 - x * 8 / av->vid_width;
 				c = bars[c];
 			}
-			else if(y < s->conf.active_lines - 120)
+			else if(y < av->vid_height - 120)
 			{
 				/* 75% red */
 				c = 0xBF0000;
 			}
-			else if(y < s->conf.active_lines - 100)
+			else if(y < av->vid_height - 100)
 			{
 				/* Gradient black to white */
-				c = x * 0xFF / (s->active_width - 1);
+				c = x * 0xFF / (av->vid_width - 1);
 				c = c << 16 | c << 8 | c;
 			}
 			else
 			{
 				/* 8 level grey bars */
-				c = x * 0xFF / (s->active_width - 1);
+				c = x * 0xFF / (av->vid_width - 1);
 				c &= 0xE0;
 				c = c | (c >> 3) | (c >> 6);
 				c = c << 16 | c << 8 | c;
 			}
 			
-			av->video[y * s->active_width + x] = c;
+			av->video[y * av->vid_width + x] = c;
 		}
 	}
 	
@@ -167,14 +169,14 @@ int av_test_open(vid_t *s, char *test_screen)
 	/* Initialise default fonts */
 	
 	/* Clock */
-	font_init(s, 56, img_ratio);
-	av->font[0] = s->av_font;
+	font_init(vid, 56, img_ratio);
+	av->font[0] = vid->av_font;
 	av->font[0]->x_loc = 50;
 	av->font[0]->y_loc = 50;
 	
 	/* HACKTV text*/
-	font_init(s, 72, img_ratio);
-	av->font[1] = s->av_font;
+	font_init(vid, 72, img_ratio);
+	av->font[1] = vid->av_font;
 	av->font[1]->x_loc = 50;
 	av->font[1]->y_loc = 25;
 	
@@ -191,30 +193,30 @@ int av_test_open(vid_t *s, char *test_screen)
 			{
 				av->font[0]->y_loc = 82.3;
 
-				y_start = s->conf.active_lines - 270;
-				y_end = s->conf.active_lines - 180;
-				x_start = (s->active_width / 18.0) * 8.5;
-				x_end = (s->active_width / 18.0) * 9.53;
+				y_start = av->vid_height - 270;
+				y_end = av->vid_height - 180;
+				x_start = (av->vid_width / 18.0) * 8.5;
+				x_end = (av->vid_width / 18.0) * 9.53;
 
-				start_pos = (s->active_width / 8.0) * 1.75;
+				start_pos = (av->vid_width / 8.0) * 1.75;
 
 				ycentre_start = 308;
 				ycentre_end = 354;
 				
 				/* Generate hamming bars */
-				for(y = 0; y < s->conf.active_lines; y++)
+				for(y = 0; y < av->vid_height; y++)
 				{
-					for(x = 0; x < s->active_width; x++)
+					for(x = 0; x < av->vid_width; x++)
 					{
 						if((y - 2 > y_start && y < y_end) && !((x > x_start && x < x_end) && y > ycentre_start && y < ycentre_end))
 						{
-							if(x > start_pos - 3 && x < s->active_width - start_pos - 3)
+							if(x > start_pos - 3 && x < av->vid_width - start_pos - 3)
 							{
 								z = x - start_pos;
-								c = 4 - z * 9 / s->active_width;
+								c = 4 - z * 9 / av->vid_width;
 								c = _hamming_bars(z - (start_pos * 4) + sine_bars_pos[4 - c], sr, sine_bars[4 - (c < 0 ? 0 : c)]);
 								c = c << 16 | c << 8 | c;
-								av->video[y * s->active_width + x] = c;
+								av->video[y * av->vid_width + x] = c;
 							}				
 						}
 					}
@@ -224,46 +226,46 @@ int av_test_open(vid_t *s, char *test_screen)
 			{
 				av->font[0]->y_loc = 82;
 
-				y_start = s->conf.active_lines - 271;
-				y_end = s->conf.active_lines - 181;
-				x_start = (s->active_width / 24.0) * 11.51;
-				x_end = (s->active_width / 24.0) * 12.5;
-				start_pos = (s->active_width / 6.0) * 1.75;
+				y_start = av->vid_height - 271;
+				y_end = av->vid_height - 181;
+				x_start = (av->vid_width / 24.0) * 11.51;
+				x_end = (av->vid_width / 24.0) * 12.5;
+				start_pos = (av->vid_width / 6.0) * 1.75;
 				ycentre_start = 307;
 				ycentre_end = 349;
 
 				/* Generate hamming bars */
-				for(y = 0; y < s->conf.active_lines; y++)
+				for(y = 0; y < av->vid_height; y++)
 				{
-					for(x = 0; x < s->active_width; x++)
+					for(x = 0; x < av->vid_width; x++)
 					{
 						if((y - 2 > y_start && y < y_end) && !((x > x_start && x < x_end) && y > ycentre_start && y < ycentre_end))
 						{
-							if(x > start_pos && x < s->active_width - start_pos)
+							if(x > start_pos && x < av->vid_width - start_pos)
 							{
 								z = x - start_pos;
-								c = 5 - z * ((9 / (4.0/3.0)) * (16.0/9.0)) / s->active_width;
+								c = 5 - z * ((9 / (4.0/3.0)) * (16.0/9.0)) / av->vid_width;
 								c = _hamming_bars(z - (start_pos * 4) + 2, sr, sine_bars[4 - (c < 0 ? 0 : c)]);
 								c = c << 16 | c << 8 | c;
-								av->video[y * s->active_width + x] = c;
+								av->video[y * av->vid_width + x] = c;
 							}				
 						}
 
 						/* Vertical grating */
 						if(y > 181 && y < 393)
 						{
-							if(x > (s->active_width / 24.0) * 1.52 && x < (s->active_width / 24.0) * 2.45)
+							if(x > (av->vid_width / 24.0) * 1.52 && x < (av->vid_width / 24.0) * 2.45)
 							{
 								c = _hamming_bars(y, sr, 1800 - (y * 12));
 								c = c << 16 | c << 8 | c;
-								av->video[y * s->active_width + x] = c;
+								av->video[y * av->vid_width + x] = c;
 							}
 
-							if(x > (s->active_width / 24.0) * 21.56 && x < (s->active_width / 24.0) * 22.47)
+							if(x > (av->vid_width / 24.0) * 21.56 && x < (av->vid_width / 24.0) * 22.47)
 							{
 								c = _hamming_bars(y, sr, 1800 - (y * 12));
 								c = c << 16 | c << 8 | c;
-								av->video[(574 - y) * s->active_width + x] = c;
+								av->video[(574 - y) * av->vid_width + x] = c;
 							}
 						}
 					}
@@ -272,8 +274,8 @@ int av_test_open(vid_t *s, char *test_screen)
 			else if(strcmp(test_screen, "fubk") == 0)
 			{
 				/* Reinit font with new size */
-				font_init(s, 44, img_ratio);
-				av->font[0] = s->av_font;
+				font_init(vid, 44, img_ratio);
+				av->font[0] = vid->av_font;
 				av->font[0]->x_loc = 52;
 				av->font[0]->y_loc = 55.5;
 			}
@@ -295,25 +297,26 @@ int av_test_open(vid_t *s, char *test_screen)
 	}
 	
 	/* Print logo, if enabled */
-	if(s->conf.logo)
+	if(conf->logo)
 	{
-		if(load_png(&s->vid_logo, s->active_width, s->conf.active_lines, s->conf.logo, 0.75, img_ratio, IMG_LOGO) != HACKTV_OK)
+		if(load_png(&vid->vid_logo, av->vid_width, av->vid_height, conf->logo, 0.75, img_ratio, IMG_LOGO) == HACKTV_OK)
 		{
-			s->conf.logo = NULL;
+			overlay_image(av->video, &vid->vid_logo, av->vid_width, av->vid_height, vid->vid_logo.position);
 		}
 		else
 		{
-			overlay_image(av->video, &s->vid_logo, av->vid_width, av->vid_height, s->vid_logo.position);
+			conf->logo = NULL;
 		}
 	}
 	
 	/* Generate the 1khz test tones (BBC 1 style) */
-	d = 1000.0 * 2 * M_PI / HACKTV_AUDIO_SAMPLE_RATE;
-	y = HACKTV_AUDIO_SAMPLE_RATE * 64 / 100; /* 640ms */
+	d = 1000.0 * 2 * M_PI * vid->av.sample_rate.den / vid->av.sample_rate.num;
+	y = vid->av.sample_rate.num / vid->av.sample_rate.den * 64 / 100; /* 640ms */
 	av->audio_samples = y * 10; /* 6.4 seconds */
 	av->audio = malloc(av->audio_samples * 2 * sizeof(int16_t));
 	if(!av->audio)
 	{
+		free(av->video);
 		free(av);
 		return(HACKTV_OUT_OF_MEMORY);
 	}
@@ -349,10 +352,10 @@ int av_test_open(vid_t *s, char *test_screen)
 	}
 	
 	/* Register the callback functions */
-	s->av_private = av;
-	s->av_read_video = _av_test_read_video;
-	s->av_read_audio = _av_test_read_audio;
-	s->av_close = _av_test_close;
+	vid->av.av_source_ctx = av;
+	vid->av.read_video = _test_read_video;
+	vid->av.read_audio = _test_read_audio;
+	vid->av.close = _test_close;
 	
 	return(HACKTV_OK);
 }

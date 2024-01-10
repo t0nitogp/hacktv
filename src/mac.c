@@ -1053,8 +1053,14 @@ int mac_init(vid_t *s)
 	mac->vsam = MAC_VSAM_FREE_ACCESS;
 	
 	mac->ec_mat_rating = s->conf.ec_mat_rating ? s->conf.ec_mat_rating : 0;
+
+	/* Calculate the threshold pixel aspect ratio for auto aspect ratio */
+	mac->ratio_threshold = rational_div(
+		(rational_t) { 14, 9 },
+		(rational_t) { s->active_width, s->conf.active_lines }
+	);
 	
-	/* Initalise Eurocrypt, if required */
+	/* Initialise Eurocrypt, if required */
 	if(s->conf.eurocrypt)
 	{
 		mac->vsam = MAC_VSAM_CONTROLLED_ACCESS;
@@ -1679,7 +1685,7 @@ static int _line_625(vid_t *s, int frame, int line, uint8_t *data, int x)
 	b  = s->mac.vsam << 5;
 	b |= 1 << 4;      /* Reserved, always 1 */
 	//b |= 1 << 3;    /* Aspect ratio: 0: 16:9, 1: 4:3 */
-	b |= (s->ratio <= (14.0 / 9.0) ? 1 : 0) << 3;
+	b |= (rational_cmp(s->vframe.pixel_aspect_ratio, s->mac.ratio_threshold) <= 0 ? 1 : 0) << 3;
 	b |= 1 << 2;      /* For satellite broadcast, this bit has no significance */
 	b |= 1 << 1;      /* Sound/data multiplex format: 0: no or incompatible sound, 1: compatible sound */
 	b |= 1 << 0;      /* Video configuration: 0: no or incompatible video, 1: compatible video */
@@ -1843,7 +1849,7 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		_prbs1_reset(&s->mac, l->frame - 1);
 		
 		/* Update the aspect ratio flag */
-		s->mac.ratio = (s->ratio <= (14.0 / 9.0) ? 0 : 1);
+		s->mac.ratio = (rational_cmp(s->vframe.pixel_aspect_ratio, s->mac.ratio_threshold) <= 0 ? 0 : 1);
 		
 		/* Push a service information packet at the start of each new
 		 * frame. Alternates between DG0 and DG3 each frame. DG0 is
@@ -1968,15 +1974,28 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		y = (l->line - 336) * 2 + 1;
 	}
 	
+	/* Shift the lines by one if the source
+	 * video has the bottom field first */
+	if(s->vframe.interlaced == 2) y += 1;
+	
+	if(y < 0 || y >= s->conf.active_lines) y = -1;
+	
 	/* Render the luminance */
 	if(y >= 0)
 	{
-		uint32_t *px = (s->framebuffer != NULL ? &s->framebuffer[y * s->active_width] : NULL);
+		uint32_t rgb = 0x000000;
+		uint32_t *px = &rgb;
+		int stride = 0;
 		
-		for(x = s->active_left; x < s->active_left + s->active_width; x++)
+		if(s->vframe.framebuffer != NULL)
 		{
-			uint32_t rgb = (px != NULL ? *(px++) & 0xFFFFFF : 0x000000);
-			l->output[x * 2] = s->yiq_level_lookup[rgb].y;
+			px = &s->vframe.framebuffer[y * s->vframe.line_stride];
+			stride = s->vframe.pixel_stride;
+		}
+		
+		for(x = s->active_left; x < s->active_left + s->active_width; x++, px += stride)
+		{
+			l->output[x * 2] = s->yiq_level_lookup[*px & 0xFFFFFF].y;
 		}
 	}
 	
@@ -1985,13 +2004,19 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 	
 	if(y >= 0)
 	{
-		uint32_t *px = (s->framebuffer != NULL ? &s->framebuffer[y * s->active_width] : NULL);
+		uint32_t rgb = 0x000000;
+		uint32_t *px = &rgb;
+		int stride = 0;
 		
-		for(x = s->mac.chrominance_left; x < s->mac.chrominance_left + s->mac.chrominance_width; x++)
+		if(s->vframe.framebuffer != NULL)
 		{
-			uint32_t rgb = (px != NULL ? *(px++) & 0xFFFFFF : 0x000000);
-			l->output[x * 2] += (l->line & 1 ? s->yiq_level_lookup[rgb].i : s->yiq_level_lookup[rgb].q);
-			if(px != NULL) px++;
+			px = &s->vframe.framebuffer[y * s->vframe.line_stride];
+			stride = s->vframe.pixel_stride * 2;
+		}
+		
+		for(x = s->mac.chrominance_left; x < s->mac.chrominance_left + s->mac.chrominance_width; x++, px += stride)
+		{
+			l->output[x * 2] += (l->line & 1 ? s->yiq_level_lookup[*px & 0xFFFFFF].i : s->yiq_level_lookup[*px & 0xFFFFFF].q);
 		}
 	}
 	
