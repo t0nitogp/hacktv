@@ -109,7 +109,7 @@ typedef struct {
 	int height;
 	int sample_rate;
 	uint32_t *video;
-	vid_t *s;
+	vid_t *vid;
 	uint8_t paused;
 	time_t last_paused;
 	
@@ -492,7 +492,7 @@ static void *_input_thread(void *arg)
 		{
 			_packet_queue_write(s, &s->audio_queue, &pkt);
 		}
-		else if(s->subtitle_stream && pkt.stream_index == s->subtitle_stream->index && (s->s->conf.subtitles || s->s->conf.txsubtitles))
+		else if(s->subtitle_stream && pkt.stream_index == s->subtitle_stream->index && (s->vid->conf.subtitles || s->vid->conf.txsubtitles))
 		{
 			AVSubtitle sub;
 			int got_frame;
@@ -506,7 +506,7 @@ static void *_input_thread(void *arg)
 				if(sub.format == SUB_TEXT)
 				{
 					/* Load text subtitle into buffer */
-					load_text_subtitle(s->s->av_sub, pkt.pts + sub.start_display_time, sub.end_display_time, sub.rects[0]->ass);
+					load_text_subtitle(s->vid->av_sub, pkt.pts + sub.start_display_time, sub.end_display_time, sub.rects[0]->ass);
 				}
 				else if(sub.format == SUB_BITMAP)
 				{
@@ -520,7 +520,7 @@ static void *_input_thread(void *arg)
 					for(i = 0; i < sub.num_rects; i++)
 					{
 						/* Scale bitmap to video width */
-						bitmap_scale = sub.rects[i]->w / s->s->active_width < 1 ? 1 : round(sub.rects[i]->w / s->s->active_width);
+						bitmap_scale = sub.rects[i]->w / s->vid->active_width < 1 ? 1 : round(sub.rects[i]->w / s->vid->active_width);
 						fprintf(stderr,"Bitmap scale %f\n", bitmap_scale);
 						
 						/* Get maximum width */
@@ -561,7 +561,7 @@ static void *_input_thread(void *arg)
 						last_pos = pos;
 					}
 					
-					load_bitmap_subtitle(s->s->av_sub, s->s, max_bitmap_width, max_bitmap_height, pkt.pts + sub.start_display_time, sub.end_display_time, bitmap);
+					load_bitmap_subtitle(s->vid->av_sub, s->vid, max_bitmap_width, max_bitmap_height, pkt.pts + sub.start_display_time, sub.end_display_time, bitmap);
 					
 					free(bitmap);
 				}
@@ -733,13 +733,13 @@ static void *_video_scaler_thread(void *arg)
 		);
 		
 		/* Print logo, if enabled */
-		if(s->s->conf.logo)
+		if(s->vid->conf.logo)
 		{
-			overlay_image((uint32_t *) oframe->data[0], &s->s->vid_logo, s->s->active_width + 2, s->s->conf.active_lines, s->s->vid_logo.position);
+			overlay_image((uint32_t *) oframe->data[0], &s->vid->vid_logo, s->vid->active_width + 2, s->vid->conf.active_lines, s->vid->vid_logo.position);
 		}
 		
 		/* Overlay timestamp, if enabled */
-		if(s->s->conf.timestamp)
+		if(s->vid->conf.timestamp)
 		{
 			char timestr[200];
 			int sec, h, m, sc;
@@ -753,26 +753,26 @@ static void *_video_scaler_thread(void *arg)
 		}
 		
 		/* Print subtitles, if enabled */
-		if(s->s->conf.subtitles || s->s->conf.txsubtitles) 
+		if(s->vid->conf.subtitles || s->vid->conf.txsubtitles) 
 		{
-			if(get_subtitle_type(s->s->av_sub) == SUB_TEXT)
+			if(get_subtitle_type(s->vid->av_sub) == SUB_TEXT)
 			{
 				/* best_effort_timestamp is very flaky - not really a good measure of current position and doesn't work some of the time */
 				char fmt[256];
-				sprintf(fmt,"%s", get_text_subtitle(s->s->av_sub, frame->best_effort_timestamp / (s->video_stream->time_base.den / 1000)));
+				sprintf(fmt,"%s", get_text_subtitle(s->vid->av_sub, frame->best_effort_timestamp / (s->video_stream->time_base.den / 1000)));
 				
-				if(s->s->conf.subtitles) print_subtitle(s->font[0], (uint32_t *) oframe->data[0], fmt);
+				if(s->vid->conf.subtitles) print_subtitle(s->font[0], (uint32_t *) oframe->data[0], fmt);
 				
-				if(s->s->conf.txsubtitles && strcmp(current_text, fmt) != 0)
+				if(s->vid->conf.txsubtitles && strcmp(current_text, fmt) != 0)
 				{
 					strcpy(current_text, fmt);
-					update_teletext_subtitle(fmt, &s->s->tt.service);
+					update_teletext_subtitle(fmt, &s->vid->tt.service);
 				}
 			}
-			else if(s->s->conf.subtitles)
+			else if(s->vid->conf.subtitles)
 			{
 				int w, h;
-				uint32_t *bitmap = get_bitmap_subtitle(s->s->av_sub, frame->best_effort_timestamp, &w, &h);
+				uint32_t *bitmap = get_bitmap_subtitle(s->vid->av_sub, frame->best_effort_timestamp, &w, &h);
 				
 				if(w > 0) display_bitmap_subtitle(s->font[0], (uint32_t *) oframe->data[0], w, h, bitmap);
 			}
@@ -798,13 +798,13 @@ static void *_video_scaler_thread(void *arg)
 
 static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 {
-	int nav;
 	av_ffmpeg_t *s = ctx;
 	AVFrame *avframe;
+		
+	// int nav;
+	// nav = 0;
 
 	av_frame_init(frame, 0, 0, NULL, 0, 0);
-	
-	nav = 0;
 
 	if(s->video_stream == NULL)
 	{
@@ -825,7 +825,7 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 				s->paused ^= 1;
 				fprintf(stderr,"\nVideo state: %s", s->paused ? "PAUSE" : "PLAY");	
 				break;
-			case '\033':
+/*			case '\033':
 				#ifndef WIN32
 				getchar();
 				c = getchar();
@@ -846,24 +846,26 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 						break;
 				}
 				break;
+*/
 			default: 
 				break;
 		}
 	}
 	kb_disable();
 
+/*
 	if(nav == AVSEEK_FWD || nav == AVSEEK_RWD)
 	{
 		s->video_start_time += nav;
 		s->audio_start_time += nav;
 		nav = 0;
 	}
-	
+*/	
 	if(s->paused) 
 	{
 		avframe = s->out_video_buffer.frame[0];
 		
-		overlay_image((uint32_t *) avframe->data[0], &s->s->media_icons[1], s->s->active_width + 2, s->s->conf.active_lines, IMG_POS_MIDDLE);
+		overlay_image((uint32_t *) avframe->data[0], &s->vid->media_icons[1], s->vid->active_width + 2, s->vid->conf.active_lines, IMG_POS_MIDDLE);
 		s->last_paused = time(0);
 	}
 	else
@@ -873,7 +875,7 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 		/* Show 'play' icon for 5 seconds after resuming play */
 		if(time(0) - s->last_paused < 5)
 		{
-			overlay_image((uint32_t *) avframe->data[0], &s->s->media_icons[0], s->s->active_width + 2, s->s->conf.active_lines, IMG_POS_MIDDLE);
+			overlay_image((uint32_t *) avframe->data[0], &s->vid->media_icons[0], s->vid->active_width + 2, s->vid->conf.active_lines, IMG_POS_MIDDLE);
 		}
 	}
 
@@ -909,7 +911,7 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 
 	// if(avframe->sample_aspect_ratio.den > 0 && frame->height > 0)
 	// {
-	// 	if(!s->s->conf.letterbox && !s->s->conf.pillarbox)
+	// 	if(!s->vid->conf.letterbox && !s->vid->conf.pillarbox)
 	// 	{
 	// 		*ratio = (float) s->video_codec_ctx->width / s->video_codec_ctx->height;
 	// 	}
@@ -1665,12 +1667,12 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		if(vid->conf.subtitles || vid->conf.txsubtitles) subs_init_ffmpeg(vid);
 		
 		/* Initialise fonts here */
-		if(font_init(vid, 38, source_ratio) !=0)
+		if(font_init(&vid->av, 38, source_ratio, &vid->conf) !=0)
 		{
 			return(HACKTV_ERROR);
 		};
 		
-		s->font[0] = vid->av_font;
+		s->font[0] = av->av_font;
 		s->font[0]->video_width += 2;
 	}
 	else
@@ -1689,14 +1691,14 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 			}
 			
 			/* Initialise fonts here */
-			if(font_init(vid, 38, source_ratio) < 0)
+			if(font_init(&vid->av, 38, source_ratio, &vid->conf) < 0)
 			{
 				vid->conf.subtitles = 0;
 				vid->conf.txsubtitles = 0;
 				return(HACKTV_ERROR);
 			}
 			
-			s->font[0] = vid->av_font;
+			s->font[0] = av->av_font;
 			s->font[0]->video_width += 2;
 		}
 	}
@@ -1732,12 +1734,12 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	{
 		vid->conf.timestamp = time(0);
 		
-		if(font_init(vid, 40, source_ratio) != VID_OK)
+		if(font_init(&vid->av, 40, source_ratio, &vid->conf) != VID_OK)
 		{
 			vid->conf.timestamp = 0;
 		};
 		
-		s->font[1] = vid->av_font;
+		s->font[1] = av->av_font;
 		s->font[1]->video_width += 2;
 	}
 	
@@ -1765,14 +1767,14 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	}
 		
 	/* Generic font */
-	if(font_init(vid, 56, source_ratio) == VID_OK)
+	if(font_init(&vid->av, 56, source_ratio, &vid->conf) == VID_OK)
 	{
-		s->font[2] = vid->av_font;
+		s->font[2] = av->av_font;
 	};
 	s->font[2]->video_width += 2;
 		
 	/* Register the callback functions */
-	s->s = vid;
+	s->vid = vid;
 	vid->av_private = av;
 
 	av->av_source_ctx = s;

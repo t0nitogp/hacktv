@@ -23,12 +23,13 @@
 
 static FT_Library _freetype = NULL;
 
-int font_init(vid_t *s, int size, float ratio)
+int font_init(av_t *av, int size, float ratio, void *ctx)
 {	
 	int r;
 	int x_res;
 	
 	av_font_t *font;
+	vid_config_t *conf = ctx;
 	
 	font = calloc(1, sizeof(av_font_t));
 	if(!font)
@@ -41,9 +42,9 @@ int font_init(vid_t *s, int size, float ratio)
 	ratio = ratio >= 14.0/9.0 ? 16.0/9.0 : 4.0/3.0;
 	
 	font->font_size = size;
-	font->video_width = s->av.width;
-	font->video_height = s->av.height;
-	font->video_ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0 / 3.0 : ratio;
+	font->video_width = av->width;
+	font->video_height = av->height;
+	font->video_ratio = conf->pillarbox || conf->letterbox ? 4.0 / 3.0 : ratio;
 	
 	/* Hack to deal with different sampling rates */
 	x_res = 96.0 * ((float) font->video_width / font->video_height / font->video_ratio);
@@ -81,7 +82,7 @@ int font_init(vid_t *s, int size, float ratio)
 	}
 	
 	/* Callback */
-	s->av_font = font;
+	av->av_font = font;
 	
 	return(HACKTV_OK);
 }

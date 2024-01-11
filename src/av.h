@@ -51,6 +51,8 @@ typedef int (*av_eof_t)(void *ctx);
 typedef int (*av_close_t)(void *ctx);
 
 typedef struct {
+	/* Source interfaces */
+	void *av_font;
 	
 	/* Video settings */
 	int width;
