@@ -109,11 +109,15 @@ typedef struct {
 	int height;
 	int sample_rate;
 	uint32_t *video;
-	vid_t *vid;
 	uint8_t paused;
 	time_t last_paused;
+	int64_t timestamp;
 	
-	av_font_t *font[10];
+	vid_t *vid;
+	av_font_t *font[3];
+	av_subs_t *av_subs;
+
+	image_t *av_logo;
 	
 	AVFormatContext *format_ctx;
 	
@@ -674,9 +678,6 @@ static void *_video_scaler_thread(void *arg)
 	AVRational ratio;
 	int64_t pts;
 	
-	/* Temp hack */
-	char current_text[256];
-	
 	/* Fetch video frames and pass them through the scaler */
 	while((frame = _frame_dbuffer_flip(&s->in_video_buffer)) != NULL)
 	{
@@ -732,52 +733,8 @@ static void *_video_scaler_thread(void *arg)
 			INT_MAX
 		);
 		
-		/* Print logo, if enabled */
-		if(s->vid->conf.logo)
-		{
-			overlay_image((uint32_t *) oframe->data[0], &s->vid->vid_logo, s->vid->active_width + 2, s->vid->conf.active_lines, s->vid->vid_logo.position);
-		}
-		
-		/* Overlay timestamp, if enabled */
-		if(s->vid->conf.timestamp)
-		{
-			char timestr[200];
-			int sec, h, m, sc;
-			
-			sec = (frame->best_effort_timestamp / (s->video_stream->time_base.den / s->video_stream->time_base.num));
-			h = (sec / 3600); 
-			m = (sec - (3600 * h)) / 60;
-			sc = (sec - (3600 * h) - (m * 60));
-			sprintf(timestr, "%02d:%02d:%02d", h, m, sc);
-			print_generic_text(	s->font[1], (uint32_t *) oframe->data[0], timestr, 10, 90, 1, 0, 0, 0);
-		}
-		
-		/* Print subtitles, if enabled */
-		if(s->vid->conf.subtitles || s->vid->conf.txsubtitles) 
-		{
-			if(get_subtitle_type(s->vid->av_sub) == SUB_TEXT)
-			{
-				/* best_effort_timestamp is very flaky - not really a good measure of current position and doesn't work some of the time */
-				char fmt[256];
-				sprintf(fmt,"%s", get_text_subtitle(s->vid->av_sub, frame->best_effort_timestamp / (s->video_stream->time_base.den / 1000)));
-				
-				if(s->vid->conf.subtitles) print_subtitle(s->font[0], (uint32_t *) oframe->data[0], fmt);
-				
-				if(s->vid->conf.txsubtitles && strcmp(current_text, fmt) != 0)
-				{
-					strcpy(current_text, fmt);
-					update_teletext_subtitle(fmt, &s->vid->tt.service);
-				}
-			}
-			else if(s->vid->conf.subtitles)
-			{
-				int w, h;
-				uint32_t *bitmap = get_bitmap_subtitle(s->vid->av_sub, frame->best_effort_timestamp, &w, &h);
-				
-				if(w > 0) display_bitmap_subtitle(s->font[0], (uint32_t *) oframe->data[0], w, h, bitmap);
-			}
-		}
-		
+		s->timestamp = frame->best_effort_timestamp;
+
 		/* Copy some data to the scaled image */
 		oframe->interlaced_frame = frame->interlaced_frame;
 		oframe->top_field_first = frame->top_field_first;
@@ -909,14 +866,60 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 	frame->pixel_stride = 1;
 	frame->line_stride = avframe->linesize[0] / sizeof(uint32_t);
 
-	// if(avframe->sample_aspect_ratio.den > 0 && frame->height > 0)
-	// {
-	// 	if(!s->vid->conf.letterbox && !s->vid->conf.pillarbox)
-	// 	{
-	// 		*ratio = (float) s->video_codec_ctx->width / s->video_codec_ctx->height;
-	// 	}
-	// }
-	
+	/* Print logo, if enabled */
+	if(s->vid->conf.logo)
+	{
+		overlay_image((uint32_t *) frame->framebuffer, &s->vid->vid_logo, s->vid->active_width + 2, s->vid->conf.active_lines, s->vid->vid_logo.position);
+	}
+
+	/* Overlay timestamp, if enabled */
+	if(s->vid->conf.timestamp)
+	{
+		int sec, hr, min, pts;
+		
+		pts = (s->timestamp / (s->video_stream->time_base.den / s->video_stream->time_base.num));
+		hr  = (pts / 3600);
+		min = (pts - (3600 * hr)) / 60;
+		sec = (pts - (3600 * hr) - (min * 60));
+		asprintf(&s->font[TEXT_TIMESTAMP]->text, "%02d:%02d:%02d", hr, min, sec);
+		print_generic_text(s->font[TEXT_TIMESTAMP], (uint32_t *) frame->framebuffer, s->font[TEXT_TIMESTAMP]->text, 10, 90, TEXT_SHADOW, NO_TEXT_BOX, 0, 0);
+
+		/* Free memory */
+		free(s->font[TEXT_TIMESTAMP]->text);
+	}
+
+	/* Print subtitles, if enabled */
+	if(s->vid->conf.subtitles || s->vid->conf.txsubtitles) 
+	{
+		if(get_subtitle_type(s->vid->av_sub) == SUB_TEXT)
+		{
+			/* best_effort_timestamp is very flaky - not really a good measure of current position and doesn't work some of the time */
+			asprintf(&s->font[TEXT_SUBTITLE]->text,"%s", get_text_subtitle(s->vid->av_sub, s->timestamp / (s->video_stream->time_base.den / 1000)));
+
+			/* Do not refresh teletext unless subtitle text has changed */
+			if(s->vid->conf.txsubtitles && strcmp(s->font[TEXT_SUBTITLE]->text, s->vid->tt.text) != 0)
+			{
+				strcpy(s->vid->tt.text, s->font[TEXT_SUBTITLE]->text);
+				update_teletext_subtitle(s->vid->tt.text, &s->vid->tt.service);
+			}
+
+			if(s->vid->conf.subtitles) 
+			{
+				print_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) frame->framebuffer, s->font[TEXT_SUBTITLE]->text);
+			}
+
+			/* Free memory */
+			free(s->font[TEXT_SUBTITLE]->text);
+		}
+		else if(s->vid->conf.subtitles)
+		{
+			int w, h;
+			uint32_t *bitmap = get_bitmap_subtitle(s->vid->av_sub, s->timestamp, &w, &h);
+			
+			if(w > 0) display_bitmap_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) frame->framebuffer, w, h, bitmap);
+		}
+	}
+
 	return(AV_OK);
 }
 
@@ -1181,10 +1184,12 @@ static int _ffmpeg_close(void *ctx)
 	return(HACKTV_OK);
 }
 
-int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
+int av_ffmpeg_open(vid_t *vid, void *ctx, char *input_url, char *format, char *options)
 {
-	av_t *av = &vid->av;
 	av_ffmpeg_t *s;
+	vid_config_t *conf = ctx;
+	av_t *av = &vid->av;
+
 	const AVInputFormat *fmt = NULL;
 	const AVCodec *codec;
 	AVDictionary *opts = NULL;
@@ -1193,11 +1198,14 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	AVChannelLayout dst_ch_layout = AV_CHANNEL_LAYOUT_STEREO;
 #endif
 	int64_t start_time = 0;
-	int r;
-	int i;
-	
+	int r, i, ws;
+
 	/* Default ratio */
-	float source_ratio = 4.0 / 3.0;
+	float source_ratio;
+
+	/* Filter declarations */
+	char *_filter_args;
+	char *_filter_def;
 	
 	s = calloc(1, sizeof(av_ffmpeg_t));
 	if(!s)
@@ -1267,8 +1275,8 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		
 		if(s->subtitle_stream == NULL && s->format_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
 		{
-			s->subtitle_stream = s->format_ctx->streams[vid->conf.txsubtitles >= i && vid->conf.txsubtitles < s->format_ctx->nb_streams? vid->conf.txsubtitles : i];
-			s->subtitle_stream = s->format_ctx->streams[vid->conf.subtitles >= i && vid->conf.subtitles < s->format_ctx->nb_streams? vid->conf.subtitles : i];
+			s->subtitle_stream = s->format_ctx->streams[conf->txsubtitles >= i && conf->txsubtitles < s->format_ctx->nb_streams? conf->txsubtitles : i];
+			s->subtitle_stream = s->format_ctx->streams[conf->subtitles >= i && conf->subtitles < s->format_ctx->nb_streams? conf->subtitles : i];
 		}
 	}
 	
@@ -1322,10 +1330,6 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		}
 		
 		/* Video filter starts here */
-		
-		/* Video filter declarations */
-		char *_vfi;
-		char *_filter_args;
 			
 		AVFilterGraph *vfilter_graph;
 
@@ -1367,50 +1371,43 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		vinputs->filter_ctx = s->vbuffersink_ctx;
 		vinputs->pad_idx    = 0;
 		vinputs->next       = NULL;
-		
-		/* Calculate letterbox padding for widescreen videos, if necessary */ 
-		int video_width_ws = vid->conf.active_lines * (16.0 / 9.0); 
-		int source_width = s->video_codec_ctx->width;
-		int source_height = s->video_codec_ctx->height;
-		
-		int video_width = vid->conf.active_lines * (4.0 / 3.0); 
-		
-		source_ratio = (float) source_width / (float) source_height;
-		int ws = source_ratio >= (14.0 / 9.0) ? 1 : 0;	
-		
-		char *_vid_filter;
+				
+		source_ratio = (float) s->video_codec_ctx->width / (float) s->video_codec_ctx->height;
+		ws = source_ratio >= (14.0 / 9.0) ? 1 : 0;	
 		
 		/* Default states */
-		asprintf(&_vid_filter,"null");
+		asprintf(&_filter_def,"[in]null[out]");
 		
 		if(ws)
 		{
-			if(vid->conf.letterbox)
+			int video_width;
+			video_width = av->height * (4.0 / 3.0);
+
+			if(conf->letterbox)
 			{
-				asprintf(&_vid_filter,"pad = 'iw:iw / (%i / %i) : 0 : (oh - ih) / 2', scale = %i:%i", video_width, vid->conf.active_lines, source_width, source_height);
+				asprintf(&_filter_def,"[in]pad = 'iw:iw / (%i / %i) : 0 : (oh - ih) / 2', scale = %i:%i[out]", video_width, av->height, s->video_codec_ctx->width, s->video_codec_ctx->height);
 			}
-			else if(vid->conf.pillarbox)
+			else if(conf->pillarbox)
 			{
-				asprintf(&_vid_filter,"crop = out_w = in_h * (4.0 / 3.0) : out_h = in_h, scale = %i:%i", source_width, source_height);
+				asprintf(&_filter_def,"[in]crop = out_w = in_h * (4.0 / 3.0) : out_h = in_h, scale = %i:%i[out]", s->video_codec_ctx->width, s->video_codec_ctx->height);
 			}
 			else
 			{
-				if((float) video_width_ws / (float) vid->conf.active_lines <= source_ratio)
+				/* Calculate letterbox padding for widescreen videos */ 
+				video_width = av->height * (16.0 / 9.0);
+
+				if((float) video_width / (float) av->height <= source_ratio)
 				{
-					asprintf(&_vid_filter,"pad = 'iw:iw / (%i/%i) : 0 : (oh-ih) / 2', scale = %i:%i", video_width_ws, vid->conf.active_lines, source_width, source_height);
+					asprintf(&_filter_def,"[in]pad = 'iw:iw / (%i/%i) : 0 : (oh-ih) / 2', scale = %i:%i[out]", video_width, av->height, s->video_codec_ctx->width, s->video_codec_ctx->height);
 				}
 				else
 				{
-					asprintf(&_vid_filter,"pad = 'ih * (%i / %i) : ih : (ow-iw) / 2 : 0', scale = %i:%i", video_width_ws, vid->conf.active_lines, source_width, source_height);
+					asprintf(&_filter_def,"[in]pad = 'ih * (%i / %i) : ih : (ow-iw) / 2 : 0', scale = %i:%i[out]", video_width, av->height, s->video_codec_ctx->width, s->video_codec_ctx->height);
 				}
 			}
 		}
 		
-		asprintf(&_vfi, "[in]%s[out]", _vid_filter);
-		
-		const char *vfilter_descr = _vfi;
-
-		if(avfilter_graph_parse_ptr(vfilter_graph, vfilter_descr, &vinputs, &voutputs, NULL) < 0)
+		if(avfilter_graph_parse_ptr(vfilter_graph, _filter_def, &vinputs, &voutputs, NULL) < 0)
 		{
 			fprintf(stderr, "Cannot parse filter graph\n");
 			return(HACKTV_ERROR);
@@ -1487,8 +1484,6 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		}
 		
 		/* Audio filter graph here */
-		char *_afi;
-		char *_afilter_args;
 		AVFilterGraph *afilter_graph;
 		
 		/* Deprecated - to be removed in later versions */
@@ -1503,18 +1498,18 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		afilter_graph = avfilter_graph_alloc();
 
 		#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 24, 100)
-		asprintf(&_afilter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
+		asprintf(&_filter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
 			s->audio_codec_ctx->time_base.num, s->audio_codec_ctx->time_base.den, s->audio_codec_ctx->sample_rate,
 			av_get_sample_fmt_name(s->audio_codec_ctx->sample_fmt),
 			s->audio_codec_ctx->ch_layout.u.mask);
 		#else
-		asprintf(&_afilter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
+		asprintf(&_filter_args, "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
 			s->audio_codec_ctx->time_base.num, s->audio_codec_ctx->time_base.den, s->audio_codec_ctx->sample_rate,
 			av_get_sample_fmt_name(s->audio_codec_ctx->sample_fmt),
 			s->audio_codec_ctx->channel_layout);
 		#endif
 	
-		if(avfilter_graph_create_filter(&s->abuffersrc_ctx, abuffersrc, "in", _afilter_args, NULL, afilter_graph) < 0) 
+		if(avfilter_graph_create_filter(&s->abuffersrc_ctx, abuffersrc, "in", _filter_args, NULL, afilter_graph) < 0) 
 		{
 			fprintf(stderr, "Cannot create audio buffer source\n");
 			return(HACKTV_ERROR);
@@ -1537,20 +1532,18 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		ainputs->pad_idx    = 0;
 		ainputs->next       = NULL;
 		
-		char fmt[5];
-		sprintf(fmt,"%s", av_get_sample_fmt_name(s->audio_codec_ctx->sample_fmt));
-		asprintf(&_afi,
+		char str_buf[5];
+		sprintf(str_buf,"%s", av_get_sample_fmt_name(s->audio_codec_ctx->sample_fmt));
+		asprintf(&_filter_def,
 				"[in]%s[downmix],[downmix]volume=%f:precision=%s[out]",
-				vid->conf.downmix ? "pan=stereo|FL < FC + 0.30*FL + 0.30*BL|FR < FC + 0.30*FR + 0.30*BR" : "anull",
-				vid->conf.volume,
-				fmt[0] == 'f' ? "float" : fmt[0] == 'd' ? "double" : "fixed"
+				conf->downmix ? "pan=stereo|FL < FC + 0.30*FL + 0.30*BL|FR < FC + 0.30*FR + 0.30*BR" : "anull",
+				conf->volume,
+				str_buf[0] == 'f' ? "float" : str_buf[0] == 'd' ? "double" : "fixed"
 		);
 		
-		const char *afilter_descr = _afi;
-		
-		if (avfilter_graph_parse_ptr(afilter_graph, afilter_descr, &ainputs, &aoutputs, NULL) < 0)
+		if (avfilter_graph_parse_ptr(afilter_graph, _filter_def, &ainputs, &aoutputs, NULL) < 0)
 		{
-			fprintf(stderr,"Cannot parse filter graph %s\n", _afi);
+			fprintf(stderr,"Cannot parse filter graph %s\n", _filter_def);
 			return(HACKTV_ERROR);
 		}
 		
@@ -1562,6 +1555,8 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		
 		avfilter_inout_free(&ainputs);
 		avfilter_inout_free(&aoutputs);
+
+		/* Audio filter ends here */
 		
 		/* Create the audio time_base using the source sample rate */
 		s->audio_time_base.num = 1;
@@ -1590,11 +1585,11 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 			s->audio_codec_ctx->ch_layout = default_ch_layout;
 		}
 		
-		av_opt_set_int(s->swr_ctx, "in_channel_layout",    vid->conf.downmix ? AV_CH_LAYOUT_STEREO : s->audio_codec_ctx->ch_layout.u.mask, 0);
+		av_opt_set_int(s->swr_ctx, "in_channel_layout",    conf->downmix ? AV_CH_LAYOUT_STEREO : s->audio_codec_ctx->ch_layout.u.mask, 0);
 		av_opt_set_int(s->swr_ctx, "in_sample_rate",       s->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(s->swr_ctx, "in_sample_fmt", s->audio_codec_ctx->sample_fmt, 0);
 
-		// av_opt_set_chlayout(s->swr_ctx, "in_chlayout",     vid->conf.downmix ? AV_CH_LAYOUT_STEREO : &s->audio_codec_ctx->ch_layout, 0);
+		// av_opt_set_chlayout(s->swr_ctx, "in_chlayout",     conf->downmix ? AV_CH_LAYOUT_STEREO : &s->audio_codec_ctx->ch_layout, 0);
 		// av_opt_set_int(s->swr_ctx, "in_sample_rate",       s->audio_codec_ctx->sample_rate, 0);
 		// av_opt_set_sample_fmt(s->swr_ctx, "in_sample_fmt", s->audio_codec_ctx->sample_fmt, 0);
 		
@@ -1606,7 +1601,7 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 			s->audio_codec_ctx->channel_layout = av_get_default_channel_layout(s->audio_codec_ctx->channels);
 		}
 		
-		av_opt_set_int(s->swr_ctx, "in_channel_layout",    vid->conf.downmix ? AV_CH_LAYOUT_STEREO : s->audio_codec_ctx->channel_layout, 0);
+		av_opt_set_int(s->swr_ctx, "in_channel_layout",    conf->downmix ? AV_CH_LAYOUT_STEREO : s->audio_codec_ctx->channel_layout, 0);
 		av_opt_set_int(s->swr_ctx, "in_sample_rate",       s->audio_codec_ctx->sample_rate, 0);
 		av_opt_set_sample_fmt(s->swr_ctx, "in_sample_fmt", s->audio_codec_ctx->sample_fmt, 0);
 		
@@ -1628,6 +1623,10 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	{
 		fprintf(stderr, "No audio streams found.\n");
 	}
+	
+	/* Free filter graph memory */
+	free(_filter_def);
+	free(_filter_args);
 	
 	if(s->subtitle_stream != NULL)
 	{
@@ -1664,16 +1663,16 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		}
 		
 		s->subtitle_eof = 0;
-		if(vid->conf.subtitles || vid->conf.txsubtitles) subs_init_ffmpeg(vid);
+		if(conf->subtitles || conf->txsubtitles) subs_init_ffmpeg(vid);
 		
 		/* Initialise fonts here */
-		if(font_init(&vid->av, 38, source_ratio, &vid->conf) !=0)
+		if(font_init(av, 38, source_ratio, conf) !=0)
 		{
 			return(HACKTV_ERROR);
 		};
 		
-		s->font[0] = av->av_font;
-		s->font[0]->video_width += 2;
+		s->font[TEXT_SUBTITLE] = av->av_font;
+		s->font[TEXT_SUBTITLE]->video_width += 2;
 	}
 	else
 	{
@@ -1681,25 +1680,25 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 		
 		/* Initialise subtitles - here because it's already supplied with the filename for video */
 		/* Should really be moved somewhere else */
-		if(vid->conf.subtitles || vid->conf.txsubtitles)
+		if(conf->subtitles || conf->txsubtitles)
 		{
 			if(subs_init_file(input_url, vid) != HACKTV_OK)
 			{
-				vid->conf.subtitles = 0;
-				vid->conf.txsubtitles = 0;
+				conf->subtitles = 0;
+				conf->txsubtitles = 0;
 				return(HACKTV_ERROR);
 			}
 			
 			/* Initialise fonts here */
-			if(font_init(&vid->av, 38, source_ratio, &vid->conf) < 0)
+			if(font_init(av, 38, source_ratio, conf) < 0)
 			{
-				vid->conf.subtitles = 0;
-				vid->conf.txsubtitles = 0;
+				conf->subtitles = 0;
+				conf->txsubtitles = 0;
 				return(HACKTV_ERROR);
 			}
 			
-			s->font[0] = av->av_font;
-			s->font[0]->video_width += 2;
+			s->font[TEXT_SUBTITLE] = av->av_font;
+			s->font[TEXT_SUBTITLE]->video_width += 2;
 		}
 	}
 	
@@ -1709,12 +1708,12 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	}
 	
 	/* Seek stuff here */
-	int64_t request_timestamp = (60.0 * vid->conf.position) / av_q2d(time_base) + start_time;
+	int64_t request_timestamp = (60.0 * conf->position) / av_q2d(time_base) + start_time;
 	
 	/* Calculate the start time for each stream */
 	if(s->video_stream != NULL)
 	{
-		if (vid->conf.position > 0) 
+		if (conf->position > 0) 
 		{
 			s->video_start_time = av_rescale_q(request_timestamp, time_base, s->video_time_base);
 			avformat_seek_file(s->format_ctx, s->video_stream->index, INT64_MIN, request_timestamp, INT64_MAX, 0);
@@ -1727,55 +1726,48 @@ int av_ffmpeg_open(vid_t *vid, char *input_url, char *format, char *options)
 	
 	if(s->audio_stream != NULL)
 	{
-		s->audio_start_time = av_rescale_q(vid->conf.position ? request_timestamp : start_time, time_base, s->audio_time_base);
+		s->audio_start_time = av_rescale_q(conf->position ? request_timestamp : start_time, time_base, s->audio_time_base);
 	}
 	
-	if(vid->conf.timestamp)
+	if(conf->timestamp)
 	{
-		vid->conf.timestamp = time(0);
+		conf->timestamp = time(0);
 		
-		if(font_init(&vid->av, 40, source_ratio, &vid->conf) != VID_OK)
+		if(font_init(av, 40, source_ratio, conf) != VID_OK)
 		{
-			vid->conf.timestamp = 0;
+			conf->timestamp = 0;
 		};
 		
-		s->font[1] = av->av_font;
-		s->font[1]->video_width += 2;
+		s->font[TEXT_TIMESTAMP] = av->av_font;
+		s->font[TEXT_TIMESTAMP]->video_width += 2;
 	}
 	
 	/* Calculate ratio */
-	float ratio = source_ratio >= (14.0 / 9.0) ? 16.0/9.0 : 4.0/3.0;
-	ratio = vid->conf.pillarbox || vid->conf.letterbox ? 4.0/3.0 : ratio;
-	if(vid->conf.logo)
+	float ratio = conf->pillarbox || conf->letterbox ? (4.0 / 3.0 ): ws ? (16.0 / 9.0) : (4.0 / 3.0);
+
+	/* Load logo */
+	if(conf->logo)
 	{
-		if(load_png(&vid->vid_logo, vid->active_width, vid->conf.active_lines, vid->conf.logo, 0.75, ratio, IMG_LOGO) == HACKTV_ERROR)
+		if(load_png(&vid->vid_logo, av->width, av->height, conf->logo, 0.75, ratio, IMG_LOGO) == HACKTV_ERROR)
 		{
-			vid->conf.logo = NULL;
+			conf->logo = NULL;
 		}
 	}
 	
-	if(load_png(&vid->media_icons[0], vid->active_width, vid->conf.active_lines, "play", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	if(load_png(&vid->media_icons[0], av->width, av->height, "play", 1, ratio, IMG_MEDIA) != HACKTV_OK)
 	{
 		fprintf(stderr, "Error loading media icons.\n");
 		return(HACKTV_ERROR);
 	}
 	
-	if(load_png(&vid->media_icons[1], vid->active_width, vid->conf.active_lines, "pause", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	if(load_png(&vid->media_icons[1], av->width, av->height, "pause", 1, ratio, IMG_MEDIA) != HACKTV_OK)
 	{
 		fprintf(stderr, "Error loading media icons.\n");
 		return(HACKTV_ERROR);
 	}
 		
-	/* Generic font */
-	if(font_init(&vid->av, 56, source_ratio, &vid->conf) == VID_OK)
-	{
-		s->font[2] = av->av_font;
-	};
-	s->font[2]->video_width += 2;
-		
 	/* Register the callback functions */
 	s->vid = vid;
-	vid->av_private = av;
 
 	av->av_source_ctx = s;
 	av->read_video = _ffmpeg_read_video;

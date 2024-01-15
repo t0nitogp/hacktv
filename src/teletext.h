@@ -136,6 +136,7 @@ typedef struct {
 	FILE *raw;
 	tt_service_t service;
 	unsigned int timecode;
+	char *text;
 } tt_t;
 
 extern int tt_init(tt_t *s, vid_t *vid, char *path);

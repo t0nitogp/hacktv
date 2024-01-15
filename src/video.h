@@ -350,8 +350,6 @@ struct _lineprocess_t {
 struct vid_t {
 	
 	/* Source interface - old */
-	void *av_private;
-	void *av_font;
 	void *av_sub;
 
 	/* AV source */
@@ -436,6 +434,9 @@ struct vid_t {
 	
 	/* VITC state */
 	vitc_t vitc;
+
+	/* Font state */
+	av_font_t *av_font;
 	
 	/* Audio state */
 	int audio;

@@ -59,10 +59,11 @@ int font_init(av_t *av, int size, float ratio, void *ctx)
 	
 	// r = FT_New_Face(_freetype, fontfile, 0, &font->fontface);
 	r = FT_New_Memory_Face( _freetype,
-                            _font_evolventa,    /* first byte in memory */
-                            sizeof(_font_evolventa),      /* size in bytes        */
-                            0,         /* face_index           */
+                            _font_evolventa,          /* first byte in memory */
+                            sizeof(_font_evolventa),  /* size in bytes        */
+                            0,                        /* face_index        	 */
                             &font->fontface );
+
 	if(r == FT_Err_Unknown_File_Format)
 	{
 		fprintf(stderr, "Unknown font file format.");
@@ -396,7 +397,7 @@ void print_subtitle(av_font_t *font, uint32_t *vid, char *fmt)
 	}
 }
 
-void print_generic_text(av_font_t *font, uint32_t *vid, char *fmt, float pos_x, float pos_y, int shadow, int box, int colour, int transparency)
+void print_generic_text(av_font_t *font, uint32_t *vid, char *fmt, float pos_x, float pos_y, int shadow, int box, int colour, float transparency)
 {
 	if(strcmp(fmt, "") != 0)
 	{

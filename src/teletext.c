@@ -1223,7 +1223,8 @@ int tt_init(tt_t *s, vid_t *vid, char *path)
 	
 	if(strcmp(path,"subtitles") == 0)
 	{
-		update_teletext_subtitle("", &s->service);
+		asprintf(&s->text,"%s", " ");
+		update_teletext_subtitle(s->text, &s->service);
 	}
 	else
 	{

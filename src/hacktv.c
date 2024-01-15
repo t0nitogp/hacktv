@@ -1522,11 +1522,11 @@ int main(int argc, char *argv[])
 			}
 			else if(strncmp(pre, "ffmpeg", l) == 0)
 			{
-				r = av_ffmpeg_open(&s.vid, sub, s.ffmt, s.fopts);
+				r = av_ffmpeg_open(&s.vid, &s.vid.conf, sub, s.ffmt, s.fopts);
 			}
 			else
 			{
-				r = av_ffmpeg_open(&s.vid, pre, s.ffmt, s.fopts);
+				r = av_ffmpeg_open(&s.vid, &s.vid.conf, pre, s.ffmt, s.fopts);
 			}
 			
 			if(r != HACKTV_OK)

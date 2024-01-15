@@ -42,20 +42,22 @@ static int _test_read_video(void *ctx, av_frame_t *frame)
 	av_set_display_aspect_ratio(frame, (rational_t) { 4, 3 });
 
 	/* Get current time */
-	char timestr[9];
 	time_t secs = time(0);
-	struct tm *local = localtime(&secs);
-	sprintf(timestr, "%02d:%02d:%02d", local->tm_hour, local->tm_min, local->tm_sec);
+	struct tm *time = localtime(&secs);
+	asprintf(&s->font[TEXT_TIMESTAMP]->text, "%02d:%02d:%02d", time->tm_hour, time->tm_min, time->tm_sec);
 
 	/* Print clock */
-	if(s->font[0])
+	if(s->font[TEXT_TIMESTAMP])
 	{
-		print_generic_text(	s->font[0],
+		print_generic_text(	s->font[TEXT_TIMESTAMP],
 							s->video,
-							timestr,
-							s->font[0]->x_loc, s->font[0]->y_loc, 0, 1, 0, 1);
+							s->font[TEXT_TIMESTAMP]->text,
+							s->font[TEXT_TIMESTAMP]->x_loc, s->font[TEXT_TIMESTAMP]->y_loc, NO_TEXT_SHADOW, TEXT_BOX, 0, 1);
 	}
-						
+	
+	/* Free memory */
+	free(s->font[TEXT_TIMESTAMP]->text);
+	
 	return(AV_OK);
 }
 
@@ -170,15 +172,15 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 	
 	/* Clock */
 	font_init(av, 56, img_ratio, conf);
-	t->font[0] = av->av_font;
-	t->font[0]->x_loc = 50;
-	t->font[0]->y_loc = 50;
+	t->font[TEXT_TIMESTAMP] = av->av_font;
+	t->font[TEXT_TIMESTAMP]->x_loc = 50;
+	t->font[TEXT_TIMESTAMP]->y_loc = 50;
 	
 	/* HACKTV text*/
 	font_init(av, 72, img_ratio, conf);
-	t->font[1] = av->av_font;
-	t->font[1]->x_loc = 50;
-	t->font[1]->y_loc = 25;
+	t->font[TEXT_GENERIC] = av->av_font;
+	t->font[TEXT_GENERIC]->x_loc = 50;
+	t->font[TEXT_GENERIC]->y_loc = 25;
 	
 	int sr = 20250.0 * (t->width / 1052.0);
 	
@@ -191,7 +193,7 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 			
 			if(strcmp(test_screen, "pm5544") == 0)
 			{
-				t->font[0]->y_loc = 82.3;
+				t->font[TEXT_TIMESTAMP]->y_loc = 82.3;
 
 				y_start = t->height - 270;
 				y_end = t->height - 180;
@@ -224,7 +226,7 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 			}
 			else if(strcmp(test_screen, "pm5644") == 0)
 			{
-				t->font[0]->y_loc = 82;
+				t->font[TEXT_TIMESTAMP]->y_loc = 82;
 
 				y_start = t->height - 271;
 				y_end = t->height - 181;
@@ -275,25 +277,25 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 			{
 				/* Reinit font with new size */
 				font_init(av, 44, img_ratio, conf);
-				t->font[0] = av->av_font;
-				t->font[0]->x_loc = 52;
-				t->font[0]->y_loc = 55.5;
+				t->font[TEXT_TIMESTAMP] = av->av_font;
+				t->font[TEXT_TIMESTAMP]->x_loc = 52;
+				t->font[TEXT_TIMESTAMP]->y_loc = 55.5;
 			}
 			else if(strcmp(test_screen, "ueitm") == 0)
 			{
 				/* Don't display clock */
-				t->font[0] = NULL;
+				t->font[TEXT_TIMESTAMP] = NULL;
 			}
 			
 		}
 		else
 		{
-			print_generic_text(	t->font[1], t->video, "HACKTV", t->font[1]->x_loc, t->font[1]->y_loc, 0, 1, 0, 1);
+			print_generic_text(	t->font[TEXT_GENERIC], t->video, "HACKTV", t->font[TEXT_GENERIC]->x_loc, t->font[TEXT_GENERIC]->y_loc, NO_TEXT_SHADOW, TEXT_BOX, 0, 1);
 		}
 	}
 	else
 	{
-		print_generic_text(	t->font[1], t->video, "HACKTV", t->font[1]->x_loc, t->font[1]->y_loc, 0, 1, 0, 1);
+		print_generic_text(	t->font[TEXT_GENERIC], t->video, "HACKTV", t->font[TEXT_GENERIC]->x_loc, t->font[TEXT_GENERIC]->y_loc, NO_TEXT_SHADOW, TEXT_BOX, 0, 1);
 	}
 	
 	/* Print logo, if enabled */
