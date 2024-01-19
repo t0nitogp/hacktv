@@ -285,7 +285,7 @@ uint16_t _get_ec_date(const char *dtm, int mode)
 {
 	int day, mon, year;
 	
-	uint16_t date;
+	uint16_t date = 0;
 	
 	sscanf(dtm, "%d/%d/%d", &day, &mon, &year);
 	
@@ -296,13 +296,13 @@ uint16_t _get_ec_date(const char *dtm, int mode)
 		date |= mon << 5;           /* Month - next 4 bits */
 		date |= day << 0;           /* Day - next 5 bits */
 	}
-	if(mode == EC_S)
+	else if(mode == EC_S)
 	{
 		date  = (year % 10) << 12;	 /* Year - first 4 bits (max 1999 in EC-S) */
 		date |= mon << 8;            /* Month - next 4 bits */
 		date |= day << 0;            /* Day - next 8 bits */
 	}
-	else
+	else if(mode == EC_S2)
 	{
 		uint8_t y;
 	
