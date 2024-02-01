@@ -1215,10 +1215,10 @@ const vid_config_t vid_config_d2mac = {
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.0, /* Overall signal level */
-	.video_level    = 1.0, /* Power level of video */
+	.video_level    = 1.75, /* Power level of video - compensate for lower FL2000 output level*/
 	
-	.white_level    =  1.00,
-	.black_level    = -1.00,
+	.white_level    =  0.50,
+	.black_level    = -0.50,
 	.blanking_level =  0.00,
 	.sync_level     =  0.00,
 	
