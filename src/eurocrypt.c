@@ -50,7 +50,7 @@ enum {
 	THEME_DOCUMENTARY,
 	THEME_MINISERIES,
 	THEME_SCIENCE,
-	THEME_ALL
+	THEME_ALL = 0xFF
 };
 
 /* Data for EC controlled-access decoding */
