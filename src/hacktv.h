@@ -96,6 +96,9 @@ typedef struct {
 	char *ec_ppv;
 	int nodate;
 	int invert_video;
+	char *raw_bb_file;
+	int16_t raw_bb_blanking_level;
+	int16_t raw_bb_white_level;
 	int secam_field_id;
 	int list_modes;
 	int json;
