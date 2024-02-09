@@ -348,22 +348,12 @@ struct _lineprocess_t {
 };
 
 struct vid_t {
-	
-	/* Source interface - old */
-	void *av_sub;
-
 	/* AV source */
 	av_t av;
 	
 	/* Signal configuration */
 	vid_config_t conf;
 	int sample_rate;
-	
-	/* Logo configuration */
-	image_t vid_logo;
-
-	/* Media icons */
-	image_t media_icons[4];
 	
 	/* Video setup */
 	int pixel_rate;

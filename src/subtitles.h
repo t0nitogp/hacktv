@@ -18,6 +18,7 @@
 #ifndef SUBTITLES_H_
 #define SUBTITLES_H_
 
+#include <libavcodec/avcodec.h>
 #include "video.h"
 
 #define SUB_BITMAP 0
@@ -38,10 +39,10 @@ typedef struct {
 } av_subs_t;
 
 extern void load_text_subtitle(av_subs_t *subs, uint32_t start_time, uint32_t duration, char *fmt);
-extern int subs_init_file(char *filename, vid_t *s);
-extern int subs_init_ffmpeg(vid_t *s);
+extern int subs_init_file(char *filename, av_subs_t **s);
+extern int subs_init_ffmpeg(av_subs_t **s);
 extern char *get_text_subtitle(av_subs_t *subs, uint32_t ts);
-extern uint32_t *get_bitmap_subtitle(av_subs_t *subs, int32_t ts, int *w, int *h);
-extern void load_bitmap_subtitle(av_subs_t *subs, vid_t *s, int w, int h, uint32_t start_time, uint32_t duration, uint32_t *bitmap);
+extern int get_bitmap_subtitle(av_subs_t *subs, uint32_t current_timestamp, int *w, int *h);
+extern void load_bitmap_subtitle(AVSubtitle *av_sub, av_subs_t *subs, int bitmap_width, int w, int h, uint32_t pts, int bitmap_scale);
 extern int get_subtitle_type(av_subs_t *subs);
 #endif

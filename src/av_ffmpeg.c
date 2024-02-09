@@ -111,13 +111,6 @@ typedef struct {
 	uint32_t *video;
 	uint8_t paused;
 	time_t last_paused;
-	int64_t timestamp;
-	
-	vid_t *vid;
-	av_font_t *font[3];
-	av_subs_t *av_subs;
-
-	image_t *av_logo;
 	
 	AVFormatContext *format_ctx;
 	
@@ -175,7 +168,20 @@ typedef struct {
 	AVFilterContext *abuffersink_ctx;
 	AVFilterContext *abuffersrc_ctx;
 	AVRational sar, dar;
-	
+
+	/* Callbacks */
+	vid_config_t *vid_conf;
+	tt_t *vid_tt;
+
+	/* Subtitles */
+	av_subs_t *av_sub;
+	av_font_t *font[3];
+
+	/* Video logo */
+	image_t *av_logo;
+
+	/* Media icons */
+	image_t *media_icons[4];
 } av_ffmpeg_t;
 
 static void _print_ffmpeg_error(int r)
@@ -496,7 +502,8 @@ static void *_input_thread(void *arg)
 		{
 			_packet_queue_write(s, &s->audio_queue, &pkt);
 		}
-		else if(s->subtitle_stream && pkt.stream_index == s->subtitle_stream->index && (s->vid->conf.subtitles || s->vid->conf.txsubtitles))
+		/* Keep it in the input thread rather than moving to a separate one */
+		else if(s->subtitle_stream && pkt.stream_index == s->subtitle_stream->index && s->av_sub)
 		{
 			AVSubtitle sub;
 			int got_frame;
@@ -510,22 +517,20 @@ static void *_input_thread(void *arg)
 				if(sub.format == SUB_TEXT)
 				{
 					/* Load text subtitle into buffer */
-					load_text_subtitle(s->vid->av_sub, pkt.pts + sub.start_display_time, sub.end_display_time, sub.rects[0]->ass);
+					load_text_subtitle(s->av_sub, pkt.pts + sub.start_display_time, sub.end_display_time, sub.rects[0]->ass);
 				}
 				else if(sub.format == SUB_BITMAP)
 				{
-					uint32_t *bitmap;
-					int max_bitmap_width = 0;
-					int max_bitmap_height = 0;
-					float bitmap_scale;
-					int x, y, pos, last_pos;
-					last_pos = pos = 0;
+					int bitmap_width, max_bitmap_width, max_bitmap_height;
+					float bitmap_ratio, bitmap_scale;
+
+					max_bitmap_width = 0;
+					max_bitmap_height = 0;
 					
 					for(i = 0; i < sub.num_rects; i++)
 					{
 						/* Scale bitmap to video width */
-						bitmap_scale = sub.rects[i]->w / s->vid->active_width < 1 ? 1 : round(sub.rects[i]->w / s->vid->active_width);
-						fprintf(stderr,"Bitmap scale %f\n", bitmap_scale);
+						bitmap_scale = sub.rects[i]->w / s->width < 1 ? 1 : round(sub.rects[i]->w / s->width);
 						
 						/* Get maximum width */
 						max_bitmap_width = MAX(max_bitmap_width, sub.rects[i]->w / bitmap_scale);
@@ -533,41 +538,11 @@ static void *_input_thread(void *arg)
 						/* Get total height of all rects */
 						max_bitmap_height += sub.rects[i]->h / bitmap_scale;
 					}
-					
-					/* Give it some memory */
-					bitmap = malloc(max_bitmap_width * max_bitmap_height * sizeof(uint32_t));
-					
-					/* Set all pixels to black */
-					memset(bitmap, 0, max_bitmap_width * max_bitmap_height * sizeof(uint32_t));
-					
-					for(i = sub.num_rects - 1; i >= 0; i--)
-					{	
-						for (x = 0; x < sub.rects[i]->w; x++)
-						{
-							for (y = 0; y < sub.rects[i]->h; y++)
-							{
-								/* Bitmap position */
-								pos = (y / bitmap_scale * max_bitmap_width + x / bitmap_scale) + last_pos;
-								
-								/* Colour index */
-								char c = sub.rects[i]->data[0][y * sub.rects[i]->w + x];
-								
-								char r = sub.rects[i]->data[1][c * 4 + 0];
-								char g = sub.rects[i]->data[1][c * 4 + 1];
-								char b = sub.rects[i]->data[1][c * 4 + 2];
-								char a = sub.rects[i]->data[1][c * 4 + 3];
-								if(c) 
-								{
-									bitmap[pos] = (a << 24 | r << 16 | g << 8 | b << 0);
-								}
-							}
-						}
-						last_pos = pos;
-					}
-					
-					load_bitmap_subtitle(s->vid->av_sub, s->vid, max_bitmap_width, max_bitmap_height, pkt.pts + sub.start_display_time, sub.end_display_time, bitmap);
-					
-					free(bitmap);
+
+					/* Set correct ratio based on supplied parameters */
+					bitmap_ratio = s->vid_conf->pillarbox || s->vid_conf->letterbox ? 4.0/3.0 : 16.0/9.0;
+					bitmap_width = (float) (s->width / (float) s->height) / bitmap_ratio * max_bitmap_width;
+					load_bitmap_subtitle(&sub, s->av_sub, bitmap_width, max_bitmap_width, max_bitmap_height, pkt.pts, bitmap_scale);
 				}
 				
 				avsubtitle_free(&sub);
@@ -732,8 +707,63 @@ static void *_video_scaler_thread(void *arg)
 			frame->height * ratio.den * oframe->width,
 			INT_MAX
 		);
-		
-		s->timestamp = frame->best_effort_timestamp;
+
+		/* I don't like these routines here but it doesn't do any harm (I think) */
+		/* Print timestamp of the video to console */
+		int sec, hr, min, pts;
+		pts = (frame->best_effort_timestamp / (s->video_stream->time_base.den / s->video_stream->time_base.num));
+		hr  = (pts / 3600);
+		min = (pts - (3600 * hr)) / 60;
+		sec = (pts - (3600 * hr) - (min * 60));
+
+		fprintf(stderr,"\r%02d:%02d:%02d", hr, min, sec);
+
+		/* Overlay timestamp to video frame, if enabled */
+		if(s->font[TEXT_TIMESTAMP])
+		{
+			asprintf(&s->font[TEXT_TIMESTAMP]->text, "%02d:%02d:%02d", hr, min, sec);
+			print_generic_text(s->font[TEXT_TIMESTAMP], (uint32_t *) oframe->data[0], s->font[TEXT_TIMESTAMP]->text, 10, 90, TEXT_SHADOW, NO_TEXT_BOX, 0, 0);
+
+			/* Free memory */
+			free(s->font[TEXT_TIMESTAMP]->text);
+		}
+
+		/* Print logo, if enabled */
+		if(s->av_logo)
+		{
+			overlay_image((uint32_t *) oframe->data[0], s->av_logo, oframe->width + 2, oframe->height, s->av_logo->position);
+		}
+	
+		/* Print subtitles to video frame, if enabled */
+		if(s->font[TEXT_SUBTITLE])
+		{
+			if(get_subtitle_type(s->av_sub) == SUB_TEXT)
+			{
+				/* best_effort_timestamp is very flaky - not really a good measure of current position and doesn't work some of the time */
+				asprintf(&s->font[TEXT_SUBTITLE]->text,"%s", get_text_subtitle(s->av_sub, frame->best_effort_timestamp / (s->video_stream->time_base.den / 1000)));
+
+				/* Do not refresh teletext unless subtitle text has changed */
+				if(s->vid_conf->txsubtitles && strcmp(s->font[TEXT_SUBTITLE]->text, s->vid_tt->text) != 0)
+				{
+					strcpy(s->vid_tt->text, s->font[TEXT_SUBTITLE]->text);
+					update_teletext_subtitle(s->vid_tt->text, &s->vid_tt->service);
+				}
+
+				if(s->vid_conf->subtitles)
+				{
+					print_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) oframe->data[0], s->font[TEXT_SUBTITLE]->text);
+				}
+
+				/* Free memory */
+				free(s->font[TEXT_SUBTITLE]->text);
+			}
+			else
+			{
+				int w, h, sindex;
+				sindex = get_bitmap_subtitle(s->av_sub, frame->best_effort_timestamp, &w, &h);				
+				if(w > 0) display_bitmap_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) oframe->data[0], w, h, s->av_sub[sindex].bitmap);
+			}
+		}
 
 		/* Copy some data to the scaled image */
 		oframe->interlaced_frame = frame->interlaced_frame;
@@ -822,17 +852,16 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 	{
 		avframe = s->out_video_buffer.frame[0];
 		
-		overlay_image((uint32_t *) avframe->data[0], &s->vid->media_icons[1], s->vid->active_width + 2, s->vid->conf.active_lines, IMG_POS_MIDDLE);
+		overlay_image((uint32_t *) avframe->data[0], s->media_icons[1], avframe->width + 2, avframe->height, IMG_POS_MIDDLE);
 		s->last_paused = time(0);
 	}
 	else
 	{
 		avframe = _frame_dbuffer_flip(&s->out_video_buffer);
-
 		/* Show 'play' icon for 5 seconds after resuming play */
 		if(time(0) - s->last_paused < 5)
 		{
-			overlay_image((uint32_t *) avframe->data[0], &s->vid->media_icons[0], s->vid->active_width + 2, s->vid->conf.active_lines, IMG_POS_MIDDLE);
+			overlay_image((uint32_t *) avframe->data[0], s->media_icons[0], avframe->width + 2, avframe->height, IMG_POS_MIDDLE);
 		}
 	}
 
@@ -865,60 +894,6 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 	frame->framebuffer = (uint32_t *) avframe->data[0];
 	frame->pixel_stride = 1;
 	frame->line_stride = avframe->linesize[0] / sizeof(uint32_t);
-
-	/* Print logo, if enabled */
-	if(s->vid->conf.logo)
-	{
-		overlay_image((uint32_t *) frame->framebuffer, &s->vid->vid_logo, s->vid->active_width + 2, s->vid->conf.active_lines, s->vid->vid_logo.position);
-	}
-
-	/* Overlay timestamp, if enabled */
-	if(s->vid->conf.timestamp)
-	{
-		int sec, hr, min, pts;
-		
-		pts = (s->timestamp / (s->video_stream->time_base.den / s->video_stream->time_base.num));
-		hr  = (pts / 3600);
-		min = (pts - (3600 * hr)) / 60;
-		sec = (pts - (3600 * hr) - (min * 60));
-		asprintf(&s->font[TEXT_TIMESTAMP]->text, "%02d:%02d:%02d", hr, min, sec);
-		print_generic_text(s->font[TEXT_TIMESTAMP], (uint32_t *) frame->framebuffer, s->font[TEXT_TIMESTAMP]->text, 10, 90, TEXT_SHADOW, NO_TEXT_BOX, 0, 0);
-
-		/* Free memory */
-		free(s->font[TEXT_TIMESTAMP]->text);
-	}
-
-	/* Print subtitles, if enabled */
-	if(s->vid->conf.subtitles || s->vid->conf.txsubtitles) 
-	{
-		if(get_subtitle_type(s->vid->av_sub) == SUB_TEXT)
-		{
-			/* best_effort_timestamp is very flaky - not really a good measure of current position and doesn't work some of the time */
-			asprintf(&s->font[TEXT_SUBTITLE]->text,"%s", get_text_subtitle(s->vid->av_sub, s->timestamp / (s->video_stream->time_base.den / 1000)));
-
-			/* Do not refresh teletext unless subtitle text has changed */
-			if(s->vid->conf.txsubtitles && strcmp(s->font[TEXT_SUBTITLE]->text, s->vid->tt.text) != 0)
-			{
-				strcpy(s->vid->tt.text, s->font[TEXT_SUBTITLE]->text);
-				update_teletext_subtitle(s->vid->tt.text, &s->vid->tt.service);
-			}
-
-			if(s->vid->conf.subtitles) 
-			{
-				print_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) frame->framebuffer, s->font[TEXT_SUBTITLE]->text);
-			}
-
-			/* Free memory */
-			free(s->font[TEXT_SUBTITLE]->text);
-		}
-		else if(s->vid->conf.subtitles)
-		{
-			int w, h;
-			uint32_t *bitmap = get_bitmap_subtitle(s->vid->av_sub, s->timestamp, &w, &h);
-			
-			if(w > 0) display_bitmap_subtitle(s->font[TEXT_SUBTITLE], (uint32_t *) frame->framebuffer, w, h, bitmap);
-		}
-	}
 
 	return(AV_OK);
 }
@@ -1628,77 +1603,81 @@ int av_ffmpeg_open(vid_t *vid, void *ctx, char *input_url, char *format, char *o
 	free(_filter_def);
 	free(_filter_args);
 	
-	if(s->subtitle_stream != NULL)
+	if(conf->subtitles || conf->txsubtitles)
 	{
-		fprintf(stderr, "Using subtitle stream %d.\n", s->subtitle_stream->index);
-		
-		/* Get a pointer to the codec context for the subtitle stream */
-		s->subtitle_codec_ctx = avcodec_alloc_context3(NULL);
-		if(!s->subtitle_codec_ctx)
+		if(s->subtitle_stream != NULL)
 		{
-			return(HACKTV_OUT_OF_MEMORY);
-		}
-		
-		if(avcodec_parameters_to_context(s->subtitle_codec_ctx, s->subtitle_stream->codecpar) < 0)
-		{
-			return(HACKTV_ERROR);
-		}
-		
-		s->subtitle_codec_ctx->thread_count = 0; /* Let ffmpeg decide number of threads */
-		s->subtitle_codec_ctx->pkt_timebase = s->subtitle_stream->time_base;
-		
-		/* Find the decoder for the subtitle stream */
-		const AVCodec *codec = avcodec_find_decoder(s->subtitle_codec_ctx->codec_id);
-		if(codec == NULL)
-		{
-			fprintf(stderr, "Unsupported subtitle codec\n");
-			return(HACKTV_ERROR);
-		}
-		
-		/* Open subtitle codec */
-		if(avcodec_open2(s->subtitle_codec_ctx, codec, NULL) < 0)
-		{
-			fprintf(stderr, "Error opening subtitle codec\n");
-			return(HACKTV_ERROR);
-		}
-		
-		s->subtitle_eof = 0;
-		if(conf->subtitles || conf->txsubtitles) subs_init_ffmpeg(vid);
-		
-		/* Initialise fonts here */
-		if(font_init(av, 38, source_ratio, conf) !=0)
-		{
-			return(HACKTV_ERROR);
-		};
-		
-		s->font[TEXT_SUBTITLE] = av->av_font;
-		s->font[TEXT_SUBTITLE]->video_width += 2;
-	}
-	else
-	{
-		fprintf(stderr, "No subtitle streams found.\n");
-		
-		/* Initialise subtitles - here because it's already supplied with the filename for video */
-		/* Should really be moved somewhere else */
-		if(conf->subtitles || conf->txsubtitles)
-		{
-			if(subs_init_file(input_url, vid) != HACKTV_OK)
-			{
-				conf->subtitles = 0;
-				conf->txsubtitles = 0;
-				return(HACKTV_ERROR);
-			}
+			subs_init_ffmpeg(&s->av_sub);
 			
 			/* Initialise fonts here */
-			if(font_init(av, 38, source_ratio, conf) < 0)
+			if(font_init(av, 38, source_ratio, conf) !=0)
 			{
-				conf->subtitles = 0;
-				conf->txsubtitles = 0;
 				return(HACKTV_ERROR);
-			}
+			};
 			
 			s->font[TEXT_SUBTITLE] = av->av_font;
 			s->font[TEXT_SUBTITLE]->video_width += 2;
+
+			fprintf(stderr, "Using subtitle stream %d.\n", s->subtitle_stream->index);
+			
+			/* Get a pointer to the codec context for the subtitle stream */
+			s->subtitle_codec_ctx = avcodec_alloc_context3(NULL);
+			if(!s->subtitle_codec_ctx)
+			{
+				return(HACKTV_OUT_OF_MEMORY);
+			}
+			
+			if(avcodec_parameters_to_context(s->subtitle_codec_ctx, s->subtitle_stream->codecpar) < 0)
+			{
+				return(HACKTV_ERROR);
+			}
+			
+			s->subtitle_codec_ctx->thread_count = 0; /* Let ffmpeg decide number of threads */
+			s->subtitle_codec_ctx->pkt_timebase = s->subtitle_stream->time_base;
+			
+			/* Find the decoder for the subtitle stream */
+			const AVCodec *codec = avcodec_find_decoder(s->subtitle_codec_ctx->codec_id);
+			if(codec == NULL)
+			{
+				fprintf(stderr, "Unsupported subtitle codec\n");
+				return(HACKTV_ERROR);
+			}
+			
+			/* Open subtitle codec */
+			if(avcodec_open2(s->subtitle_codec_ctx, codec, NULL) < 0)
+			{
+				fprintf(stderr, "Error opening subtitle codec\n");
+				return(HACKTV_ERROR);
+			}
+			
+			s->subtitle_eof = 0;
+		}
+		else
+		{
+			fprintf(stderr, "No subtitle streams found.\n");
+			
+			/* Initialise subtitles - here because it's already supplied with the filename for video */
+			/* Should really be moved somewhere else */
+			if(conf->subtitles || conf->txsubtitles)
+			{
+				if(subs_init_file(input_url, &s->av_sub) != HACKTV_OK)
+				{
+					conf->subtitles = 0;
+					conf->txsubtitles = 0;
+					return(HACKTV_ERROR);
+				}
+				
+				/* Initialise fonts here */
+				if(font_init(av, 38, source_ratio, conf) < 0)
+				{
+					conf->subtitles = 0;
+					conf->txsubtitles = 0;
+					return(HACKTV_ERROR);
+				}
+				
+				s->font[TEXT_SUBTITLE] = av->av_font;
+				s->font[TEXT_SUBTITLE]->video_width += 2;
+			}
 		}
 	}
 	
@@ -1748,26 +1727,29 @@ int av_ffmpeg_open(vid_t *vid, void *ctx, char *input_url, char *format, char *o
 	/* Load logo */
 	if(conf->logo)
 	{
-		if(load_png(&vid->vid_logo, av->width, av->height, conf->logo, 0.75, ratio, IMG_LOGO) == HACKTV_ERROR)
+		if(load_png(&s->av_logo, av->width, av->height, conf->logo, 0.75, ratio, IMG_LOGO) == HACKTV_ERROR)
 		{
 			conf->logo = NULL;
 		}
 	}
 	
-	if(load_png(&vid->media_icons[0], av->width, av->height, "play", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	if(load_png(&s->media_icons[0], av->width, av->height, "play", 1, ratio, IMG_MEDIA) != HACKTV_OK)
 	{
 		fprintf(stderr, "Error loading media icons.\n");
 		return(HACKTV_ERROR);
 	}
 	
-	if(load_png(&vid->media_icons[1], av->width, av->height, "pause", 1, ratio, IMG_MEDIA) != HACKTV_OK)
+	if(load_png(&s->media_icons[1], av->width, av->height, "pause", 1, ratio, IMG_MEDIA) != HACKTV_OK)
 	{
 		fprintf(stderr, "Error loading media icons.\n");
 		return(HACKTV_ERROR);
 	}
 		
 	/* Register the callback functions */
-	s->vid = vid;
+	s->vid_conf = &vid->conf;
+	s->vid_tt = &vid->tt;
+	s->width = av->width;
+	s->height = av->height;
 
 	av->av_source_ctx = s;
 	av->read_video = _ffmpeg_read_video;

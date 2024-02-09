@@ -30,6 +30,7 @@ const pngs_t png_logos[] = {
 	{ "cartoonnetwork", _png_cartoonnetwork, IMG_POS_TR, sizeof(_png_cartoonnetwork) },
 	{ "tv1000",         _png_tv1000,         IMG_POS_TR, sizeof(_png_tv1000) },
 	{ "filmnet1",       _png_filmnet1,       IMG_POS_TR, sizeof(_png_filmnet1) },
+	{ "filmnetplus",    _png_filmnet_plus,   IMG_POS_TR, sizeof(_png_filmnet_plus) },
 	{ "canal+",         _png_canalplus,      IMG_POS_TR, sizeof(_png_canalplus) },
 	{ "eurotica",       _png_eurotica,       IMG_POS_TR, sizeof(_png_eurotica) },
 	{ "mtv",            _png_mtv,            IMG_POS_TR, sizeof(_png_mtv) },
@@ -185,9 +186,17 @@ static int _read_png_data(image_t *image, const pngs_t *pngs)
 	return (HACKTV_OK);
 }
 
-int load_png(image_t *image, int width, int height, char *image_name, float scale, float ratio, int type)
+int load_png(image_t **s, int width, int height, char *image_name, float scale, float ratio, int type)
 {
 	const pngs_t *pngs;
+
+	image_t *image;
+	image = calloc(1, sizeof(image_t));
+	if(!image)
+	{
+		return(HACKTV_OUT_OF_MEMORY);
+	}
+
 	image->name = image_name;
 	
 	/* Find the image */
@@ -271,9 +280,10 @@ int load_png(image_t *image, int width, int height, char *image_name, float scal
 		}
 		
 		resize_bitmap(logo, image->logo, image->width, image->height, image->img_width, image->img_height);
+		*s = image;
 		return(HACKTV_OK);
 	}
-	
+
 	return(HACKTV_ERROR);
 }
 

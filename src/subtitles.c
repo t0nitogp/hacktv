@@ -16,9 +16,9 @@
 /* along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <sys/stat.h>
-#include "subtitles.h"
-#include "hacktv.h"
 #include <unistd.h>
+#include "hacktv.h"
+#include "subtitles.h"
 
 /* Convert hh:mm:ss,mmm to milliseconds */
 unsigned int get_ms(char *fmt)
@@ -151,37 +151,67 @@ void load_text_subtitle(av_subs_t *subs, uint32_t start_time, uint32_t duration,
 }
 
 
-void load_bitmap_subtitle(av_subs_t *subs, vid_t *s, int w, int h, uint32_t start_time, uint32_t duration, uint32_t *bitmap)
+void load_bitmap_subtitle(AVSubtitle *sub, av_subs_t *subs, int bitmap_width, int max_bitmap_width, int max_bitmap_height, uint32_t pts, int bitmap_scale)
 {
-	int sindex;
+	uint32_t *bitmap;
+	int i, x, y, pixel, sindex;
 	
 	sindex = subs[0].number_of_subs;
 		
 	/* Load subs struct with data */
 	subs[sindex].index = sindex;
-	subs[sindex].start_time = start_time;
-	subs[sindex].end_time = start_time + duration;
-	
-	subs[sindex].bitmap_height = h;
-	
-	/* Set correct ratio based on supplied parameters */
-	float ratio = s->conf.pillarbox || s->conf.letterbox ? 4.0/3.0 : 16.0/9.0;
-	int new_width = (float) (s->active_width / (float) s->conf.active_lines) / ratio * w;
-	subs[sindex].bitmap_width = new_width;
+	subs[sindex].start_time = pts + sub->start_display_time;
+	subs[sindex].end_time = pts + sub->start_display_time + sub->end_display_time;
+	subs[sindex].bitmap_height = max_bitmap_height;
+	subs[sindex].bitmap_width = bitmap_width;
 		
+	/* Convert subtitle to bitmap */
+	bitmap = malloc(max_bitmap_width * max_bitmap_height * sizeof(uint32_t));
+	
+	/* Set all pixels to black */
+	memset(bitmap, 0, max_bitmap_width * max_bitmap_height * sizeof(uint32_t));
+	
+	for(i = sub->num_rects - 1; i >= 0; i--)
+	{	
+		for (x = 0; x < sub->rects[i]->w; x++)
+		{
+			for (y = 0; y < sub->rects[i]->h; y++)
+			{
+				/* Colour index */
+				char c = sub->rects[i]->data[0][y * sub->rects[i]->w + x];
+				
+				if(c)
+				{
+					/* Pixel position */
+					pixel = (y / bitmap_scale * max_bitmap_width + x / bitmap_scale);
+
+					char r = sub->rects[i]->data[1][c * 4 + 0];
+					char g = sub->rects[i]->data[1][c * 4 + 1];
+					char b = sub->rects[i]->data[1][c * 4 + 2];
+					char a = sub->rects[i]->data[1][c * 4 + 3];
+					
+					bitmap[pixel] = (a << 24 | r << 16 | g << 8 | b << 0);
+				}
+			}
+		}
+	}
+
 	/* Resize bitmap subtitle and load into subs struct */
-	subs[sindex].bitmap = malloc(new_width * h * sizeof(uint32_t));
-	resize_bitmap(bitmap, subs[sindex].bitmap, w, h, new_width, h);
+	subs[sindex].bitmap = malloc(bitmap_width * max_bitmap_height * sizeof(uint32_t));
+	resize_bitmap(bitmap, subs[sindex].bitmap, max_bitmap_width, max_bitmap_height, bitmap_width, max_bitmap_height);
 	
 	/* Update number of subtitles */
 	subs[0].number_of_subs++;
 	
 	/* Set subtitle type */
-	subs[0].type = SUB_BITMAP;	
+	subs[0].type = SUB_BITMAP;
+
+	free(bitmap);
 }
 
-int subs_init_ffmpeg(vid_t *s)
+int subs_init_ffmpeg(av_subs_t **s)
 {
+
 	av_subs_t *subs;
 
 	/* Give subs typedef some memory - 512Kb enough?! */
@@ -195,19 +225,18 @@ int subs_init_ffmpeg(vid_t *s)
 	
 	subs[0].pos = 0;
 	subs[0].number_of_subs = 0;
+
+	*s = subs;
 	
-	/* Callback */
-	s->av_sub = subs;
-	
-	return(0);
+	return(HACKTV_OK);
 }
 
-int subs_init_file(char *video_path, vid_t *s)
+int subs_init_file(char *video_path, av_subs_t **s)
 {
 	int bufc, c, char_count, n;
 	int sindex = 0;
 	struct stat fs;
-	
+
 	av_subs_t *subs;
 	
 	char *filename = malloc(strlen(video_path) + 1);
@@ -219,8 +248,7 @@ int subs_init_file(char *video_path, vid_t *s)
 	
 	if(access(filename, 0) == -1)
 	{
-		fprintf(stderr, "Warning: subtitle path '%s' does not exist!\n", filename);
-		
+		fprintf(stderr, "Error: subtitle path '%s' does not exist!\n", filename);
 		return(HACKTV_ERROR);
 	}
 	
@@ -308,14 +336,11 @@ int subs_init_file(char *video_path, vid_t *s)
 	
 	/* Close file */
 	fclose(fp);
-		
+
 	subs[0].pos = 0;
 	subs[0].number_of_subs = sindex;
 	subs[0].type = SUB_TEXT;
-	
-	/* Callback */
-	s->av_sub = subs;
-	
+	*s = subs;
 	return(HACKTV_OK);
 }
 
@@ -338,26 +363,23 @@ char *get_text_subtitle(av_subs_t *subs, uint32_t ts)
 	return fmt;
 }
 
-uint32_t *get_bitmap_subtitle(av_subs_t *subs, int32_t ts, int *w, int *h)
+int get_bitmap_subtitle(av_subs_t *subs, uint32_t current_timestamp, int *w, int *h)
 {
-	uint32_t *fmt;
 	int x;
 	
 	*w = 0;
 	
-	fmt = (uint32_t*) "";
 	for(x = subs[0].pos; x < subs[0].number_of_subs; x++)
 	{
-		if(ts >= subs[x].start_time && ts <= subs[x].end_time)
+		if(current_timestamp >= subs[x].start_time && current_timestamp <= subs[x].end_time)
 		{
-			fmt = subs[x].bitmap;
 			subs[0].pos = x;
 			*w = subs[x].bitmap_width;
 			*h = subs[x].bitmap_height;
 			break;
 		}
 	}
-	return fmt;
+	return x;
 }
 
 int get_subtitle_type(av_subs_t *subs)
