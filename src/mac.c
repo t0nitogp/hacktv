@@ -1843,7 +1843,7 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		
 		int golay;
 		
-		golay = l->frame & 1;
+		golay = (l->frame & 0xF) == 1 ? 1 : 0;
 		
 		/* Reset PRBS for packet scrambling */
 		_prbs1_reset(&s->mac, l->frame - 1);
@@ -1854,7 +1854,7 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		/* Push a service information packet at the start of each new
 		 * frame. Alternates between DG0 and DG3 each frame. DG0 is
 		 * added to both subframes for D-MAC */
-		switch(l->frame % 3)
+		switch(l->frame % 4)
 		{
 		case 0: /* Write DG0 to 1st and 2nd subframes */
 			
@@ -1870,12 +1870,14 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			_write_dg_packet(s, pkt, x, 3, golay);
 			break;
 			
-		case 2: /* Write DG4 and DG9 to 1st subframe */
+		case 2: /* Write DG4 to 1st subframe */
 			
 			x = _create_si_dg4_packet(&s->mac, pkt, golay);
 			
 			_write_dg_packet(s, pkt, x, 4, golay);
-
+			break;
+		
+		case 3: /* Write DG4 to 1st subframe */
 			x = _create_si_dg9_packet(&s->mac, pkt);
 			
 			_write_dg_packet(s, pkt, x, 9, golay);
