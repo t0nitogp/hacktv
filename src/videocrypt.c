@@ -84,7 +84,7 @@ static _vc_mode_t _vc1_modes[] = {
 
 static _vc_mode_t _vc2_modes[] = {
 	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0,      "           ", 0x00, 0x52, 0x00,     0x00, 0x00 },
-	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52, 0x00, _vc2_key, 0x81 },
+	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52, 0x81, _vc2_key, 0x00 },
 	{ NULL }
 };
 
@@ -305,14 +305,17 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 			}
 		}
 
-		/* Set channel name */
-		s->blocks[1].messages[0][0] = 0x20;
-		s->blocks[1].messages[0][1] = 0x00;
-		s->blocks[1].messages[0][2] = 0x60 + strlen(s->mode->channelname);
-
-		for(i = 0; i < strlen(s->mode->channelname); i++)
+		if(strcmp(mode, "free") != 0)
 		{
-			s->blocks[1].messages[0][i + 3] = s->mode->channelname[i];
+			/* Set channel name */
+			s->blocks[1].messages[0][0] = 0x20;
+			s->blocks[1].messages[0][1] = 0x00;
+			s->blocks[1].messages[0][2] = 0x60 + strlen(s->mode->channelname);
+
+			for(i = 0; i < strlen(s->mode->channelname); i++)
+			{
+				s->blocks[1].messages[0][i + 3] = s->mode->channelname[i];
+			}
 		} 
 	}
 	
@@ -362,18 +365,21 @@ int vc_init(vc_t *s, vid_t *vid, const char *mode, const char *mode2)
 	
 		/* Set channel name */
 		/* Both blocks require 'OSD' headers in VC2 */
-		for(i = 0; i < 2; i++)
+		if(strcmp(mode2, "free") != 0)
 		{
-			s->blocks2[i].messages[0][0] = 0x21;
-			s->blocks2[i].messages[0][1] = 0x02;
+			for(i = 0; i < 2; i++)
+			{
+				s->blocks2[i].messages[0][0] = 0x21;
+				s->blocks2[i].messages[0][1] = 0x02;
+			}
+
+			s->blocks2[0].messages[0][2] = 0x60 + strlen(s->mode->channelname);
+
+			for(i = 0; i < strlen(s->mode->channelname); i++)
+			{
+				s->blocks2[0].messages[0][i + 3] = s->mode->channelname[i];
+			}
 		}
-
-		s->blocks2[0].messages[0][2] = 0x60 + strlen(s->mode->channelname);
-
-		for(i = 0; i < strlen(s->mode->channelname); i++)
-		{
-			s->blocks2[0].messages[0][i + 3] = s->mode->channelname[i];
-		} 
 		
 		if(vid->conf.enableemm)
 		{
