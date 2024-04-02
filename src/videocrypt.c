@@ -84,7 +84,7 @@ static _vc_mode_t _vc1_modes[] = {
 
 static _vc_mode_t _vc2_modes[] = {
 	{ "free",        VC_CW_STATIC,  VC_FREE,  NULL, _fa2_blocks, 1, 0,      "           ", 0x00, 0x52, 0x00,     0x00, 0x00 },
-	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x80, 0x52, 0x81, _vc2_key, 0x00 },
+	{ "conditional", VC_CW_DYNAMIC, VC_MC,    NULL, _vc2_blocks, 2, VC_EMM, "MULTICHOICE", 0x82, 0x53, 0x81, _vc2_key, 0x00 },
 	{ NULL }
 };
 
