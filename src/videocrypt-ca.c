@@ -115,7 +115,7 @@ void _xor_serial(uint8_t *message, int cmd, uint32_t cardserial, int byte)
 	/* Videocrypt 2 uses message bytes 5 and 6 */
 	a = byte == 0x81 ? message[5] ^ message[6] : message[1] ^ message[2];
 	a = _swap_nibbles(a);
-	b = byte == 0x81 ? message[6] : message[2];;
+	b = byte == 0x81 ? message[6] : message[2];
 
 	for (i=0; i < 4;i++)
 	{
@@ -212,7 +212,7 @@ void vc_emm_p07(_vc_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 	for(i = 0; i < 7; i++) s->messages[2][i] = emmdata[i];
 	
 	/* Obfuscate card serial */
-	_xor_serial(s->messages[2], cmd, cardserial, 0xA7);
+	_xor_serial(s->messages[2], cmd, cardserial, m->emm_byte);
 	
 	/* Process Videocrypt message */
 	_vc_process_p07_msg(s->messages[2], m);
@@ -237,7 +237,7 @@ void vc2_emm(_vc2_block_t *s, _vc_mode_t *m, int cmd, uint32_t cardserial)
 	for(i = 0; i < 7; i++) s->messages[2][i] = emmdata[i];
 	
 	/* Obfuscate card serial */
-	_xor_serial(s->messages[2], cmd, cardserial, 0x81);
+	_xor_serial(s->messages[2], cmd, cardserial, m->emm_byte);
 	
 	/* Process Videocrypt message */
 	_vc_process_p07_msg(s->messages[2], m);

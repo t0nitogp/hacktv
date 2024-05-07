@@ -69,7 +69,7 @@ static _vc_mode_t _vc1_modes[] = {
 	{ "sky04",       VC_CW_DYNAMIC, VC_SKY04,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY04 MODE", 0x01, 0x14, 0xA4,   _sky_key, 0x20 },
 	{ "sky05",       VC_CW_DYNAMIC, VC_SKY05,      _vc1_blocks,       NULL, 2, 0,      "   HACKTV    SKY05 MODE", 0x0C, 0x1C, 0xA5,   _sky_key, 0x40 },
 	{ "sky06",       VC_CW_DYNAMIC, VC_SKY06,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY06 MODE", 0x05, 0x20, 0xA6,   _sky_key, 0x50 },
-	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY07 MODE", 0x0C, 0x40, 0xA7,   _sky_key, 0x68 },
+	{ "sky07",       VC_CW_DYNAMIC, VC_SKY07,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY07 MODE", 0x0C, 0x3A, 0xA7,   _sky_key, 0x58 },
 	{ "sky09",       VC_CW_DYNAMIC, VC_SKY09,      _vc1_blocks,       NULL, 2, VC_EMM, "   HACKTV    SKY09 MODE", 0x0C, 0x43, 0xA9, _sky09_key, 0x00 },
 	{ "sky09nano",   VC_CW_DYNAMIC, VC_SKY09_NANO, _vc1_blocks,       NULL, 2, VC_EMM, "   SKY 09    NANO  MODE", 0x0C, 0x43, 0xA9, _sky09_key, 0x00 },
 	{ "sky10",       VC_CW_STATIC,  VC_SKY10,      _sky10_blocks,     NULL, 2, 0,      "   HACKTV    SKY10 MODE", 0x00, 0x20, 0x00,       0x00, 0x00 },
