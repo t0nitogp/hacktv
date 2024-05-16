@@ -1695,7 +1695,7 @@ static int _line_625(vid_t *s, int frame, int line, uint8_t *data, int x)
 	dx = _bits(df, dx, 1, 1);                          /* Rp Repacement */
 	dx = _bits(df, dx, 1, 1);                          /* Fp Fingerprint */
 	dx = _bits(df, dx, 3, 2);                          /* Unallocated, both bits set to 1 */
-	dx = _bits(df, dx, 0, 1);                          /* SIFT Service identification channel format */
+	dx = _bits(df, dx, 1, 1);                          /* SIFT Service identification channel format */
 	_bch_encode(df, 71, 57);
 	
 	ix = _bits_buf(il, ix, df, 71);
