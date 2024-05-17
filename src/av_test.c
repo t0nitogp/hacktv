@@ -189,7 +189,7 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 	{
 		if(load_png(&t->test_pattern, t->width, t->height, test_screen, 1.0, img_ratio, IMG_TEST) == HACKTV_OK)
 		{	
-			overlay_image(t->video, t->test_pattern, t->width, t->height, IMG_POS_FULL);
+			overlay_image(t->video, t->test_pattern, t->width, t->width, t->height, IMG_POS_FULL);
 			
 			if(strcmp(test_screen, "pm5544") == 0)
 			{
@@ -303,7 +303,7 @@ int av_test_open(av_t *av, char *test_screen, void *ctx)
 	{
 		if(load_png(&t->logo, t->width, t->height, conf->logo, 0.75, img_ratio, IMG_LOGO) == HACKTV_OK)
 		{
-			overlay_image(t->video, t->logo, t->width, t->height, t->logo->position);
+			overlay_image(t->video, t->logo, t->width, t->width, t->height, t->logo->position);
 		}
 		else
 		{

@@ -777,7 +777,7 @@ static void *_video_scaler_thread(void *arg)
 		/* Print logo, if enabled */
 		if(s->av_logo)
 		{
-			overlay_image((uint32_t *) oframe->data[0], s->av_logo, oframe->width + 2, oframe->height, s->av_logo->position);
+			overlay_image((uint32_t *) oframe->data[0], s->av_logo, oframe->width, oframe->linesize[0] / sizeof(uint32_t), oframe->height, s->av_logo->position);
 		}
 	
 		/* Print subtitles to video frame, if enabled */
@@ -903,7 +903,7 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 	{
 		avframe = s->out_video_buffer.frame[0];
 		
-		overlay_image((uint32_t *) avframe->data[0], s->media_icons[1], avframe->width + 2, avframe->height, IMG_POS_MIDDLE);
+		overlay_image((uint32_t *) avframe->data[0], s->media_icons[1], avframe->width, avframe->linesize[0] / sizeof(uint32_t), avframe->height, IMG_POS_MIDDLE);
 		s->last_paused = time(0);
 	}
 	else
@@ -912,7 +912,7 @@ static int _ffmpeg_read_video(void *ctx, av_frame_t *frame)
 		/* Show 'play' icon for 5 seconds after resuming play */
 		if(time(0) - s->last_paused < 5)
 		{
-			overlay_image((uint32_t *) avframe->data[0], s->media_icons[0], avframe->width + 2, avframe->height, IMG_POS_MIDDLE);
+			overlay_image((uint32_t *) avframe->data[0], s->media_icons[0], avframe->width, avframe->linesize[0] / sizeof(uint32_t), avframe->height, IMG_POS_MIDDLE);
 		}
 	}
 
