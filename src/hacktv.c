@@ -748,7 +748,7 @@ int main(int argc, char *argv[])
 		
 		case _OPT_FIT: /* --fit <mode> */
 			
-			if(strcmp(optarg, "stretch") == 0) s.fit_mode = AV_FIT_STRETCH;
+/*			if(strcmp(optarg, "stretch") == 0) s.fit_mode = AV_FIT_STRETCH;
 			else if(strcmp(optarg, "fill") == 0) s.fit_mode = AV_FIT_FILL;
 			else if(strcmp(optarg, "fit") == 0) s.fit_mode = AV_FIT_FIT;
 			else if(strcmp(optarg, "none") == 0) s.fit_mode = AV_FIT_NONE;
@@ -757,7 +757,8 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Unrecognised fit mode '%s'.\n", optarg);
 				return(-1);
 			}
-			
+*/			
+			fprintf(stderr, "--fit parameter is disabled in this release");
 			break;
 		
 		case _OPT_MIN_ASPECT: /* --min-aspect <value> */
@@ -783,7 +784,7 @@ int main(int argc, char *argv[])
 		case _OPT_LETTERBOX: /* --letterbox */
 			
 			/* For compatiblity with CJ fork */
-			s.fit_mode = AV_FIT_FIT;
+			/* s.fit_mode = AV_FIT_FIT; */
 			s.letterbox = 1;
 			
 			break;
@@ -791,7 +792,7 @@ int main(int argc, char *argv[])
 		case _OPT_PILLARBOX: /* --pillarbox */
 			
 			/* For compatiblity with CJ fork */
-			s.fit_mode = AV_FIT_FILL;
+			/* s.fit_mode = AV_FIT_FILL; */
 			s.pillarbox = 1;
 			
 			break;
