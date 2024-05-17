@@ -1978,7 +1978,7 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 	
 	/* Shift the lines by one if the source
 	 * video has the bottom field first */
-	if(s->vframe.interlaced == 2) y += 1;
+	if(y >= 0 && s->vframe.interlaced == 2) y += 1;
 	
 	if(y < 0 || y >= s->conf.active_lines) y = -1;
 	
@@ -1989,15 +1989,31 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 		uint32_t *px = &rgb;
 		int stride = 0;
 		
-		if(s->vframe.framebuffer != NULL)
+		/* Centre the video vertically */
+		y -= s->vframe_y;
+		
+		/* Check for out of bounds */
+		if(y < 0 || y >= s->vframe.height) y = -1;
+		
+		if(y >= 0 && s->vframe.framebuffer != NULL)
 		{
 			px = &s->vframe.framebuffer[y * s->vframe.line_stride];
 			stride = s->vframe.pixel_stride;
 		}
 		
-		for(x = s->active_left; x < s->active_left + s->active_width; x++, px += stride)
+		for(x = s->active_left; x < s->active_left + s->vframe_x; x++)
+		{
+			l->output[x * 2] = s->yiq_level_lookup[0x000000].y;
+		}
+		
+		for(; x < s->active_left + s->vframe_x + s->vframe.width; x++, px += stride)
 		{
 			l->output[x * 2] = s->yiq_level_lookup[*px & 0xFFFFFF].y;
+		}
+		
+		for(; x < s->active_left + s->active_width; x++)
+		{
+			l->output[x * 2] = s->yiq_level_lookup[0x000000].y;
 		}
 	}
 	
@@ -2016,7 +2032,7 @@ int mac_next_line(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 			stride = s->vframe.pixel_stride * 2;
 		}
 		
-		for(x = s->mac.chrominance_left; x < s->mac.chrominance_left + s->mac.chrominance_width; x++, px += stride)
+		for(x = s->mac.chrominance_left + s->vframe_x / 2; x < s->mac.chrominance_left + (s->vframe_x + s->vframe.width) / 2; x++, px += stride)
 		{
 			l->output[x * 2] += (l->line & 1 ? s->yiq_level_lookup[*px & 0xFFFFFF].i : s->yiq_level_lookup[*px & 0xFFFFFF].q);
 		}

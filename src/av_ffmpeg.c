@@ -111,6 +111,7 @@ typedef struct {
 	uint32_t *video;
 	uint8_t paused;
 	time_t last_paused;
+	av_t *av;
 	
 	AVFormatContext *format_ctx;
 	
@@ -651,6 +652,7 @@ static void *_video_scaler_thread(void *arg)
 	av_ffmpeg_t *s = (av_ffmpeg_t *) arg;
 	AVFrame *frame, *oframe;
 	AVRational ratio;
+	rational_t r;
 	int64_t pts;
 	
 	/* Fetch video frames and pass them through the scaler */
@@ -681,6 +683,58 @@ static void *_video_scaler_thread(void *arg)
 		
 		oframe = _frame_dbuffer_back_buffer(&s->out_video_buffer);
 		
+		ratio = av_guess_sample_aspect_ratio(s->format_ctx, s->video_stream, frame);
+		
+		if(ratio.num == 0 || ratio.den == 0)
+		{
+			/* Default to square pixels if the ratio looks odd */
+			ratio = (AVRational) { 1, 1 };
+		}
+		
+		r = av_calculate_frame_size(
+			s->av,
+			(rational_t) { frame->width, frame->height },
+			rational_mul(
+				(rational_t) { ratio.num, ratio.den },
+				(rational_t) { frame->width, frame->height }
+			)
+		);
+		
+		if(r.num != oframe->width ||
+		   r.den != oframe->height)
+		{
+			av_freep(&oframe->data[0]);
+			
+			oframe->format = AV_PIX_FMT_RGB32;
+			oframe->width = r.num;
+			oframe->height = r.den;
+			
+			int i = av_image_alloc(
+				oframe->data,
+				oframe->linesize,
+				oframe->width, oframe->height,
+				AV_PIX_FMT_RGB32, av_cpu_max_align()
+			);
+			memset(oframe->data[0], 0, i);
+		}
+		
+		/* Initialise / re-initialise software scaler */
+		s->sws_ctx = sws_getCachedContext(
+			s->sws_ctx,
+			frame->width,
+			frame->height,
+			frame->format,
+			oframe->width,
+			oframe->height,
+			AV_PIX_FMT_RGB32,
+			SWS_BICUBIC,
+			NULL,
+			NULL,
+			NULL
+		);
+		
+		if(!s->sws_ctx) break;
+		
 		sws_scale(
 			s->sws_ctx,
 			(uint8_t const * const *) frame->data,
@@ -690,14 +744,6 @@ static void *_video_scaler_thread(void *arg)
 			oframe->data,
 			oframe->linesize
 		);
-		
-		ratio = frame->sample_aspect_ratio;
-		
-		if(ratio.num == 0 || ratio.den == 0)
-		{
-			/* Default to square pixels if the ratio looks odd */
-			ratio = (AVRational) { 1, 1 };
-		}
 		
 		/* Adjust the pixel ratio for the scaled image */
 		av_reduce(
@@ -766,8 +812,13 @@ static void *_video_scaler_thread(void *arg)
 		}
 
 		/* Copy some data to the scaled image */
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 29, 100)
+		oframe->interlaced_frame = frame->flags & AV_FRAME_FLAG_INTERLACED ? 1 : 0;
+		oframe->top_field_first = frame->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST ? 1 : 0;
+#else
 		oframe->interlaced_frame = frame->interlaced_frame;
 		oframe->top_field_first = frame->top_field_first;
+#endif
 		
 		/* Done with the frame */
 		av_frame_unref(frame);
@@ -1189,6 +1240,8 @@ int av_ffmpeg_open(vid_t *vid, void *ctx, char *input_url, char *format, char *o
 	}
 
 	s->paused = 0;
+	
+	s->av = av;
 	
 	/* Use 'pipe:' for stdin */
 	if(strcmp(input_url, "-") == 0)
