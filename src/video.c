@@ -23,7 +23,6 @@
 #include "dance.h"
 #include "hacktv.h"
 #include <sys/time.h>
-#include "av.h"
 
 /* 
  * Video generation
@@ -50,7 +49,7 @@
 const vid_config_t vid_config_pal_i = {
 	
 	/* System I (PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -64,7 +63,6 @@ const vid_config_t vid_config_pal_i = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -106,7 +104,7 @@ const vid_config_t vid_config_pal_i = {
 const vid_config_t vid_config_pal_bg = {
 	
 	/* System B/G (PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5000000, /* Hz */
@@ -120,7 +118,6 @@ const vid_config_t vid_config_pal_bg = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -162,7 +159,7 @@ const vid_config_t vid_config_pal_bg = {
 const vid_config_t vid_config_pal_dk = {
 	
 	/* System D/K (PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -176,7 +173,6 @@ const vid_config_t vid_config_pal_dk = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -219,23 +215,22 @@ const vid_config_t vid_config_pal_dk = {
 const vid_config_t vid_config_pal_fm = {
 	
 	/* PAL FM (satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
 	.fm_deviation   = 16e6, /* 16 MHz/V */
-	//.fm_energy_dispersal = 0.0625, /* 1 MHz deviation (2 MHz p-p) */
+	.fm_energy_dispersal = 0.0625, /* 1 MHz deviation (2 MHz p-p) */
 	
 	.level          = 0.8, /* Overall signal level */
 	
 	.video_level    = 1.00, /* Power level of video */
-	// .fm_mono_level  = 0.06, /* FM audio carrier power level */
-	.fm_left_level  = 0.04, /* FM stereo left audio carrier power level */
-	.fm_right_level = 0.04, /* FM stereo right audio carrier power level */
+	.fm_mono_level  = 0.06, /* FM audio carrier power level */
+	// .fm_left_level  = 0.04, /* FM stereo left audio carrier power level */
+	// .fm_right_level = 0.04, /* FM stereo right audio carrier power level */
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -266,23 +261,23 @@ const vid_config_t vid_config_pal_fm = {
 	.ev_co          = 0.877,
 	.eu_co          = 0.493,
 	
-	// .fm_mono_carrier   = 6500000, /* Hz */
-	// .fm_mono_deviation = 85000, /* +/- Hz */
-	// .fm_mono_preemph   = VID_50US, /* Seconds */
+	.fm_mono_carrier   = 6500000, /* Hz */
+	.fm_mono_deviation = 60000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US, /* Seconds */
 	
-	.fm_left_carrier   = 7020000, /* Hz */
-	.fm_left_deviation = 50000, /* +/- Hz */
-	.fm_left_preemph   = VID_50US, /* Seconds */
+	// .fm_left_carrier   = 7020000, /* Hz */
+	// .fm_left_deviation = 50000, /* +/- Hz */
+	// .fm_left_preemph   = VID_50US, /* Seconds */
 	
-	.fm_right_carrier   = 7200000, /* Hz */
-	.fm_right_deviation = 50000, /* +/- Hz */
-	.fm_right_preemph   = VID_50US, /* Seconds */
+	// .fm_right_carrier   = 7200000, /* Hz */
+	// .fm_right_deviation = 50000, /* +/- Hz */
+	// .fm_right_preemph   = VID_50US, /* Seconds */
 };
 
 const vid_config_t vid_config_pal = {
 	
 	/* Composite PAL */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -291,7 +286,6 @@ const vid_config_t vid_config_pal = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -326,7 +320,7 @@ const vid_config_t vid_config_pal = {
 const vid_config_t vid_config_pal_m = {
 	
 	/* System M (525 PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -334,12 +328,11 @@ const vid_config_t vid_config_pal_m = {
 	
 	.level          = 1.0, /* Overall signal level */
 	
-	.video_level    = 0.77, /* Power level of video */
-	.fm_mono_level  = 0.15, /* FM audio carrier power level */
+	.video_level    = 0.83, /* Power level of video */
+	.fm_mono_level  = 0.17, /* FM audio carrier power level */
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001, },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -378,7 +371,7 @@ const vid_config_t vid_config_pal_m = {
 const vid_config_t vid_config_pal_n = {
 	
 	/* System N (625 PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -386,12 +379,11 @@ const vid_config_t vid_config_pal_n = {
 	
 	.level          = 1.0, /* Overall signal level */
 	
-	.video_level    = 0.77, /* Power level of video */
-	.fm_mono_level  = 0.15, /* FM audio carrier power level */
+	.video_level    = 0.83, /* Power level of video */
+	.fm_mono_level  = 0.16, /* FM audio carrier power level */
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -429,7 +421,7 @@ const vid_config_t vid_config_pal_n = {
 const vid_config_t vid_config_525pal = {
 	
 	/* Composite 525PAL */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -438,7 +430,6 @@ const vid_config_t vid_config_525pal = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -473,7 +464,7 @@ const vid_config_t vid_config_525pal = {
 const vid_config_t vid_config_secam_l = {
 	
 	/* System L (SECAM) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 6000000, /* Hz */
@@ -487,7 +478,6 @@ const vid_config_t vid_config_secam_l = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -525,7 +515,7 @@ const vid_config_t vid_config_secam_l = {
 const vid_config_t vid_config_secam_dk = {
 	
 	/* System D/K (SECAM) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -539,7 +529,6 @@ const vid_config_t vid_config_secam_dk = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -579,7 +568,7 @@ const vid_config_t vid_config_secam_dk = {
 const vid_config_t vid_config_secam_i = {
 	
 	/* System I (SECAM) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -593,7 +582,6 @@ const vid_config_t vid_config_secam_i = {
 
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -633,7 +621,7 @@ const vid_config_t vid_config_secam_i = {
 const vid_config_t vid_config_secam_bg = {
 	
 	/* System B/G (SECAM) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5000000, /* Hz */
@@ -643,10 +631,10 @@ const vid_config_t vid_config_secam_bg = {
 	
 	.video_level    = 0.80 * (100.0 / 124.0), /* Power level of video */
 	.fm_mono_level  = 0.15, /* FM audio carrier power level */
+    .nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -678,12 +666,15 @@ const vid_config_t vid_config_secam_bg = {
 	.fm_mono_carrier   = 5500000, /* Hz */
 	.fm_mono_deviation = 50000, /* +/- Hz */
 	.fm_mono_preemph   = VID_50US, /* Seconds */
+
+    .nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 0.4,
 };
 
 const vid_config_t vid_config_secam_fm = {
 	
 	/* SECAM FM (satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -698,7 +689,6 @@ const vid_config_t vid_config_secam_fm = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -743,7 +733,7 @@ const vid_config_t vid_config_secam_fm = {
 const vid_config_t vid_config_secam = {
 	
 	/* Composite SECAM */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -752,7 +742,6 @@ const vid_config_t vid_config_secam = {
 	
 	.type           = VID_RASTER_625,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 625,
 	.hline          = 313,
 	
@@ -785,7 +774,7 @@ const vid_config_t vid_config_secam = {
 const vid_config_t vid_config_ntsc_m = {
 	
 	/* System M (NTSC) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -793,12 +782,11 @@ const vid_config_t vid_config_ntsc_m = {
 	
 	.level          = 1.0, /* Overall signal level */
 	
-	.video_level    = 0.77, /* Power level of video */
-	.fm_mono_level  = 0.15, /* FM audio carrier power level */
+	.video_level    = 0.83, /* Power level of video */
+	.fm_mono_level  = 0.17, /* FM audio carrier power level */
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -837,7 +825,7 @@ const vid_config_t vid_config_ntsc_m = {
 const vid_config_t vid_config_ntsc_i = {
 	
 	/* System I (NTSC) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -851,7 +839,6 @@ const vid_config_t vid_config_ntsc_i = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -890,10 +877,285 @@ const vid_config_t vid_config_ntsc_i = {
 	.nicam_beta     = 1.0,
 };
 
+const vid_config_t vid_config_ntsc_bg = {
+	
+	/* System BG (NTSC) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = { 39375000, 11 }, /* 3579545.4545... Hz */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.ev_co          =  0.877,
+	.eu_co          =  0.493,
+	
+	.fm_mono_carrier   = 5500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
+const vid_config_t vid_config_ntsc_dk = {
+	
+	/* System DK (NTSC) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = { 39375000, 11 }, /* 3579545.4545... Hz */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.ev_co          =  0.877,
+	.eu_co          =  0.493,
+	
+	.fm_mono_carrier   = 6500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
+const vid_config_t vid_config_ntsc443_bg = {
+	
+	/* System BG (NTSC_443) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = { 17734475, 4 }, /* 4433618.75 Hz */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.ev_co          =  0.877,
+	.eu_co          =  0.493,
+	
+	.fm_mono_carrier   = 5500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
+const vid_config_t vid_config_ntsc443_i = {
+	
+	/* System I (NTSC_443) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = { 17734475, 4 }, /* 4433618.75 Hz */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.ev_co          =  0.877,
+	.eu_co          =  0.493,
+	
+	.fm_mono_carrier   = 6000000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 6552000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
+const vid_config_t vid_config_ntsc443_dk = {
+	
+	/* System DK (NTSC_443) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 µs */
+	
+	.white_level    = 0.200000,
+	.black_level    = 0.728571,
+	.blanking_level = 0.771428,
+	.sync_level     = 1.000000,
+	
+	.colour_mode    = VID_NTSC,
+	.burst_width    = 0.00000250, /* 2.5 ±0.28µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000530, /* |-->| 5.3 ±0.1µs */
+	.burst_level    = 4.0 / 10.0, /* 4/10 of white - blanking level */
+	.colour_carrier = { 17734475, 4 }, /* 4433618.75 Hz */
+	
+	.rw_co          =  0.299, /* R weight */
+	.gw_co          =  0.587, /* G weight */
+	.bw_co          =  0.114, /* B weight */
+	.ev_co          =  0.877,
+	.eu_co          =  0.493,
+	
+	.fm_mono_carrier   = 6500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
 const vid_config_t vid_config_ntsc_fm = {
 	
 	/* NTSC FM (satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -908,7 +1170,6 @@ const vid_config_t vid_config_ntsc_fm = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -955,7 +1216,7 @@ const vid_config_t vid_config_ntsc_fm = {
 const vid_config_t vid_config_ntsc_bs_fm = {
 	
 	/* Digital Subcarrier/NTSC FM (satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -968,7 +1229,6 @@ const vid_config_t vid_config_ntsc_bs_fm = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1006,7 +1266,7 @@ const vid_config_t vid_config_ntsc_bs_fm = {
 const vid_config_t vid_config_ntsc = {
 	
 	/* Composite NTSC */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1015,7 +1275,6 @@ const vid_config_t vid_config_ntsc = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1050,7 +1309,7 @@ const vid_config_t vid_config_ntsc = {
 const vid_config_t vid_config_pal60_i = {
 	
 	/* System I (525-line PAL) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -1064,7 +1323,6 @@ const vid_config_t vid_config_pal60_i = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1103,10 +1361,120 @@ const vid_config_t vid_config_pal60_i = {
 	.nicam_beta     = 1.0,
 };
 
+const vid_config_t vid_config_pal60_bg = {
+	
+	/* System BG (525-line PAL) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 +0.05µs */
+	
+	.white_level    = 0.20,
+	.black_level    = 0.76,
+	.blanking_level = 0.76,
+	.sync_level     = 1.00,
+	
+	.colour_mode    = VID_PAL,
+	.burst_width    = 0.00000225, /* 2.25 ±0.23µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000560, /* |-->| 5.6 ±0.1µs */
+	.burst_level    = 3.0 / 7.0, /* 3 / 7 of white - blanking level */
+	.colour_carrier = { 17734475, 4 }, /* 4433618.75 Hz */
+	
+	.rw_co          = 0.299, /* R weight */
+	.gw_co          = 0.587, /* G weight */
+	.bw_co          = 0.114, /* B weight */
+	.ev_co          = 0.877,
+	.eu_co          = 0.493,
+	
+	.fm_mono_carrier   = 5500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
+const vid_config_t vid_config_pal60_dk = {
+	
+	/* System DK (525-line PAL) */
+	.output_type    = HACKTV_INT16_COMPLEX,
+	
+	.modulation     = VID_VSB,
+	.vsb_upper_bw   = 5500000, /* Hz */
+	.vsb_lower_bw   = 1250000, /* Hz */
+	
+	.level          = 1.0, /* Overall signal level */
+	
+	.video_level    = 0.71, /* Power level of video */
+	.fm_mono_level  = 0.22, /* FM audio carrier power level */
+	.nicam_level    = 0.07 / 2, /* NICAM audio carrier power level */
+	
+	.type           = VID_RASTER_525,
+	.frame_rate     = { 30000, 1001 },
+	.lines          = 525,
+	.hline          = 263,
+	
+	.active_lines   = 480,
+	.active_width   = 0.00005290, /* 52.90µs */
+	.active_left    = 0.00000920, /* |-->| 9.20µs */
+	
+	.hsync_width       = 0.00000470, /*  4.70 ±1.00µs */
+	.vsync_short_width = 0.00000230, /*  2.30 ±0.10µs */
+	.vsync_long_width  = 0.00002710, /* 27.10 µs */
+	.sync_rise         = 0.00000025, /*  0.25 +0.05µs */
+	
+	.white_level    = 0.20,
+	.black_level    = 0.76,
+	.blanking_level = 0.76,
+	.sync_level     = 1.00,
+	
+	.colour_mode    = VID_PAL,
+	.burst_width    = 0.00000225, /* 2.25 ±0.23µs */
+	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
+	.burst_left     = 0.00000560, /* |-->| 5.6 ±0.1µs */
+	.burst_level    = 3.0 / 7.0, /* 3 / 7 of white - blanking level */
+	.colour_carrier = { 17734475, 4 }, /* 4433618.75 Hz */
+	
+	.rw_co          = 0.299, /* R weight */
+	.gw_co          = 0.587, /* G weight */
+	.bw_co          = 0.114, /* B weight */
+	.ev_co          = 0.877,
+	.eu_co          = 0.493,
+	
+	.fm_mono_carrier   = 6500000 - 400, /* Hz */
+	.fm_mono_deviation = 50000, /* +/- Hz */
+	.fm_mono_preemph   = VID_50US,
+	
+	.nicam_carrier  = 5850000, /* Hz */
+	.nicam_beta     = 1.0,
+};
+
 const vid_config_t vid_config_pal60 = {
 	
 	/* Composite 525-line PAL */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1115,7 +1483,6 @@ const vid_config_t vid_config_pal60 = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1149,7 +1516,7 @@ const vid_config_t vid_config_pal60 = {
 const vid_config_t vid_config_d2mac_am = {
 	
 	/* D2-MAC AM */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 8400000, /* Hz */
@@ -1158,12 +1525,11 @@ const vid_config_t vid_config_d2mac_am = {
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.00, /* Overall signal level */
@@ -1186,7 +1552,7 @@ const vid_config_t vid_config_d2mac_am = {
 const vid_config_t vid_config_d2mac_fm = {
 	
 	/* D2-MAC FM (Satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -1195,12 +1561,11 @@ const vid_config_t vid_config_d2mac_fm = {
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.0, /* Overall signal level */
@@ -1223,26 +1588,25 @@ const vid_config_t vid_config_d2mac_fm = {
 const vid_config_t vid_config_d2mac = {
 	
 	/* D2-MAC */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.video_bw       = 6.0e6,
 	
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.0, /* Overall signal level */
-	.video_level    = 1.75, /* Power level of video - compensate for lower FL2000 output level*/
+	.video_level    = 1.0, /* Power level of video */
 	
-	.white_level    =  0.50,
-	.black_level    = -0.50,
+	.white_level    =  1.00,
+	.black_level    = -1.00,
 	.blanking_level =  0.00,
 	.sync_level     =  0.00,
 	
@@ -1258,19 +1622,18 @@ const vid_config_t vid_config_d2mac = {
 const vid_config_t vid_config_dmac_am = {
 	
 	/* D-MAC AM */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.00, /* Overall signal level */
@@ -1293,7 +1656,7 @@ const vid_config_t vid_config_dmac_am = {
 const vid_config_t vid_config_dmac_fm = {
 	
 	/* D2-MAC FM (Satellite) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_FM,
 	.fm_level       = 1.0,
@@ -1302,12 +1665,11 @@ const vid_config_t vid_config_dmac_fm = {
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.0, /* Overall signal level */
@@ -1330,19 +1692,18 @@ const vid_config_t vid_config_dmac_fm = {
 const vid_config_t vid_config_dmac = {
 	
 	/* D-MAC */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.video_bw       = 8.4e6,
 	
 	.type           = VID_MAC,
 	.chid           = 0xE8B5,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 }, { 16, 9 } },
 	.lines          = 625,
 	.hline          = 313,
 	
 	.active_lines   = 576,
-	.active_left    = 585.0 / MAC_CLOCK_RATE,
+	.active_left    = 586.0 / MAC_CLOCK_RATE,
 	.active_width   = 702.0 / MAC_CLOCK_RATE,
 	
 	.level          = 1.0, /* Overall signal level */
@@ -1365,7 +1726,7 @@ const vid_config_t vid_config_dmac = {
 const vid_config_t vid_config_819_e = {
 	
 	/* System E (819 line monochrome, French variant) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   =  2000000, /* Hz */
@@ -1377,7 +1738,6 @@ const vid_config_t vid_config_819_e = {
 	
 	.type           = VID_RASTER_819,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 819,
 	.hline          = 409,
 	
@@ -1405,7 +1765,7 @@ const vid_config_t vid_config_819_e = {
 const vid_config_t vid_config_819 = {
 	
 	/* 819 line video, French variant */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.video_bw       = 10.4e6,
 	
@@ -1414,7 +1774,6 @@ const vid_config_t vid_config_819 = {
 	
 	.type           = VID_RASTER_819,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 819,
 	.hline          = 409,
 	
@@ -1438,7 +1797,7 @@ const vid_config_t vid_config_819 = {
 const vid_config_t vid_config_405_a = {
 	
 	/* System A (405 line monochrome) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   =  750000, /* Hz */
@@ -1450,7 +1809,6 @@ const vid_config_t vid_config_405_a = {
 	
 	.type           = VID_RASTER_405,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 405,
 	.hline          = 203,
 	
@@ -1476,61 +1834,10 @@ const vid_config_t vid_config_405_a = {
 	.am_mono_bandwidth = 10000, /* Hz */
 };
 
-const vid_config_t vid_config_405_a_ntsc = {
-	
-	/* System A (405 line NTSC, based on specs from
-	 * BBC Engineering Division Monograph No. 32, Appendix A) */
-	.output_type    = RF_INT16_COMPLEX,
-	
-	.modulation     = VID_VSB,
-	.vsb_upper_bw   =  750000, /* Hz */
-	.vsb_lower_bw   = 3000000, /* Hz */
-	
-	.level          = 1.0, /* Overall signal level */
-	.video_level    = 0.80 / 1.22, /* Power level of video (reduced for NTSC 122% overshoot) */
-	.am_audio_level = 0.20, /* Power level of audio */
-	
-	.type           = VID_RASTER_405,
-	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
-	.lines          = 405,
-	.hline          = 203,
-	
-	.active_lines   = 376,
-	.active_width   = 0.00008030, /* 80.3µs */
-	.active_left    = 0.00001680, /* |-->| 16.8µs */
-	
-	.hsync_width       = 0.00000900, /*  9.00 ±1.00 µs */
-	.vsync_long_width  = 0.00004000, /* 40.00 ±2.00 µs */
-	.sync_rise         = 0.00000025, /*  0.25 µs */
-	
-	.white_level    =  1.00,
-	.black_level    =  0.35,
-	.blanking_level =  0.30,
-	.sync_level     =  0.00,
-	
-	.colour_mode    = VID_NTSC,
-	.burst_width    = 0.00000339, /* 3.39 ±0.38µs */
-	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
-	.burst_left     = 0.00001050, /* |-->| 10.5 ±0.1µs */
-	.burst_level    = 3.0 / 7.0, /* 30% full carrier */
-	.colour_carrier = { 5315625, 2 }, /* 2657812.5 Hz */
-	
-	.rw_co          =  0.299, /* R weight */
-	.gw_co          =  0.587, /* G weight */
-	.bw_co          =  0.114, /* B weight */
-	.ev_co          =  0.877,
-	.eu_co          =  0.493,
-	
-	/* AM modulated */
-	.am_mono_carrier = -3500000, /* Hz */
-	.am_mono_bandwidth = 10000, /* Hz */
-};
-
 const vid_config_t vid_config_405_i = {
 	
 	/* System A (405 line monochrome) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 5500000, /* Hz */
@@ -1543,7 +1850,6 @@ const vid_config_t vid_config_405_i = {
 	
 	.type           = VID_RASTER_405,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 405,
 	.hline          = 203,
 	
@@ -1572,7 +1878,7 @@ const vid_config_t vid_config_405_i = {
 const vid_config_t vid_config_405 = {
 	
 	/* 405 line video */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
@@ -1581,7 +1887,6 @@ const vid_config_t vid_config_405 = {
 	
 	.type           = VID_RASTER_405,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 405,
 	.hline          = 203,
 	
@@ -1603,54 +1908,10 @@ const vid_config_t vid_config_405 = {
 	.bw_co          = 0.114, /* B weight */
 };
 
-const vid_config_t vid_config_405_ntsc = {
-	
-	/* 405 line video (NTSC, based on specs from
-	 * BBC Engineering Division Monograph No. 32, Appendix A) */
-	.output_type    = RF_INT16_REAL,
-	
-	.level          = 1.0, /* Overall signal level */
-	.video_level    = 1.0, /* Power level of video */
-	
-	.video_bw       = 3.0e6,
-	
-	.type           = VID_RASTER_405,
-	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
-	.lines          = 405,
-	.hline          = 203,
-	
-	.active_lines   = 376,
-	.active_width   = 0.00008030, /* 80.3µs */
-	.active_left    = 0.00001680, /* |-->| 16.8µs */
-	
-	.hsync_width       = 0.00000900, /*  9.00 ±1.00µs */
-	.vsync_long_width  = 0.00004000, /* 40.00 ±2.00µs */
-	.sync_rise         = 0.00000025, /*  0.25 µs */
-	
-	.white_level    =  0.70,
-	.black_level    =  0.05,
-	.blanking_level =  0.00,
-	.sync_level     = -0.30,
-	
-	.colour_mode    = VID_NTSC,
-	.burst_width    = 0.00000339, /* 3.39 ±0.38µs */
-	.burst_rise     = 0.00000030, /* 0.30 ±0.10µs */
-	.burst_left     = 0.00001050, /* |-->| 10.5 ±0.1µs */
-	.burst_level    = 3.0 / 7.0, /* 30% full carrier */
-	.colour_carrier = { 5315625, 2 }, /* 2657812.5 Hz */
-	
-	.rw_co          =  0.299, /* R weight */
-	.gw_co          =  0.587, /* G weight */
-	.bw_co          =  0.114, /* B weight */
-	.ev_co          =  0.877,
-	.eu_co          =  0.493,
-};
-
 const vid_config_t vid_config_baird_240_am = {
 	
 	/* Baird 240 line, AM modulation */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1659,7 +1920,6 @@ const vid_config_t vid_config_baird_240_am = {
 	
 	.type           = VID_BAIRD_240,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 240,
 	
 	.active_lines   = 220,
@@ -1682,14 +1942,13 @@ const vid_config_t vid_config_baird_240_am = {
 const vid_config_t vid_config_baird_240 = {
 	
 	/* Baird 240 line */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_BAIRD_240,
 	.frame_rate     = { 25, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 240,
 	
 	.active_lines   = 220,
@@ -1712,7 +1971,7 @@ const vid_config_t vid_config_baird_240 = {
 const vid_config_t vid_config_baird_30_am = {
 	
 	/* Baird 30 line, AM modulation */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1721,8 +1980,6 @@ const vid_config_t vid_config_baird_30_am = {
 	
 	.type           = VID_BAIRD_30,
 	.frame_rate     = { 25, 2 }, /* 12.5 Hz */
-	.frame_aspects  = { { 3, 7 } },
-	.frame_orientation = VID_ROTATE_270 | VID_HFLIP,
 	.lines          = 30,
 	
 	.active_lines   = 30,
@@ -1742,15 +1999,13 @@ const vid_config_t vid_config_baird_30_am = {
 const vid_config_t vid_config_baird_30 = {
 	
 	/* Baird 30 line */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_BAIRD_30,
 	.frame_rate     = { 25, 2 }, /* 12.5 Hz */
-	.frame_aspects  = { { 3, 7 } },
-	.frame_orientation = VID_ROTATE_270 | VID_HFLIP,
 	.lines          = 30,
 	
 	.active_lines   = 30,
@@ -1770,7 +2025,7 @@ const vid_config_t vid_config_baird_30 = {
 const vid_config_t vid_config_nbtv_32_am = {
 	
 	/* NBTV Club standard, AM modulation (negative) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_AM,
 	
@@ -1779,8 +2034,6 @@ const vid_config_t vid_config_nbtv_32_am = {
 	
 	.type           = VID_NBTV_32,
 	.frame_rate     = { 25, 2 }, /* 12.5 Hz */
-	.frame_aspects  = { { 2, 3 } },
-	.frame_orientation = VID_ROTATE_270 | VID_HFLIP,
 	.lines          = 32,
 	
 	.active_lines   = 32,
@@ -1802,15 +2055,13 @@ const vid_config_t vid_config_nbtv_32_am = {
 const vid_config_t vid_config_nbtv_32 = {
 	
 	/* NBTV Club standard */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_NBTV_32,
 	.frame_rate     = { 25, 2 }, /* 12.5 Hz */
-	.frame_aspects  = { { 2, 3 } },
-	.frame_orientation = VID_ROTATE_270 | VID_HFLIP,
 	.lines          = 32,
 	
 	.active_lines   = 32,
@@ -1832,7 +2083,7 @@ const vid_config_t vid_config_nbtv_32 = {
 const vid_config_t vid_config_apollo_colour_fm = {
 	
 	/* Unified S-Band, Apollo Colour Lunar Television */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.level          = 1.000, /* Overall signal level */
 	.video_level    = 1.000, /* Power level of video */
@@ -1844,7 +2095,6 @@ const vid_config_t vid_config_apollo_colour_fm = {
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1884,14 +2134,13 @@ const vid_config_t vid_config_apollo_colour_fm = {
 const vid_config_t vid_config_apollo_colour = {
 	
 	/* Apollo Colour Lunar Television */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_RASTER_525,
 	.frame_rate     = { 30000, 1001 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 525,
 	.hline          = 263,
 	
@@ -1922,7 +2171,7 @@ const vid_config_t vid_config_apollo_colour = {
 const vid_config_t vid_config_apollo_mono_fm = {
 	
 	/* Unified S-Band, Apollo Lunar Television 10 fps video (Mode 1) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.level          = 1.000, /* Overall signal level */
 	.video_level    = 1.000, /* Power level of video */
@@ -1934,7 +2183,6 @@ const vid_config_t vid_config_apollo_mono_fm = {
 	
 	.type           = VID_APOLLO_320,
 	.frame_rate     = { 10, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 320,
 	.active_lines   = 312,
 	.active_width   = 0.00028250, /* 282.5µs */
@@ -1971,14 +2219,13 @@ const vid_config_t vid_config_apollo_mono_fm = {
 const vid_config_t vid_config_apollo_mono = {
 	
 	/* Apollo Lunar Television 10 fps video (Mode 1) */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_APOLLO_320,
 	.frame_rate     = { 10, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 320,
 	.active_lines   = 312,
 	.active_width   = 0.00028250, /* 282.5µs */
@@ -2011,7 +2258,7 @@ const vid_config_t vid_config_apollo_mono = {
 const vid_config_t vid_config_cbs405_m = {
 	
 	/* System M (CBS 405-line Colour) */
-	.output_type    = RF_INT16_COMPLEX,
+	.output_type    = HACKTV_INT16_COMPLEX,
 	
 	.modulation     = VID_VSB,
 	.vsb_upper_bw   = 4200000, /* Hz */
@@ -2019,12 +2266,11 @@ const vid_config_t vid_config_cbs405_m = {
 	
 	.level          = 1.0, /* Overall signal level */
 	
-	.video_level    = 0.77, /* Power level of video */
-	.fm_mono_level  = 0.15, /* FM audio carrier power level */
+	.video_level    = 0.83, /* Power level of video */
+	.fm_mono_level  = 0.17, /* FM audio carrier power level */
 	
 	.type           = VID_CBS_405,
 	.frame_rate     = { 72, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 405,
 	.hline          = 203,
 	
@@ -2059,14 +2305,13 @@ const vid_config_t vid_config_cbs405_m = {
 const vid_config_t vid_config_cbs405 = {
 	
 	/* CBS 405-line Colour */
-	.output_type    = RF_INT16_REAL,
+	.output_type    = HACKTV_INT16_REAL,
 	
 	.level          = 1.0, /* Overall signal level */
 	.video_level    = 1.0, /* Power level of video */
 	
 	.type           = VID_CBS_405,
 	.frame_rate     = { 72, 1 },
-	.frame_aspects  = { { 4, 3 } },
 	.lines          = 405,
 	.hline          = 203,
 	
@@ -2095,57 +2340,62 @@ const vid_config_t vid_config_cbs405 = {
 };
 
 const vid_configs_t vid_configs[] = {
-	{ "i",             &vid_config_pal_i,            "PAL colour, 25 fps, 625 lines, AM (complex), 6.0 MHz FM audio" },
-	{ "b",             &vid_config_pal_bg,           "PAL colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio" },
-	{ "g",             &vid_config_pal_bg,           "PAL colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio" },
-	{ "pal-d",         &vid_config_pal_dk,           "PAL colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM audio" },
-	{ "pal-k",         &vid_config_pal_dk,           "PAL colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM audio" },
-	{ "pal-fm",        &vid_config_pal_fm,           "PAL colour, 25 fps, 625 lines, FM (complex), 6.5 MHz FM audio" },
-	{ "pal",           &vid_config_pal,              "PAL colour, 25 fps, 625 lines, unmodulated (real)" },
-	{ "pal-m",         &vid_config_pal_m,            "PAL colour, 30/1.001 fps, 525 lines, AM (complex), 4.5 MHz FM audio" },
-	{ "pal-n",         &vid_config_pal_n,            "PAL colour, 25 fps, 625 lines, AM (complex), 4.5 MHz FM audio" },
-	{ "525pal",        &vid_config_525pal,           "PAL colour, 30/1.001 fps, 525 lines, unmodulated (real)" },
-	{ "l",             &vid_config_secam_l,          "SECAM colour, 25 fps, 625 lines, AM (complex), 6.5 MHz AM audio" },
-	{ "d",             &vid_config_secam_dk,         "SECAM colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM audio" },
-	{ "k",             &vid_config_secam_dk,         "SECAM colour, 25 fps, 625 lines, AM (complex), 6.5 MHz FM audio" },
-	{ "secam-i",       &vid_config_secam_i,          "SECAM colour, 25 fps, 625 lines, AM (complex), 6.0 MHz FM audio" },
-	{ "secam-b",       &vid_config_secam_bg,         "SECAM colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio" },
-	{ "secam-g",       &vid_config_secam_bg,         "SECAM colour, 25 fps, 625 lines, AM (complex), 5.5 MHz FM audio" },
-	{ "secam-fm",      &vid_config_secam_fm,         "SECAM colour, 25 fps, 625 lines, FM (complex), 6.5 MHz FM audio" },
-	{ "secam",         &vid_config_secam,            "SECAM colour, 25 fps, 625 lines, unmodulated (real)" },
-	{ "m",             &vid_config_ntsc_m,           "NTSC colour, 30/1.001 fps, 525 lines, AM (complex), 4.5 MHz FM audio" },
-	{ "ntsc-i",        &vid_config_ntsc_i,           "NTSC colour, 30/1.001 fps, 525 lines, AM (complex), 6.0 MHz FM audio" },
-	{ "ntsc-fm",       &vid_config_ntsc_fm,          "NTSC colour, 30/1.001 fps, 525 lines, FM (complex), 6.5 MHz FM audio" },
-	{ "ntsc-bs",       &vid_config_ntsc_bs_fm,       "NTSC colour, 30/1.001 fps, 525 lines, FM (complex), BS digital audio" },
-	{ "ntsc",          &vid_config_ntsc,             "NTSC colour, 30/1.001 fps, 525 lines, unmodulated (real)" },
-	{ "pal60-i",       &vid_config_pal60_i,          "PAL colour, 30/1.001 fps, 525 lines, AM (complex), 6.0 MHz FM audio" },
-	{ "pal60",         &vid_config_pal60,            "PAL colour, 30/1.001 fps, 525 lines, unmodulated (real)" },
-	{ "d2mac-am",      &vid_config_d2mac_am,         "D2-MAC, 25 fps, 625 lines, AM (complex)" },
-	{ "d2mac-fm",      &vid_config_d2mac_fm,         "D2-MAC, 25 fps, 625 lines, FM (complex)" },
-	{ "d2mac",         &vid_config_d2mac,            "D2-MAC, 25 fps, 625 lines, unmodulated (real)" },
-	{ "dmac-am",       &vid_config_dmac_am,          "D-MAC, 25 fps, 625 lines, AM (complex)" },
-	{ "dmac-fm",       &vid_config_dmac_fm,          "D-MAC, 25 fps, 625 lines, FM (complex)" },
-	{ "dmac",          &vid_config_dmac,             "D-MAC, 25 fps, 625 lines, unmodulated (real)" },
-	{ "e",             &vid_config_819_e,            "No colour, 25 fps, 819 lines, AM (complex), 11.15 MHz AM audio" },
-	{ "819",           &vid_config_819,              "No colour, 25 fps, 819 lines, unmodulated (real)" },
-	{ "a",             &vid_config_405_a,            "No colour, 25 fps, 405 lines, AM (complex), -3.5 MHz AM audio" },
-	{ "ntsc-a",        &vid_config_405_a_ntsc,       "NTSC colour, 25 fps, 405 lines, AM (complex), -3.5 MHz AM audio" },
-	{ "405-i",         &vid_config_405_i,            "No colour, 25 fps, 405 lines, AM (complex), 6.0 MHz FM audio" },
-	{ "405",           &vid_config_405,              "No colour, 25 fps, 405 lines, unmodulated (real)" },
-	{ "ntsc-405",      &vid_config_405_ntsc,         "NTSC colour, 25 fps, 405 lines, unmodulated (real)" },
-	{ "240-am",        &vid_config_baird_240_am,     "No colour, 25 fps, 240 lines, AM (complex)" },
-	{ "240",           &vid_config_baird_240,        "No colour, 25 fps, 240 lines, unmodulated (real)" },
-	{ "30-am",         &vid_config_baird_30_am,      "No colour, 12.5 fps, 30 lines, AM (complex)" },
-	{ "30",            &vid_config_baird_30,         "No colour, 12.5 fps, 30 lines, unmodulated (real)" },
-	{ "nbtv-am",       &vid_config_nbtv_32_am,       "No colour, 12.5 fps, 32 lines, AM (complex)" },
-	{ "nbtv",          &vid_config_nbtv_32,          "No colour, 12.5 fps, 32 lines, unmodulated (real)" },
-	{ "apollo-fsc-fm", &vid_config_apollo_colour_fm, "Field sequential colour, 30/1.001 fps, 525 lines, FM (complex), 1.25 MHz FM audio" },
-	{ "apollo-fsc",    &vid_config_apollo_colour,    "Field sequential colour, 30/1.001 fps, 525 lines, unmodulated (real)" },
-	{ "apollo-fm",     &vid_config_apollo_mono_fm,   "No colour, 10 fps, 320 lines, FM (complex), 1.25 MHz FM audio" },
-	{ "apollo",        &vid_config_apollo_mono,      "No colour, 10 fps, 320 lines, unmodulated (real)" },
-	{ "m-cbs405",      &vid_config_cbs405_m,         "Field sequential colour, 72 fps, 405 lines, VSB (complex), 4.5MHz FM audio" },
-	{ "cbs405",        &vid_config_cbs405,           "Field sequential colour, 72 fps, 405 lines, unmodulated (real)" },
-	{ NULL },
+	{ "i",             &vid_config_pal_i            },
+	{ "b",             &vid_config_pal_bg           },
+	{ "g",             &vid_config_pal_bg           },
+	{ "pal-d",         &vid_config_pal_dk           },
+	{ "pal-k",         &vid_config_pal_dk           },
+	{ "pal-fm",        &vid_config_pal_fm           },
+	{ "pal",           &vid_config_pal              },
+	{ "pal-m",         &vid_config_pal_m            },
+	{ "pal-n",         &vid_config_pal_n            },
+	{ "525pal",        &vid_config_525pal           },
+	{ "l",             &vid_config_secam_l          },
+	{ "d",             &vid_config_secam_dk         },
+	{ "k",             &vid_config_secam_dk         },
+	{ "secam-i",       &vid_config_secam_i          },
+	{ "secam-b",       &vid_config_secam_bg         },
+	{ "secam-g",       &vid_config_secam_bg         },
+	{ "secam-fm",      &vid_config_secam_fm         },
+	{ "secam",         &vid_config_secam            },
+	{ "m",             &vid_config_ntsc_m           },
+	{ "ntsc-i",        &vid_config_ntsc_i           },
+    { "ntsc-bg",       &vid_config_ntsc_bg          },
+	{ "ntsc-dk",	   &vid_config_ntsc_dk			},
+    { "ntsc443-bg",    &vid_config_ntsc443_bg       },
+	{ "ntsc443-i",     &vid_config_ntsc443_i        },
+	{ "ntsc443-dk",    &vid_config_ntsc443_bg       },
+	{ "ntsc-fm",       &vid_config_ntsc_fm          },
+	{ "ntsc-bs",       &vid_config_ntsc_bs_fm       },
+	{ "ntsc",          &vid_config_ntsc             },
+	{ "pal60-i",       &vid_config_pal60_i          },
+    { "pal60-bg",      &vid_config_pal60_bg         },
+	{ "pal60-dk",      &vid_config_pal60_dk         },
+	{ "pal60",         &vid_config_pal60            },
+	{ "d2mac-am",      &vid_config_d2mac_am         },
+	{ "d2mac-fm",      &vid_config_d2mac_fm         },
+	{ "d2mac",         &vid_config_d2mac            },
+	{ "dmac-am",       &vid_config_dmac_am          },
+	{ "dmac-fm",       &vid_config_dmac_fm          },
+	{ "dmac",          &vid_config_dmac             },
+	{ "e",             &vid_config_819_e            },
+	{ "819",           &vid_config_819              },
+	{ "a",             &vid_config_405_a            },
+	{ "405-i",         &vid_config_405_i            },
+	{ "405",           &vid_config_405              },
+	{ "240-am",        &vid_config_baird_240_am     },
+	{ "240",           &vid_config_baird_240        },
+	{ "30-am",         &vid_config_baird_30_am      },
+	{ "30",            &vid_config_baird_30         },
+	{ "nbtv-am",       &vid_config_nbtv_32_am       },
+	{ "nbtv",          &vid_config_nbtv_32          },
+	{ "apollo-fsc-fm", &vid_config_apollo_colour_fm },
+	{ "apollo-fsc",    &vid_config_apollo_colour    },
+	{ "apollo-fm",     &vid_config_apollo_mono_fm   },
+	{ "apollo",        &vid_config_apollo_mono      },
+	{ "m-cbs405",      &vid_config_cbs405_m         },
+	{ "cbs405",        &vid_config_cbs405           },
+	{ NULL,            NULL },
 };
 
 /* Video filter process */
@@ -2311,7 +2561,7 @@ const static double fm_audio_j17_taps[65] = {
  * sub-carrier at f Hz (bell curve) */
 static void _secam_g(double *g, double f)
 {
-	const double f0 = 4.286e6;
+	const double f0 = SECAM_FM_FREQ;
 	double lq, rq, d;
 	
 	f = f / f0 - f0 / f;
@@ -2522,6 +2772,52 @@ static void _free_am_modulator(_mod_am_t *am)
 	/* Nothing */
 }
 
+/* AV source callback handlers */
+static uint32_t *_av_read_video(vid_t *s, float *ratio)
+{
+	if(s->av_read_video)
+	{
+		return(s->av_read_video(s->av_private, ratio));
+	}
+	
+	return(NULL);
+}
+
+static int16_t *_av_read_audio(vid_t *s, size_t *samples)
+{
+	if(s->av_read_audio)
+	{
+		return(s->av_read_audio(s->av_private, samples));
+	}
+	
+	return(NULL);
+}
+
+static int _av_eof(vid_t *s)
+{
+	if(s->av_eof)
+	{
+		return(s->av_eof(s->av_private));
+	}
+	
+	return(0);
+}
+
+int vid_av_close(vid_t *s)
+{
+	int r;
+	
+	r = s->av_close ? s->av_close(s->av_private) : VID_ERROR;
+	
+	s->av_private = NULL;
+	s->av_read_video = NULL;
+	s->av_read_audio = NULL;
+	s->av_eof = NULL;
+	s->av_close = NULL;
+	
+	return(r);
+}
+
 void _test_sample_rate(const vid_config_t *conf, unsigned int sample_rate)
 {
 	int m, r;
@@ -2543,46 +2839,6 @@ void _test_sample_rate(const vid_config_t *conf, unsigned int sample_rate)
 	fprintf(stderr, "Next valid pixel rates: %u, %u\n", m * r, m * (r + 1));
 }
 
-static int _vid_next_line_rawbb(vid_t *s, void *arg, int nlines, vid_line_t **lines)
-{
-	vid_line_t *l = lines[0];
-	int x, i;
-	
-	l->width    = s->width;
-	l->frame    = s->bframe;
-	l->line     = s->bline;
-	l->vbialloc = 0;
-	l->lut      = NULL;
-	
-	/* Read the next line */
-	x = l->width;
-	while(x > 0)
-	{
-		i = fread(l->output, sizeof(int16_t), x, s->raw_bb_file);
-		if(i < x && feof(s->raw_bb_file))
-		{
-			rewind(s->raw_bb_file);
-		}
-		
-		x -= i;
-	}
-	
-	/* Move samples into I channel and scale for output */
-	for(x = l->width - 1; x >= 0; x--)
-	{
-		l->output[x * 2] = s->blanking_level +
-			(((int) l->output[x] - s->conf.raw_bb_blanking_level) * (s->white_level - s->blanking_level) / (s->conf.raw_bb_white_level - s->conf.raw_bb_blanking_level));
-	}
-	
-	/* Clear the Q channel */
-	for(x = 0; x < s->max_width; x++)
-	{
-		l->output[x * 2 + 1] = 0;
-	}
-	
-	return(1);
-}
-
 static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **lines)
 {
 	const char *seq;
@@ -2591,7 +2847,6 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	int pal = 0;
 	int fsc = 0;
 	uint8_t sc = 0;
-	int al, ar;
 	vid_line_t *l = lines[1];
 	
 	l->width    = s->width;
@@ -2859,36 +3114,36 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		case 2:   seq = "V__V"; break;
 		case 3:   seq = "V__V"; break;
 		case 4:   seq = "V__V"; break;
-		case 5:   seq = "h0__"; break;
-		case 6:   seq = "h0__"; break;
-		case 7:   seq = "h0__"; break;
-		case 8:   seq = "h0__"; break;
-		case 9:   seq = "h0__"; break;
-		case 10:  seq = "h0__"; break;
-		case 11:  seq = "h0__"; break;
-		case 12:  seq = "h0__"; break;
-		case 13:  seq = "h0__"; break;
-		case 14:  seq = "h0__"; break;
-		case 15:  seq = "h0__"; break;
+		case 5:   seq = "h___"; break;
+		case 6:   seq = "h___"; break;
+		case 7:   seq = "h___"; break;
+		case 8:   seq = "h___"; break;
+		case 9:   seq = "h___"; break;
+		case 10:  seq = "h___"; break;
+		case 11:  seq = "h___"; break;
+		case 12:  seq = "h___"; break;
+		case 13:  seq = "h___"; break;
+		case 14:  seq = "h___"; break;
+		case 15:  seq = "h___"; break;
 		
-		case 203: seq = "h0aV"; break;
+		case 203: seq = "h_aV"; break;
 		case 204: seq = "V__V"; break;
 		case 205: seq = "V__V"; break;
 		case 206: seq = "V__V"; break;
 		case 207: seq = "V___"; break;
-		case 208: seq = "h0__"; break;
-		case 209: seq = "h0__"; break;
-		case 210: seq = "h0__"; break;
-		case 211: seq = "h0__"; break;
-		case 212: seq = "h0__"; break;
-		case 213: seq = "h0__"; break;
-		case 214: seq = "h0__"; break;
-		case 215: seq = "h0__"; break;
-		case 216: seq = "h0__"; break;
-		case 217: seq = "h0__"; break;
-		case 218: seq = "h0_a"; break;
+		case 208: seq = "h___"; break;
+		case 209: seq = "h___"; break;
+		case 210: seq = "h___"; break;
+		case 211: seq = "h___"; break;
+		case 212: seq = "h___"; break;
+		case 213: seq = "h___"; break;
+		case 214: seq = "h___"; break;
+		case 215: seq = "h___"; break;
+		case 216: seq = "h___"; break;
+		case 217: seq = "h___"; break;
+		case 218: seq = "h__a"; break;
 		
-		default:  seq = "h0aa"; break;
+		default:  seq = "h_aa"; break;
 		}
 		
 		/* Calculate the active line number */
@@ -2991,15 +3246,7 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		vy = l->line - 1;
 	}
 	
-	/* Shift the lines by one if the source
-	 * video has the bottom field first */
-	if(vy >= 0 && s->vframe.interlaced == 2) vy += 1;
-	
-	/* Centre the video vertically */
-	vy -= s->vframe_y;
-	
-	/* Check for out of bounds */
-	if(vy < 0 || vy >= s->vframe.height) vy = -1;
+	if(vy < 0 || vy >= s->conf.active_lines) vy = -1;
 	
 	if(s->conf.colour_mode == VID_PAL ||
 	   s->conf.colour_mode == VID_NTSC)
@@ -3063,30 +3310,24 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	/* Render the active video if required */
 	if(seq[2] == 'a' || seq[3] == 'a')
 	{
-		uint32_t rgb = 0x000000;
-		uint32_t *prgb = &rgb;
-		int stride = 0;
+		uint32_t rgb;
+		uint32_t *prgb;
 		int16_t *o;
 		
 		/* Calculate active video portion of this line */
-		al = (seq[2] == 'a' ? s->active_left : (seq[3] == 'a' ? s->half_width : -1));
-		ar = (seq[3] == 'a' ? s->active_left + s->active_width : (seq[2] == 'a' ? s->half_width : -1));
+		int al = (seq[2] == 'a' ? s->active_left : (seq[3] == 'a' ? s->half_width : -1));
+		int ar = (seq[3] == 'a' ? s->active_left + s->active_width : (seq[2] == 'a' ? s->half_width : -1));
 		
-		for(x = al, o = &l->output[al * 2]; x < s->active_left + s->vframe_x; x++, o += 2)
-		{
-			*o = s->yiq_level_lookup[0x000000].y;
-		}
+		/* Render the active video */
+		prgb = (s->framebuffer != NULL && vy != -1 ? &s->framebuffer[vy * s->active_width + al - s->active_left] : NULL);
+		rgb = 0x000000;
 		
-		if(s->vframe.framebuffer && vy >= 0)
+		for(x = al, o = &l->output[al * 2]; x < ar; x++, o += 2)
 		{
-			prgb  = &s->vframe.framebuffer[vy * s->vframe.line_stride];
-			prgb += (x - s->active_left - s->vframe_x) * s->vframe.pixel_stride;
-			stride = s->vframe.pixel_stride;
-		}
-		
-		for(; x < s->active_left + s->vframe_x + s->vframe.width && x < ar; x++, o += 2, prgb += stride)
-		{
-			rgb = *prgb & 0xFFFFFF;
+			if(prgb)
+			{
+				rgb = *(prgb++) & 0xFFFFFF;
+			}
 			
 			if(s->conf.colour_mode == VID_APOLLO_FSC ||
 			   s->conf.colour_mode == VID_CBS_FSC)
@@ -3103,11 +3344,6 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 				       s->yiq_level_lookup[rgb].q * l->lut[x].i * pal) >> 15;
 			}
 		}
-		
-		for(; x < ar; x++, o += 2)
-		{
-			*o = s->yiq_level_lookup[0x000000].y;
-		}
 	}
 	
 	/* Render the colour burst */
@@ -3115,6 +3351,8 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 	{
 		for(x = s->burst_left; x < s->burst_left + s->burst_width; x++)
 		{
+			/* Nasty hack for Videocrypt-S */
+			int y = s->conf.videocrypts ? x + 2 : x;
 			l->output[x * 2] += (((s->burst_phase.i * l->lut[x].q +
 			                       s->burst_phase.q * l->lut[x].i * pal) >> 15) * s->burst_win[x - s->burst_left]) >> 15;
 		}
@@ -3187,52 +3425,24 @@ static int _vid_next_line_raster(vid_t *s, void *arg, int nlines, vid_line_t **l
 		}
 		else if(seq[2] == 'a' || seq[3] == 'a')
 		{
-			uint32_t rgb = 0x000000;
-			uint32_t *prgb = &rgb;
-			int stride = 0;
+			uint32_t rgb;
 			
-			if(s->vframe.framebuffer && vy >= 0)
+			for(x = 0; x < s->width; x++)
 			{
-				prgb = &s->vframe.framebuffer[vy * s->vframe.line_stride];
-				stride = s->vframe.pixel_stride;
-			}
-			
-			if(((l->frame * s->conf.lines) + l->line) & 1)
-			{
-				/* D'r */
+				rgb = 0x000000;
 				
-				for(x = 0; x < s->active_left + s->vframe_x; x++)
+				if(x >= s->active_left && x < s->active_left + s->active_width)
 				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].q;
+					rgb = s->framebuffer != NULL && vy >= 0 ? s->framebuffer[vy * s->active_width + x - s->active_left] & 0xFFFFFF : 0x000000;
 				}
 				
-				for(; x < s->active_left + s->vframe_x + s->vframe.width; x++, prgb += stride)
+				if(((l->frame * s->conf.lines) + l->line) & 1)
 				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[*prgb & 0xFFFFFF].q;
+					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].q; // D'r
 				}
-				
-				for(; x < s->width; x++)
+				else
 				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].q;
-				}
-			}
-			else
-			{
-				/* D'b */
-				
-				for(x = 0; x < s->active_left + s->vframe_x; x++)
-				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].i;
-				}
-				
-				for(; x < s->active_left + s->vframe_x + s->vframe.width; x++, prgb += stride)
-				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[*prgb & 0xFFFFFF].i;
-				}
-				
-				for(; x < s->width; x++)
-				{
-					l->output[x * 2 + 1] = s->yiq_level_lookup[0x000000].i;
+					l->output[x * 2 + 1] = s->yiq_level_lookup[rgb].i; // D'b
 				}
 			}
 			
@@ -3314,7 +3524,7 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 			
 			if(s->audiobuffer_samples == 0)
 			{
-				s->audiobuffer = av_read_audio(&s->av, &s->audiobuffer_samples);
+				s->audiobuffer = _av_read_audio(s, &s->audiobuffer_samples);
 				
 				if(s->conf.systeraudio == 1)
 				{
@@ -3424,26 +3634,19 @@ static int _vid_audio_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 		
 		if(s->conf.fm_right_level > 0 && s->conf.fm_right_carrier != 0)
 		{
-			int16_t a2 = s->fm_right.sample;
+			int16_t a2 = 0;
 			
 			if(s->conf.a2stereo)
 			{
 				int16_t s1[2] = { 0, 0 };
 				int16_t s2[2] = { 0, 0 };
 				
-				if(s->a2stereo_system_m)
-				{
-					/* The System M variant is L-R, not R */
-					a2 = s->fm_mono.sample - s->fm_right.sample;
-				}
-				
-				/* Add the pilot tone */
 				_am_modulator_add(&s->a2stereo_signal, s1, 0);
 				_am_modulator_add(&s->a2stereo_pilot, s2, s1[0]);
-				a2 += s2[0];
+				a2 = s2[0];
 			}
 			
-			_fm_modulator_add(&s->fm_right, add, a2);
+			_fm_modulator_add(&s->fm_right, add, s->fm_right.sample + a2);
 		}
 		
 		if(s->conf.am_audio_level > 0 && s->conf.am_mono_carrier != 0)
@@ -3477,22 +3680,6 @@ static int _vid_fmmod_process(vid_t *s, void *arg, int nlines, vid_line_t **line
 	for(x = 0; x < l->width; x++)
 	{
 		_fm_modulator(&s->fm_video, &l->output[x * 2], l->output[x * 2]);
-	}
-	
-	return(1);
-}
-
-static int _vid_swap_iq_process(vid_t *s, void *arg, int nlines, vid_line_t **lines)
-{
-	vid_line_t *l = lines[0];
-	int x;
-	int16_t t;
-	
-	for(x = 0; x < l->width; x++)
-	{
-		t = l->output[x * 2 + 0];
-		l->output[x * 2 + 0] = l->output[x * 2 + 1];
-		l->output[x * 2 + 1] = t;
 	}
 	
 	return(1);
@@ -4028,12 +4215,6 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		fir_int16_init(&s->fm_secam_fir, taps, 51, 1, 1, 0);
 		
 		fir_band_reject(taps, 51, s->pixel_rate, SECAM_FM_FREQ - 1e6, SECAM_FM_FREQ + 1e6, 1e6, 1.0);
-		
-		/* A little test to see if a weaker luminance filter can improve
-		 * SECAM image quality without causing interference to colour */
-		taps[51 / 2] += 0.5;
-		fir_normalise(taps, 51, 1.0);
-		
 		fir_int16_init(&s->secam_l_fir, taps, 51, 1, 1, 0);
 		
 		/* FM deviation limits */
@@ -4081,33 +4262,13 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	s->bline  = 1;
 	s->bframe = 1;
 	
-	s->vframe = (av_frame_t) {
-		.width = s->active_width,
-		.height = s->conf.active_lines,
-		.framebuffer = NULL,
-		.pixel_stride = 0,
-		.line_stride = 0,
-		.pixel_aspect_ratio = { 1, 1 },
-		.interlaced = 0,
-	};
+	s->framebuffer = NULL;
 	s->olines = 1;
 	s->audio = 0;
 	
-	if(s->conf.raw_bb_file != NULL)
+	/* Initialise D/D2-MAC state */
+	if(s->conf.type == VID_MAC)
 	{
-		s->raw_bb_file = fopen(s->conf.raw_bb_file, "rb");
-		if(!s->raw_bb_file)
-		{
-			perror("fopen");
-			vid_free(s);
-			return(r);
-		}
-		
-		_add_lineprocess(s, "rawbb", 1, NULL, _vid_next_line_rawbb, NULL);
-	}
-	else if(s->conf.type == VID_MAC)
-	{
-		/* Initialise D/D2-MAC state */
 		r = mac_init(s);
 		
 		if(r != VID_OK)
@@ -4253,21 +4414,20 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	if(s->conf.a2stereo)
 	{
 		/* Enable Zweikanalton / A2 Stereo */
-		s->a2stereo_system_m = s->conf.fm_mono_carrier == 4500000;
 		s->conf.fm_right_level = s->conf.fm_mono_level * 0.446684; /* -7 dB */
-		s->conf.fm_right_carrier = s->conf.fm_mono_carrier + (s->a2stereo_system_m ? 224213 : 242000);
+		s->conf.fm_right_carrier = s->conf.fm_mono_carrier + 242000;
 		s->conf.fm_right_deviation = s->conf.fm_mono_deviation;
 		s->conf.fm_right_preemph = s->conf.fm_mono_preemph;
 		
-		r = _init_am_modulator(&s->a2stereo_pilot, s->sample_rate, (s->a2stereo_system_m ? 55.06993e3 : 54.6875e3), 0.05);
+		r = _init_am_modulator(&s->a2stereo_pilot, s->sample_rate, 54.6875e3, 0.05);
 		if(r != VID_OK)
 		{
 			vid_free(s);
 			return(r);
 		}
 		
-		/* 117.5 Hz == Stereo (149.9 Hz for M variant) */
-		r = _init_am_modulator(&s->a2stereo_signal, s->sample_rate, (s->a2stereo_system_m ? 149.9 : 117.5), 1.0);
+		/* 117.5 Hz == Stereo */
+		r = _init_am_modulator(&s->a2stereo_signal, s->sample_rate, 117.5, 1.0);
 		if(r != VID_OK)
 		{
 			vid_free(s);
@@ -4405,7 +4565,7 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 	/* NICAM audio */
 	if(s->conf.nicam_level > 0 && s->conf.nicam_carrier != 0)
 	{
-		r = nicam_mod_init(&s->nicam, NICAM_MODE_STEREO, 1, s->sample_rate, s->conf.nicam_carrier, s->conf.nicam_beta, s->conf.nicam_level * slevel);
+		r = nicam_mod_init(&s->nicam, NICAM_MODE_STEREO, 0, s->sample_rate, s->conf.nicam_carrier, s->conf.nicam_beta, s->conf.nicam_level * slevel);
 		
 		if(r != 0)
 		{
@@ -4473,11 +4633,6 @@ int vid_init(vid_t *s, unsigned int sample_rate, unsigned int pixel_rate, const 
 		}
 		
 		_add_lineprocess(s, "fmmod", 1, NULL, _vid_fmmod_process, NULL);
-	}
-	
-	if(s->conf.swap_iq != 0)
-	{
-		_add_lineprocess(s, "swap_iq", 1, NULL, _vid_swap_iq_process, NULL);
 	}
 	
 	if(s->conf.offset != 0)
@@ -4583,7 +4738,7 @@ void vid_free(vid_t *s)
 	int i;
 	
 	/* Close the AV source */
-	av_close(&s->av);
+	vid_av_close(s);
 	
 	for(i = 0; i < s->nprocesses; i++)
 	{
@@ -4713,28 +4868,11 @@ static vid_line_t *_vid_next_line(vid_t *s, size_t *samples)
 	if(s->bline == 1 || (s->conf.interlace && s->bline == s->conf.hline))
 	{
 		/* Have we reached the end of the video? */
-		if(av_eof(&s->av))
+		if(_av_eof(s))
 		{
 			return(NULL);
 		}
-		
-		av_read_video(&s->av, &s->vframe);
-		
-		av_rotate_frame(&s->vframe, s->conf.frame_orientation & 3);
-		if(s->conf.frame_orientation & VID_HFLIP) av_hflip_frame(&s->vframe);
-		if(s->conf.frame_orientation & VID_VFLIP) av_vflip_frame(&s->vframe);
-		
-		/* Crop frame to fit inside active video area */
-		av_crop_frame(&s->vframe,
-			(s->vframe.width - s->active_width) / 2,
-			(s->vframe.height - s->conf.active_lines) / 2,
-			s->active_width,
-			s->conf.active_lines
-		);
-		
-		/* Calculate frame offset from top left */
-		s->vframe_x = (s->active_width - s->vframe.width) / 2;
-		s->vframe_y = (s->conf.active_lines - s->vframe.height) / 2;
+		s->framebuffer = _av_read_video(s, &s->ratio);
 	}
 	
 	for(i = 0; i < s->nprocesses; i++)
